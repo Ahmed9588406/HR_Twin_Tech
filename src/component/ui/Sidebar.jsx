@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home, 
   Users, 
@@ -13,27 +14,37 @@ import {
 import logo from '../../assets/images/logo.png';
 
 export default function Sidebar() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(true);
   const [activeItem, setActiveItem] = useState('Dashboard');
   const [expandedItems, setExpandedItems] = useState({});
 
   const menuItems = [
-    { icon: Home, label: 'Dashboard', path: '/' },
-    { icon: BarChart3, label: 'Employess', path: '/analytics' },
-    { 
-      icon: Users, 
-      label: 'Team', 
-      path: '/team',
-      children: [
-        { label: 'Members', path: '/team/members' },
-        { label: 'Roles', path: '/team/roles' },
-        { label: 'Permissions', path: '/team/permissions' }
-      ]
-    },
+    { icon: Home, label: 'Dashboard', path: '/dashboard' },
+    { icon: Users, label: 'Employess', path: '/employee-dashboard' },
+    
     { icon: FileText, label: 'Documents', path: '/documents' },
     { icon: Bell, label: 'Notifications', path: '/notifications', badge: 3 },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
+
+  // Update active item based on current location
+  useEffect(() => {
+    const currentPath = location.pathname;
+    
+    if (currentPath === '/dashboard') {
+      setActiveItem('Dashboard');
+    } else if (currentPath === '/employee-dashboard' || currentPath === '/employees') {
+      setActiveItem('Employess');
+    } else if (currentPath === '/documents') {
+      setActiveItem('Documents');
+    } else if (currentPath === '/notifications') {
+      setActiveItem('Notifications');
+    } else if (currentPath === '/settings') {
+      setActiveItem('Settings');
+    }
+  }, [location.pathname]); // Only depend on pathname, not search params
 
   const toggleExpand = (label) => {
     setExpandedItems(prev => ({
@@ -50,18 +61,18 @@ export default function Sidebar() {
     <div 
       className={`${
         isOpen ? 'w-64' : 'w-20'
-      } bg-gradient-to-b from-green-500 to-green-600 text-white transition-all duration-300 ease-in-out flex flex-col shadow-2xl h-screen`}
+      } bg-gradient-to-b from-green-500 to-green-600 text-white transition-all duration-300 ease-in-out flex flex-col shadow-2xl h-screen fixed left-0 top-0 z-40`}
     >
       {/* Header */}
       <div className={`${isOpen ? 'p-6' : 'p-4'} flex items-center ${isOpen ? 'justify-between' : 'justify-center'} border-b border-green-400/30`}>
         <button
           onClick={toggleSidebar}
-          className={`flex items-center justify-center rounded-xl transition-all duration-200 hover:bg-green-400/30 ${isOpen ? 'p-2' : 'p-3'}`}
+          className={`flex items-center justify-center rounded-2xl transition-all duration-300 bg-white shadow-lg hover:shadow-xl border-4 border-white/90 hover:border-white group ${isOpen ? 'p-3' : 'p-2'}`}
         >
           <img
             src={logo}
             alt="Logo"
-            className={`${isOpen ? 'w-16 h-16' : 'w-12 h-12'} object-contain transition-all duration-300`}
+            className={`${isOpen ? 'w-14 h-14' : 'w-10 h-10'} object-contain transition-all duration-300 group-hover:scale-110`}
           />
         </button>
         {isOpen && (
@@ -95,9 +106,11 @@ export default function Sidebar() {
             <li key={item.label}>
               <button
                 onClick={() => {
-                  setActiveItem(item.label);
+                  // Don't manually set activeItem, let useEffect handle it based on route
                   if (item.children) {
                     toggleExpand(item.label);
+                  } else if (item.path) {
+                    navigate(item.path);
                   }
                 }}
                 className={`w-full flex items-center ${isOpen ? 'justify-between' : 'justify-center'} gap-3 px-3 py-3 rounded-lg transition-all duration-200 ${
@@ -137,7 +150,12 @@ export default function Sidebar() {
                   {item.children.map((child) => (
                     <li key={child.label}>
                       <button
-                        onClick={() => setActiveItem(child.label)}
+                        onClick={() => {
+                          // Don't manually set activeItem
+                          if (child.path) {
+                            navigate(child.path);
+                          }
+                        }}
                         className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                           activeItem === child.label
                             ? 'bg-green-400/30 text-white font-medium'
@@ -174,4 +192,3 @@ export default function Sidebar() {
     </div>
   );
 }
-
