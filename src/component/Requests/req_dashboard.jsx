@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import Sidebar from '../ui/Sidebar';
 import { Search, Calendar, DollarSign, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function ReqDashboard() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Vacation Request');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -12,20 +14,20 @@ export default function ReqDashboard() {
     { id: 'Over Time', label: 'Over Time', icon: Clock }
   ];
 
-  // Sample data for each tab
+  // Sample data for each tab with employee details
   const vacationRequests = [
-    { id: 1, employeeName: 'John Doe', startDate: '2023-10-01', endDate: '2023-10-05', status: 'Pending' },
-    { id: 2, employeeName: 'Jane Smith', startDate: '2023-10-10', endDate: '2023-10-12', status: 'Approved' }
+    { id: 1, employeeName: 'John Doe', startDate: '2023-10-01', endDate: '2023-10-05', status: 'Pending', employee: { name: 'John Doe', role: 'Software Engineer', department: 'Engineering', avatar: 'https://i.pravatar.cc/150?img=1', status: 'present', checkInTime: '09:00' } },
+    { id: 2, employeeName: 'Jane Smith', startDate: '2023-10-10', endDate: '2023-10-12', status: 'Approved', employee: { name: 'Jane Smith', role: 'Marketing Lead', department: 'Marketing', avatar: 'https://i.pravatar.cc/150?img=2', status: 'absent', checkInTime: 'N/A' } }
   ];
 
   const advanceRequests = [
-    { id: 1, employeeName: 'John Doe', amount: 500, reason: 'Medical', status: 'Pending' },
-    { id: 2, employeeName: 'Jane Smith', amount: 300, reason: 'Travel', status: 'Approved' }
+    { id: 1, employeeName: 'John Doe', amount: 500, reason: 'Medical', status: 'Pending', employee: { name: 'John Doe', role: 'Software Engineer', department: 'Engineering', avatar: 'https://i.pravatar.cc/150?img=1', status: 'present', checkInTime: '09:00' } },
+    { id: 2, employeeName: 'Jane Smith', amount: 300, reason: 'Travel', status: 'Approved', employee: { name: 'Jane Smith', role: 'Marketing Lead', department: 'Marketing', avatar: 'https://i.pravatar.cc/150?img=2', status: 'absent', checkInTime: 'N/A' } }
   ];
 
   const overTimeRequests = [
-    { id: 1, employeeName: 'John Doe', hours: 5, date: '2023-10-01', status: 'Pending' },
-    { id: 2, employeeName: 'Jane Smith', hours: 3, date: '2023-10-02', status: 'Approved' }
+    { id: 1, employeeName: 'John Doe', hours: 5, date: '2023-10-01', status: 'Pending', employee: { name: 'John Doe', role: 'Software Engineer', department: 'Engineering', avatar: 'https://i.pravatar.cc/150?img=1', status: 'present', checkInTime: '09:00' } },
+    { id: 2, employeeName: 'Jane Smith', hours: 3, date: '2023-10-02', status: 'Approved', employee: { name: 'Jane Smith', role: 'Marketing Lead', department: 'Marketing', avatar: 'https://i.pravatar.cc/150?img=2', status: 'absent', checkInTime: 'N/A' } }
   ];
 
   const getFilteredData = () => {
@@ -48,6 +50,10 @@ export default function ReqDashboard() {
     );
   };
 
+  const handleEmployeeClick = (employee) => {
+    navigate('/employee-profile', { state: { employee } });
+  };
+
   const renderTable = () => {
     const data = getFilteredData();
     if (activeTab === 'Vacation Request') {
@@ -64,7 +70,7 @@ export default function ReqDashboard() {
           <div className="divide-y divide-gray-100">
             {data.map((item) => (
               <div key={item.id} className="grid grid-cols-5 gap-4 px-6 py-4 hover:bg-gray-50">
-                <div className="text-gray-800">{item.employeeName}</div>
+                <div className="text-gray-800 cursor-pointer hover:text-blue-600" onClick={() => handleEmployeeClick(item.employee)}>{item.employeeName}</div>
                 <div className="text-gray-600">{item.startDate}</div>
                 <div className="text-gray-600">{item.endDate}</div>
                 <div className="text-gray-600">
@@ -93,7 +99,7 @@ export default function ReqDashboard() {
           <div className="divide-y divide-gray-100">
             {data.map((item) => (
               <div key={item.id} className="grid grid-cols-4 gap-4 px-6 py-4 hover:bg-gray-50">
-                <div className="text-gray-800">{item.employeeName}</div>
+                <div className="text-gray-800 cursor-pointer hover:text-blue-600" onClick={() => handleEmployeeClick(item.employee)}>{item.employeeName}</div>
                 <div className="text-gray-600">${item.amount}</div>
                 <div className="text-gray-600">{item.reason}</div>
                 <div className="text-gray-600">
@@ -122,7 +128,7 @@ export default function ReqDashboard() {
           <div className="divide-y divide-gray-100">
             {data.map((item) => (
               <div key={item.id} className="grid grid-cols-4 gap-4 px-6 py-4 hover:bg-gray-50">
-                <div className="text-gray-800">{item.employeeName}</div>
+                <div className="text-gray-800 cursor-pointer hover:text-blue-600" onClick={() => handleEmployeeClick(item.employee)}>{item.employeeName}</div>
                 <div className="text-gray-600">{item.hours}</div>
                 <div className="text-gray-600">{item.date}</div>
                 <div className="text-gray-600">
@@ -143,7 +149,7 @@ export default function ReqDashboard() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1 p-6 lg:p-8 overflow-auto ml-20 xl:ml-64 transition-all duration-300">
+      <div className="flex-1 p-6 lg:p-8 overflow-auto ml-20 xl:ml-72 transition-all duration-300">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-6">

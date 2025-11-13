@@ -8,9 +8,9 @@ export default function ActionDashboard() {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('Employees Action');
   const [actions, setActions] = useState([
-    { id: 1, name: 'John Doe', department: 'Engineering', position: 'Software Engineer', manager: 'Alice Brown' },
-    { id: 2, name: 'Jane Smith', department: 'Marketing', position: 'Marketing Lead', manager: 'Alice Brown' },
-    { id: 3, name: 'Bob Johnson', department: 'Sales', position: 'Sales Rep', manager: 'Charlie Davis' }
+    { id: 1, name: 'John Doe', department: 'Engineering', position: 'Software Engineer', manager: 'Alice Brown', employee: { name: 'John Doe', role: 'Software Engineer', department: 'Engineering', avatar: 'https://i.pravatar.cc/150?img=1', status: 'present', checkInTime: '09:00' } },
+    { id: 2, name: 'Jane Smith', department: 'Marketing', position: 'Marketing Lead', manager: 'Alice Brown', employee: { name: 'Jane Smith', role: 'Marketing Lead', department: 'Marketing', avatar: 'https://i.pravatar.cc/150?img=2', status: 'absent', checkInTime: 'N/A' } },
+    { id: 3, name: 'Bob Johnson', department: 'Sales', position: 'Sales Rep', manager: 'Charlie Davis', employee: { name: 'Bob Johnson', role: 'Sales Rep', department: 'Sales', avatar: 'https://i.pravatar.cc/150?img=3', status: 'on-leave', checkInTime: 'N/A' } }
   ]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedActions, setSelectedActions] = useState([]);
@@ -20,14 +20,11 @@ export default function ActionDashboard() {
     { id: 'Employees', label: 'Employees', icon: User, path: '/employees' },
     { id: 'Work Teams', label: 'Work Teams', icon: Users, path: '/dashboard-teams' },
     { id: 'Employees Action', label: 'Employees Action', icon: Calendar, path: '/employees-action' },
-    { id: 'Calender', label: 'Calender', icon: Heart, path: '/employee-dashboard?tab=calendar' }
   ];
 
   // Update active tab based on current location
   useEffect(() => {
     const currentPath = location.pathname;
-    const queryParams = new URLSearchParams(location.search);
-    const tab = queryParams.get('tab');
 
     if (currentPath === '/employees') {
       setActiveTab('Employees');
@@ -35,13 +32,14 @@ export default function ActionDashboard() {
       setActiveTab('Work Teams');
     } else if (currentPath === '/employees-action') {
       setActiveTab('Employees Action');
-    } else if (tab === 'calendar') {
-      setActiveTab('Calender');
     }
-  }, [location]);
+  }, [location.pathname]);
 
   const handleTabClick = (tab) => {
-    navigate(tab.path);
+    setActiveTab(tab.id);
+    if (location.pathname !== tab.path) {
+      navigate(tab.path);
+    }
   };
 
   const handleDelete = (id) => {
@@ -83,10 +81,14 @@ export default function ActionDashboard() {
     action.manager.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleEmployeeClick = (employee) => {
+    navigate('/employee-profile', { state: { employee } });
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1 p-6 lg:p-8 overflow-auto ml-20 xl:ml-64 transition-all duration-300">
+      <div className="flex-1 p-6 lg:p-8 overflow-auto ml-20 xl:ml-72 transition-all duration-300">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-6">
@@ -175,7 +177,7 @@ export default function ActionDashboard() {
                         onChange={() => handleSelectOne(action.id)}
                       />
                     </div>
-                    <div className="col-span-3 text-gray-800">{action.name}</div>
+                    <div className="col-span-3 text-gray-800 cursor-pointer hover:text-blue-600" onClick={() => handleEmployeeClick(action.employee)}>{action.name}</div>
                     <div className="col-span-2 text-gray-600">{action.department}</div>
                     <div className="col-span-2 text-gray-600">{action.position}</div>
                     <div className="col-span-2 text-gray-600">{action.manager}</div>

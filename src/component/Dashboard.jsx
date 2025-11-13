@@ -55,7 +55,7 @@ function Dashboard() {
       name: "Sarah Johnson",
       role: "Frontend Developer",
       department: "Information Technology",
-      avatar: "https://i.pravatar.cc/150?img=12",
+      avatar: "https://i.pravatar.cc/150?img=5",
       checkInTime: "09:45",
       status: "present",
       date: new Date().toISOString().split('T')[0]
@@ -64,7 +64,7 @@ function Dashboard() {
       name: "Michael Chen",
       role: "Product Manager",
       department: "Marketing",
-      avatar: "https://i.pravatar.cc/150?img=12",
+      avatar: "https://i.pravatar.cc/150?img=8",
       checkInTime: "08:30",
       status: "present",
       date: new Date().toISOString().split('T')[0]
@@ -73,7 +73,7 @@ function Dashboard() {
       name: "Emily Rodriguez",
       role: "HR Specialist",
       department: "Human Resources",
-      avatar: "https://i.pravatar.cc/150?img=12",
+      avatar: "https://i.pravatar.cc/150?img=9",
       checkInTime: "09:15",
       status: "present",
       date: new Date().toISOString().split('T')[0]
@@ -166,7 +166,7 @@ function Dashboard() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1 p-6 lg:p-8 overflow-auto ml-20 xl:ml-64 transition-all duration-300">
+      <div className="flex-1 p-6 lg:p-8 overflow-auto ml-20 xl:ml-72 transition-all duration-300">
         <div className="max-w-7xl mx-auto space-y-6">
           {dashboardData && (
             <>
@@ -209,7 +209,11 @@ function Dashboard() {
                       <EmployeeCard 
                         key={index}
                         employee={{
-                          ...employee,
+                          name: employee.name,
+                          role: employee.role,
+                          department: employee.department,
+                          avatar: employee.avatar,
+                          checkInTime: employee.checkInTime,
                           status: employee.status === 'present' ? 'Stay here' : 
                                  employee.status === 'absent' ? 'Absent' : 'On Leave'
                         }}
@@ -234,4 +238,4 @@ function Dashboard() {
   )
 }
 
-export default Dashboard
+export default Dashboard;

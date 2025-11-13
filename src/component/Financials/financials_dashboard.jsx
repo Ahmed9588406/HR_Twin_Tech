@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import Sidebar from '../ui/Sidebar';
-import { Search, DollarSign, CreditCard, TrendingUp } from 'lucide-react';
+import PayrollDashboard from './payroll';
+import RewardsDashboard from './rewards';
+import DiscountsDashboard from './discounts';
+import { Search, DollarSign, Award, TrendingDown } from 'lucide-react';
 
 export default function FinancialsDashboard() {
-  const [activeTab, setActiveTab] = useState('Salary Management');
+  const [activeTab, setActiveTab] = useState('PayRoll');
   const [searchTerm, setSearchTerm] = useState('');
 
   const tabs = [
-    { id: 'Salary Management', label: 'Salary Management', icon: DollarSign },
-    { id: 'Expenses', label: 'Expenses', icon: CreditCard },
-    { id: 'Budget', label: 'Budget', icon: TrendingUp }
+    { id: 'PayRoll', label: 'PayRoll', icon: DollarSign },
+    { id: 'Rewards', label: 'Rewards', icon: Award },
+    { id: 'Discount', label: 'Discount', icon: TrendingDown }
   ];
 
   // Sample data for each tab
@@ -138,10 +141,24 @@ export default function FinancialsDashboard() {
     }
   };
 
+  const renderContent = () => {
+    if (activeTab === 'PayRoll') {
+      return <PayrollDashboard />;
+    }
+    if (activeTab === 'Rewards') {
+      return <RewardsDashboard />;
+    }
+    if (activeTab === 'Discount') {
+      return <DiscountsDashboard />;
+    }
+    // For other tabs, keep existing table logic or add placeholder
+    return renderTable();
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1 p-6 lg:p-8 overflow-auto ml-20 xl:ml-64 transition-all duration-300">
+      <div className="flex-1 p-6 lg:p-8 overflow-auto ml-20 xl:ml-72 transition-all duration-300">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-6">
@@ -176,25 +193,29 @@ export default function FinancialsDashboard() {
 
           {/* Tab Content */}
           <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-            <div className="mb-6 flex items-center justify-between">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search financials"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-            </div>
-
-            {renderTable()}
-
-            {getFilteredData().length === 0 && (
-              <div className="px-6 py-12 text-center text-gray-500">
-                No data found
-              </div>
+            {activeTab === 'PayRoll' || activeTab === 'Rewards' || activeTab === 'Discount' ? (
+              renderContent()
+            ) : (
+              <>
+                <div className="mb-6 flex items-center justify-between">
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      type="text"
+                      placeholder="Search financials"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  </div>
+                </div>
+                {renderContent()}
+                {getFilteredData().length === 0 && (
+                  <div className="px-6 py-12 text-center text-gray-500">
+                    No data found
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

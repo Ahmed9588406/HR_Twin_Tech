@@ -22,14 +22,11 @@ export default function EmployeeManager() {
     { id: 'Employees', label: 'Employees', icon: User, path: '/employees' },
     { id: 'Work Teams', label: 'Work Teams', icon: Users, path: '/dashboard-teams' },
     { id: 'Employees Action', label: 'Employees Action', icon: Calendar, path: '/employees-action' },
-    { id: 'Calender', label: 'Calender', icon: Heart, path: '/employee-dashboard?tab=calendar' }
   ];
 
   // Update active tab based on current location
   useEffect(() => {
     const currentPath = location.pathname;
-    const queryParams = new URLSearchParams(location.search);
-    const tab = queryParams.get('tab');
 
     if (currentPath === '/employees') {
       setActiveTab('Employees');
@@ -37,13 +34,14 @@ export default function EmployeeManager() {
       setActiveTab('Work Teams');
     } else if (currentPath === '/employees-action') {
       setActiveTab('Employees Action');
-    } else if (tab === 'calendar') {
-      setActiveTab('Calender');
     }
-  }, [location]);
+  }, [location.pathname]);
 
   const handleTabClick = (tab) => {
-    navigate(tab.path);
+    setActiveTab(tab.id);
+    if (location.pathname !== tab.path) {
+      navigate(tab.path);
+    }
   };
 
   const handleDelete = (id) => {
@@ -101,7 +99,7 @@ export default function EmployeeManager() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1 p-6 lg:p-8 overflow-auto ml-20 xl:ml-64 transition-all duration-300">
+      <div className="flex-1 p-6 lg:p-8 overflow-auto ml-20 xl:ml-72 transition-all duration-300">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-6">
@@ -224,13 +222,6 @@ export default function EmployeeManager() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Employees Action</h2>
                 <p className="text-gray-600">Employee actions content goes here...</p>
-              </div>
-            )}
-
-            {activeTab === 'Calender' && (
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Calender</h2>
-                <p className="text-gray-600">Calendar content goes here...</p>
               </div>
             )}
           </div>

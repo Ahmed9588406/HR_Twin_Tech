@@ -26,6 +26,7 @@ export default function Sidebar() {
     { icon: Users, label: 'Employees', path: '/employees' },
     { icon: FileText, label: 'Requests', path: '/requests' },
     { icon: DollarSign, label: 'Financials', path: '/financials' },
+    // Make sure this path matches the route for settingsDashboard.jsx
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
@@ -33,10 +34,14 @@ export default function Sidebar() {
   useEffect(() => {
     const currentPath = location.pathname;
     
-    if (currentPath === '/dashboard') {
-      setActiveItem('Dashboard');
-    } else if (currentPath === '/employees' || currentPath === '/dashboard-teams' || currentPath === '/employees-action' || currentPath === '/employee-dashboard') {
+    // Check employee-related paths first (more specific)
+    if (currentPath === '/employees' || 
+        currentPath === '/dashboard-teams' || 
+        currentPath === '/employees-action' || 
+        currentPath === '/employee-dashboard') {
       setActiveItem('Employees');
+    } else if (currentPath === '/dashboard') {
+      setActiveItem('Dashboard');
     } else if (currentPath === '/requests') {
       setActiveItem('Requests');
     } else if (currentPath === '/financials') {
@@ -55,6 +60,12 @@ export default function Sidebar() {
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
+  };
+
+  const handleNavigation = (path) => {
+    if (location.pathname !== path) {
+      navigate(path);
+    }
   };
 
   return (
@@ -133,7 +144,7 @@ export default function Sidebar() {
                   if (item.children) {
                     toggleExpand(item.label);
                   } else if (item.path) {
-                    navigate(item.path);
+                    handleNavigation(item.path);
                   }
                 }}
                 className={`w-full flex items-center ${isOpen ? 'justify-between' : 'justify-center'} gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group relative overflow-hidden ${
@@ -190,7 +201,7 @@ export default function Sidebar() {
                       <button
                         onClick={() => {
                           if (child.path) {
-                            navigate(child.path);
+                            handleNavigation(child.path);
                           }
                         }}
                         className={`w-full text-left px-3.5 py-2.5 rounded-lg text-sm transition-all duration-200 ${
