@@ -1,4 +1,6 @@
 import React from "react";
+import { useNavigate } from 'react-router-dom';
+import { Phone, AlertCircle, Edit, Send, Trash2, Lock } from 'lucide-react';
 
 /**
  * Modern Employee Card Component
@@ -9,9 +11,16 @@ import React from "react";
  */
 export default function EmployeeCard({ 
   employee,
-  onClick 
+  onClick,
+  onEdit,
+  onNotify,
+  onDelete,
+  onLock,
+  onPhone,
+  onInfo
 }) {
-  // Dummy data for demonstration
+  const navigate = useNavigate();
+
   const defaultEmployee = {
     name: "Abdulrahman Ahmed",
     role: "Backend Developer",
@@ -22,6 +31,14 @@ export default function EmployeeCard({
   };
 
   const emp = employee || defaultEmployee;
+
+  const handleCardClick = () => {
+    if (onClick) {
+      onClick(emp);
+    } else {
+      navigate('/employee-portal', { state: { employee: emp } });
+    }
+  };
 
   // Status configurations
   const statusConfig = {
@@ -42,6 +59,26 @@ export default function EmployeeCard({
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+        </svg>
+      )
+    },
+    "Absent": {
+      color: "text-red-600",
+      bgColor: "bg-red-50",
+      dotColor: "bg-red-500",
+      icon: (
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      )
+    },
+    "On Leave": {
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-50",
+      dotColor: "bg-yellow-500",
+      icon: (
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       )
     },
@@ -70,15 +107,21 @@ export default function EmployeeCard({
 
   const currentStatus = statusConfig[emp.status] || statusConfig["Stay here"];
 
+  // Helper to call action handlers without triggering card click
+  const callHandler = (e, handler) => {
+    e.stopPropagation();
+    if (typeof handler === 'function') handler(emp);
+  };
+
   return (
     <div 
-      onClick={onClick}
-      className={`
+      onClick={handleCardClick}
+      className="
         group relative bg-white border border-gray-200 rounded-2xl p-4 
         shadow-sm hover:shadow-lg transition-all duration-300
-        ${onClick ? 'cursor-pointer hover:border-emerald-300' : ''}
+        cursor-pointer hover:border-emerald-300
         overflow-hidden
-      `}
+      "
     >
       {/* Decorative gradient background */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-50/50 to-transparent rounded-full blur-2xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -127,15 +170,68 @@ export default function EmployeeCard({
           </div>
 
           {/* Check-in time */}
-          <div className="flex items-center gap-1 text-emerald-600">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-            <span className="text-xs font-semibold">
-              {emp.checkInTime}
-            </span>
-          </div>
+          {emp.checkInTime && (
+            <div className="flex items-center gap-1 text-emerald-600">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+              <span className="text-xs font-semibold">
+                {emp.checkInTime}
+              </span>
+            </div>
+          )}
         </div>
+      </div>
+
+      {/* Action icons row (new) */}
+      <div className="mt-3 flex items-center justify-end gap-2">
+        <button
+          onClick={(e) => callHandler(e, onPhone)}
+          className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          title="Call"
+        >
+          <Phone className="w-4 h-4 text-gray-600" />
+        </button>
+
+        <button
+          onClick={(e) => callHandler(e, onNotify)}
+          className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          title="Notify"
+        >
+          <AlertCircle className="w-4 h-4 text-gray-600" />
+        </button>
+
+        <button
+          onClick={(e) => callHandler(e, onEdit)}
+          className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          title="Edit"
+        >
+          <Edit className="w-4 h-4 text-gray-600" />
+        </button>
+
+        <button
+          onClick={(e) => callHandler(e, onInfo)}
+          className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          title="Send"
+        >
+          <Send className="w-4 h-4 text-gray-600" />
+        </button>
+
+        <button
+          onClick={(e) => callHandler(e, onDelete)}
+          className="p-2 bg-gray-100 hover:bg-red-50 rounded-lg transition-colors"
+          title="Delete"
+        >
+          <Trash2 className="w-4 h-4 text-red-600" />
+        </button>
+
+        <button
+          onClick={(e) => callHandler(e, onLock)}
+          className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          title="Lock"
+        >
+          <Lock className="w-4 h-4 text-gray-600" />
+        </button>
       </div>
 
       {/* Hover effect border */}

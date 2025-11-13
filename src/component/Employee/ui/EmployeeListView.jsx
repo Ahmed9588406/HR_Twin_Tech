@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from "react";
 import { Search, Filter, X, MapPin, Building } from "lucide-react";
-import EmployeeCard from "./EmployeeCard";
+import EmployeeCard from "../../ui/EmployeeCard";
+import { useNavigate } from "react-router-dom";
 
 export default function EmployeeListView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [selectedLocation, setSelectedLocation] = useState('all');
+  const navigate = useNavigate();
 
   const employees = [
     {
@@ -165,6 +167,11 @@ export default function EmployeeListView() {
   };
 
   const hasActiveFilters = searchQuery || selectedDepartment !== 'all' || selectedLocation !== 'all';
+
+  // navigate to Employee_profile.jsx (route: /employee-portal)
+  const handleCardClick = (employee) => {
+    navigate('/employee-portal', { state: { employee } });
+  };
 
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6">
@@ -358,18 +365,37 @@ export default function EmployeeListView() {
         {/* Employee Cards Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {filteredEmployees.length > 0 ? (
-            filteredEmployees.map((employee, index) => (
-              <EmployeeCard
-                key={index}
-                employee={employee}
-                onEdit={() => handleEdit(employee)}
-                onNotify={() => handleNotify(employee)}
-                onDelete={() => handleDelete(employee)}
-                onLock={() => handleLock(employee)}
-                onPhone={() => handlePhone(employee)}
-                onInfo={() => handleInfo(employee)}
-              />
-            ))
+            filteredEmployees.map((employee, index) => {
+              // Map status to match EmployeeCard config
+              const statusMap = {
+                "Present": "Stay here",
+                "On Leave": "On Leave",
+                "Late": "On break",
+                "Absent": "Absent"
+              };
+              const mappedStatus = statusMap[employee.status] || "Stay here";
+              
+              return (
+                <EmployeeCard
+                  key={index}
+                  employee={{
+                    name: employee.name,
+                    role: employee.role,
+                    department: employee.department,
+                    avatar: employee.avatar,
+                    status: mappedStatus,
+                    checkInTime: "10:00" // Default check-in time
+                  }}
+                  onClick={handleCardClick}
+                  onEdit={() => handleEdit(employee)}
+                  onNotify={() => handleNotify(employee)}
+                  onDelete={() => handleDelete(employee)}
+                  onLock={() => handleLock(employee)}
+                  onPhone={() => handlePhone(employee)}
+                  onInfo={() => handleInfo(employee)}
+                />
+              );
+            })
           ) : (
             <div className="col-span-full text-center py-12">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
