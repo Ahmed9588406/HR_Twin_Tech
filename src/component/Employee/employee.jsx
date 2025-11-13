@@ -6,18 +6,32 @@ import { Users, Calendar, User, CalendarHeart } from 'lucide-react'
 
 function Employee() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [activeTab, setActiveTab] = useState('Employees')
 
   const tabs = [
     { id: 'Employees', label: 'Employees', icon: User, path: '/employees' },
-    { id: 'Work Teams', label: 'Work Teams', icon: Users, path: '/employee-dashboard' },
-    { id: 'Employees Action', label: 'Employees Action', icon: Calendar, path: '/employee-dashboard?tab=actions' },
+    { id: 'Work Teams', label: 'Work Teams', icon: Users, path: '/dashboard-teams' },
+    { id: 'Employees Action', label: 'Employees Action', icon: Calendar, path: '/employees-action' },
     { id: 'Calender', label: 'Calender', icon: CalendarHeart, path: '/employee-dashboard?tab=calendar' }
   ]
 
+  // Update active tab based on current location
   useEffect(() => {
-    setActiveTab('Employees')
-  }, [])
+    const currentPath = location.pathname
+    const queryParams = new URLSearchParams(location.search)
+    const tab = queryParams.get('tab')
+
+    if (currentPath === '/employees') {
+      setActiveTab('Employees')
+    } else if (currentPath === '/dashboard-teams') {
+      setActiveTab('Work Teams')
+    } else if (currentPath === '/employees-action') {
+      setActiveTab('Employees Action')
+    } else if (tab === 'calendar') {
+      setActiveTab('Calender')
+    }
+  }, [location])
 
   const handleTabClick = (tab) => {
     navigate(tab.path)

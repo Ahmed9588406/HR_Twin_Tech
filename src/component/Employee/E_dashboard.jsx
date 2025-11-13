@@ -10,7 +10,7 @@ function E_dashboard() {
 
   const tabs = [
     { id: 'Employees', label: 'Employees', icon: User, path: '/employees' },
-    { id: 'Work Teams', label: 'Work Teams', icon: Users, path: '/employee-dashboard' },
+    { id: 'Work Teams', label: 'Work Teams', icon: Users, path: '/dashboard-teams' },
     { id: 'Employees Action', label: 'Employees Action', icon: Calendar, path: '/employee-dashboard?tab=actions' },
     { id: 'Calender', label: 'Calender', icon: CalendarHeart, path: '/employee-dashboard?tab=calendar' }
   ]
@@ -23,12 +23,12 @@ function E_dashboard() {
 
     if (currentPath === '/employees') {
       setActiveTab('Employees')
+    } else if (currentPath === '/dashboard-teams') {
+      setActiveTab('Work Teams')
     } else if (tab === 'actions') {
       setActiveTab('Employees Action')
     } else if (tab === 'calendar') {
       setActiveTab('Calender')
-    } else {
-      setActiveTab('Work Teams')
     }
   }, [location])
 
