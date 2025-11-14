@@ -46,7 +46,8 @@ export default function Sidebar() {
       setActiveItem('Requests');
     } else if (currentPath === '/financials') {
       setActiveItem('Financials');
-    } else if (currentPath === '/settings') {
+    } else if (currentPath.startsWith('/settings')) {
+      // Match any settings route including /settings/workplace
       setActiveItem('Settings');
     }
   }, [location.pathname]);

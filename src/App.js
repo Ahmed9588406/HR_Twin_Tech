@@ -10,6 +10,11 @@ import FinancialsDashboard from './component/Financials/financials_dashboard';
 import VacationRequestPage from './component/Employee_page/profile';
 import EmployeeProfile from './component/Employee_page/Employee_profile';
 import SettingsDashboard from './component/Settings/settingsDashboard';
+import WorkPlace from './component/Settings/WorkPlace';
+import Departments from './component/Settings/departments';
+import Positions from './component/Settings/positions';
+import WorkTiming from './component/Settings/WorkTiming';
+import Attendance from './component/Settings/Attendance';
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 function App() {
@@ -27,7 +32,13 @@ function App() {
         <Route path="/financials" element={<FinancialsDashboard />} />
         <Route path="/employee-profile" element={<VacationRequestPage />} />
         <Route path="/employee-portal" element={<EmployeeProfile />} />
-        <Route path="/settings" element={<SettingsDashboard />} />
+        <Route path="/settings" element={<SettingsDashboard />}>
+          <Route path="workplace" element={<WorkPlace />} />
+          <Route path="departments" element={<Departments />} />
+          <Route path="positions" element={<Positions />} />
+          <Route path="worktimings" element={<WorkTiming />} />
+          <Route path="attendance" element={<Attendance />} />
+        </Route>
       </Routes>
     </Router>
   );

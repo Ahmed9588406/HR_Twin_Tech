@@ -1,55 +1,59 @@
-import React, { useState, useContext } from 'react';
-import { MapPin, Edit2, X, Check, Plus } from 'lucide-react';
-import EditModal from './editmodal';
-import PinModal from './pinmodal';
-import { useOutletContext } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Edit2, X, User, Check, Plus } from 'lucide-react';
+import DepEditModal from './Dep_editmodal';
 
-export default function WorkPlace() {
-  const { workplaces, updateWorkplaces } = useOutletContext();
+const initialDepartments = [
+  { id: 1, name: 'Engineering', manager: 'John Doe', date: '2023-01-15' },
+  { id: 2, name: 'Marketing', manager: 'Jane Smith', date: '2023-02-20' },
+  { id: 3, name: 'HR', manager: 'Alice Johnson', date: '2023-03-10' },
+];
+
+export default function Departments() {
+  const [departments, setDepartments] = useState(initialDepartments);
   const [isAdding, setIsAdding] = useState(false);
-  const [newWorkplace, setNewWorkplace] = useState({ name: '', type: '', company: '', lat: '', lng: '' });
+  const [newDepartment, setNewDepartment] = useState({
+    name: '',
+    manager: '',
+    date: '',
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedWorkplace, setSelectedWorkplace] = useState(null);
-  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
 
   const handleAdd = () => {
     setIsAdding(true);
-    setNewWorkplace({ name: '', type: '', company: '', lat: '', lng: '' });
+    setNewDepartment({ name: '', manager: '', date: '' });
   };
 
   const handleSaveNew = () => {
-    if (newWorkplace.name && newWorkplace.type && newWorkplace.company) {
-      const newId = Math.max(...workplaces.map(wp => wp.id)) + 1;
-      const updatedWorkplaces = [...workplaces, { ...newWorkplace, id: newId, lat: parseFloat(newWorkplace.lat) || 0, lng: parseFloat(newWorkplace.lng) || 0 }];
-      updateWorkplaces(updatedWorkplaces);
+    if (newDepartment.name && newDepartment.manager && newDepartment.date) {
+      const newId = Math.max(...departments.map((dept) => dept.id)) + 1;
+      setDepartments([...departments, { ...newDepartment, id: newId }]);
       setIsAdding(false);
-      setNewWorkplace({ name: '', type: '', company: '', lat: '', lng: '' });
+      setNewDepartment({ name: '', manager: '', date: '' });
     }
   };
 
   const handleCancelAdd = () => {
     setIsAdding(false);
-    setNewWorkplace({ name: '', type: '', company: '', lat: '', lng: '' });
+    setNewDepartment({ name: '', manager: '', date: '' });
   };
 
-  const handleEdit = (workplace) => {
-    setSelectedWorkplace(workplace);
+  const handleEdit = (department) => {
+    setSelectedDepartment(department);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setSelectedWorkplace(null);
+    setSelectedDepartment(null);
   };
 
-  const handlePin = (workplace) => {
-    setSelectedWorkplace(workplace);
-    setIsPinModalOpen(true);
-  };
-
-  const handleClosePinModal = () => {
-    setIsPinModalOpen(false);
-    setSelectedWorkplace(null);
+  const updateDepartment = (updatedDepartment) => {
+    setDepartments((prev) =>
+      prev.map((dept) =>
+        dept.id === updatedDepartment.id ? updatedDepartment : dept
+      )
+    );
   };
 
   return (
@@ -59,33 +63,26 @@ export default function WorkPlace() {
           <thead>
             <tr className="bg-green-50">
               <th className="px-6 py-4 text-green-600 font-semibold">Name</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">Type</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">Company</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">Manager</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">Date</th>
               <th className="px-6 py-4 text-green-600 font-semibold">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {workplaces.map((wp) => (
+            {departments.map((dept) => (
               <tr
-                key={wp.id}
+                key={dept.id}
                 className="border-t border-green-200 hover:bg-green-50 transition-colors"
               >
                 <td className="px-6 py-4 font-medium text-green-600">
-                  {wp.name}
+                  {dept.name}
                 </td>
-                <td className="px-6 py-4 text-gray-500">{wp.type}</td>
-                <td className="px-6 py-4 text-gray-500">{wp.company}</td>
+                <td className="px-6 py-4 text-gray-500">{dept.manager}</td>
+                <td className="px-6 py-4 text-gray-500">{dept.date}</td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-4">
                     <button
-                      onClick={() => handlePin(wp)}
-                      className="text-gray-500 hover:text-green-600 transition-colors"
-                      title="Place Pin on Map"
-                    >
-                      <MapPin size={18} />
-                    </button>
-                    <button
-                      onClick={() => handleEdit(wp)}
+                      onClick={() => handleEdit(dept)}
                       className="text-green-400 hover:text-green-600 transition-colors"
                       title="Edit"
                     >
@@ -107,28 +104,33 @@ export default function WorkPlace() {
                 <td className="px-6 py-4">
                   <input
                     type="text"
-                    value={newWorkplace.name}
-                    onChange={(e) => setNewWorkplace({ ...newWorkplace, name: e.target.value })}
+                    value={newDepartment.name}
+                    onChange={(e) =>
+                      setNewDepartment({ ...newDepartment, name: e.target.value })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="Workplace name"
+                    placeholder="Department name"
                   />
                 </td>
                 <td className="px-6 py-4">
                   <input
                     type="text"
-                    value={newWorkplace.type}
-                    onChange={(e) => setNewWorkplace({ ...newWorkplace, type: e.target.value })}
+                    value={newDepartment.manager}
+                    onChange={(e) =>
+                      setNewDepartment({ ...newDepartment, manager: e.target.value })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="Type"
+                    placeholder="Manager"
                   />
                 </td>
                 <td className="px-6 py-4">
                   <input
-                    type="text"
-                    value={newWorkplace.company}
-                    onChange={(e) => setNewWorkplace({ ...newWorkplace, company: e.target.value })}
+                    type="date"
+                    value={newDepartment.date}
+                    onChange={(e) =>
+                      setNewDepartment({ ...newDepartment, date: e.target.value })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="Company"
                   />
                 </td>
                 <td className="px-6 py-4">
@@ -159,7 +161,7 @@ export default function WorkPlace() {
                     <button
                       onClick={handleAdd}
                       className="bg-green-400 hover:bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg border-4 border-white transition-all duration-200"
-                      title="Add Work Place"
+                      title="Add Department"
                     >
                       <Plus size={20} />
                     </button>
@@ -173,17 +175,10 @@ export default function WorkPlace() {
 
       {/* Modal */}
       {isModalOpen && (
-        <EditModal 
-          workplace={selectedWorkplace} 
-          onClose={handleCloseModal} 
-        />
-      )}
-
-      {/* Pin Modal */}
-      {isPinModalOpen && (
-        <PinModal 
-          workplace={selectedWorkplace} 
-          onClose={handleClosePinModal} 
+        <DepEditModal
+          department={selectedDepartment}
+          onClose={handleCloseModal}
+          onSave={updateDepartment}
         />
       )}
     </div>
