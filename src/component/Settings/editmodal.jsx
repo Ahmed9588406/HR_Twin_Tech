@@ -1,41 +1,76 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Building2, X } from 'lucide-react';
+import { updateBranch } from './api/settings_api';
+import PinModal from './pinmodal'; // <- added import for map pin picker
 
 export default function EditModal({ workplace, onClose }) {
   const [name, setName] = useState('');
-  const [selectedDays, setSelectedDays] = useState(['Sat']);
-  const [startTime, setStartTime] = useState('10.0');
-  const [endTime, setEndTime] = useState('18.0');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
 
-  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  // Pin modal state
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [pinTarget, setPinTarget] = useState(null); // object passed to PinModal
 
   useEffect(() => {
     if (workplace) {
-      setName(workplace.name);
+      setName(workplace.name ?? '');
+      setLatitude(workplace.lat ?? workplace.latitude ?? '');
+      setLongitude(workplace.lng ?? workplace.longitude ?? '');
     }
   }, [workplace]);
 
-  const toggleDay = (day) => {
-    if (selectedDays.includes(day)) {
-      setSelectedDays(selectedDays.filter(d => d !== day));
-    } else {
-      setSelectedDays([...selectedDays, day]);
+  const openPinPicker = () => {
+    // prepare target object for PinModal: include existing coords and id
+    setPinTarget({
+      id: workplace?.id,
+      lat: Number(latitude) || (workplace?.lat ?? workplace?.latitude) || 0,
+      lng: Number(longitude) || (workplace?.lng ?? workplace?.longitude) || 0,
+      __isNew: false
+    });
+    setIsPinModalOpen(true);
+  };
+
+  const handlePinModalClose = (result) => {
+    setIsPinModalOpen(false);
+    setPinTarget(null);
+    if (result) {
+      // PinModal may return { lat, lng } or { latitude, longitude }
+      const newLat = result.lat ?? result.latitude ?? result.latitude;
+      const newLng = result.lng ?? result.longitude ?? result.longitude;
+      if (newLat !== undefined) setLatitude(newLat);
+      if (newLng !== undefined) setLongitude(newLng);
     }
   };
 
-  const removeDay = (day) => {
-    setSelectedDays(selectedDays.filter(d => d !== day));
+  const handleCancel = () => {
+    onClose && onClose(null);
   };
 
-  const handleSave = () => {
-    alert(`Saved!\nLocation: ${name}\nDays: ${selectedDays.join(', ')}\nHours: ${startTime} - ${endTime}`);
-    onClose();
-  };
+  const handleSave = async () => {
+    if (!workplace || !workplace.id) {
+      alert('No workplace to update.');
+      return;
+    }
 
-  const handleSetLocation = () => {
-    if (workplace) {
-      const url = `https://www.google.com/maps?q=${workplace.lat},${workplace.lng}&z=15&t=m`;
-      window.open(url, '_blank');
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
+    if (Number.isNaN(lat) || Number.isNaN(lng)) {
+      alert('Latitude and longitude must be valid numbers.');
+      return;
+    }
+
+    try {
+      // Send only the fields being updated (updateBranch will merge with existing)
+      const payload = { name, latitude: lat, longitude: lng };
+      console.log('Update payload:', payload);
+      const updated = await updateBranch(workplace.id, payload);
+      console.log('Update response:', updated);
+      // map response to local shape for parent
+      onClose && onClose(updated);
+    } catch (err) {
+      console.error('Failed to update branch:', err);
+      alert('Failed to update branch: ' + (err.message || err));
     }
   };
 
@@ -44,7 +79,7 @@ export default function EditModal({ workplace, onClose }) {
       <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-8 md:p-12 max-h-[90vh] relative">
         {/* Close Button */}
         <button
-          onClick={onClose}
+          onClick={handleCancel}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
           aria-label="Close"
         >
@@ -59,8 +94,8 @@ export default function EditModal({ workplace, onClose }) {
         </div>
 
         {/* Name Input */}
-        <div className="mb-8">
-          <label className="block text-gray-500 text-sm font-medium mb-3 tracking-wide">
+        <div className="mb-6">
+          <label className="block text-gray-500 text-sm font-medium mb-2">
             Name
           </label>
           <input
@@ -68,97 +103,70 @@ export default function EditModal({ workplace, onClose }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full px-4 py-3 border-b-2 border-gray-200 focus:border-green-400 focus:outline-none text-lg transition-colors"
-            placeholder="Enter location name"
+            placeholder="Branch name"
           />
         </div>
 
-        {/* Select Days */}
-        <div className="mb-8">
-          <label className="block text-green-500 text-sm font-semibold mb-4 tracking-wide">
-            Select Days
-          </label>
-          
-          {/* Selected Days Pills */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {selectedDays.map(day => (
-              <div
-                key={day}
-                className="bg-gray-200 text-gray-700 px-4 py-2 rounded-full flex items-center gap-2 shadow-sm"
-              >
-                <X className="w-4 h-4 cursor-pointer hover:text-red-500" onClick={() => removeDay(day)} />
-                <span className="font-medium">{day}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Day Selector Grid */}
-          <div className="grid grid-cols-7 gap-2">
-            {daysOfWeek.map(day => (
+        {/* Latitude and Longitude Inputs */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <label className="block text-gray-500 text-sm font-medium mb-2">
+              Latitude
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                step="any"
+                value={latitude}
+                onChange={(e) => setLatitude(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Latitude"
+              />
               <button
-                key={day}
-                onClick={() => toggleDay(day)}
-                className={`py-3 rounded-xl font-semibold text-sm transition-all ${
-                  selectedDays.includes(day)
-                    ? 'bg-green-500 text-white shadow-lg scale-105'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                onClick={openPinPicker}
+                title="Pick on map"
+                className="text-gray-500 hover:text-green-600 transition-colors p-2"
               >
-                {day}
+                <MapPin size={18} />
               </button>
-            ))}
+            </div>
           </div>
-        </div>
-
-        {/* Working Hours */}
-        <div className="mb-10">
-          <label className="block text-green-500 text-sm font-semibold mb-4 tracking-wide">
-            Working Hours
-          </label>
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="block text-gray-500 text-xs font-medium mb-2 uppercase">
-                Start Time
-              </label>
-              <input
-                type="number"
-                step="0.5"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="w-full px-4 py-3 border-b-2 border-gray-200 focus:border-green-400 focus:outline-none text-lg transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-500 text-xs font-medium mb-2 uppercase">
-                End Time
-              </label>
-              <input
-                type="number"
-                step="0.5"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="w-full px-4 py-3 border-b-2 border-gray-200 focus:border-green-400 focus:outline-none text-lg transition-colors"
-              />
-            </div>
+          <div>
+            <label className="block text-gray-500 text-sm font-medium mb-2">
+              Longitude
+            </label>
+            <input
+              type="number"
+              step="any"
+              value={longitude}
+              onChange={(e) => setLongitude(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="Longitude"
+            />
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex justify-end gap-3 mt-4">
           <button
-            onClick={handleSetLocation}
-            className="flex-1 bg-gradient-to-r from-green-400 to-green-500 text-white py-4 px-6 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center gap-2"
+            onClick={handleCancel}
+            className="px-4 py-2 rounded bg-gray-100"
           >
-            <MapPin className="w-5 h-5" />
-            Set Location
+            Cancel
           </button>
           <button
             onClick={handleSave}
-            className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-4 px-6 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+            className="px-4 py-2 rounded bg-green-500 text-white"
           >
             Save
           </button>
         </div>
       </div>
+
+      {/* Pin Modal (map picker) */}
+      {isPinModalOpen && pinTarget && (
+        <PinModal workplace={pinTarget} onClose={handlePinModalClose} />
+      )}
     </div>
   );
 }

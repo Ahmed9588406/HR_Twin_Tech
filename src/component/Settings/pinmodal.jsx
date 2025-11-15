@@ -10,6 +10,15 @@ export default function PinModal({ workplace, onClose }) {
   const initialLatRef = useRef(workplace?.lat || 30.0444);
   const initialLngRef = useRef(workplace?.lng || 31.2357);
 
+  // initialize local coords from workplace (works for edit and add flows)
+  const [lat, setLat] = useState(workplace?.lat ?? 0);
+  const [lng, setLng] = useState(workplace?.lng ?? 0);
+
+  useEffect(() => {
+    setLat(workplace?.lat ?? 0);
+    setLng(workplace?.lng ?? 0);
+  }, [workplace]);
+
   useEffect(() => {
     const initializeMap = () => {
       if (!window.L || leafletMapRef.current) return;
@@ -44,6 +53,8 @@ export default function PinModal({ workplace, onClose }) {
         const position = e.target.getLatLng();
         setSelectedLat(parseFloat(position.lat.toFixed(6)));
         setSelectedLng(parseFloat(position.lng.toFixed(6)));
+        setLat(parseFloat(position.lat.toFixed(6)));
+        setLng(parseFloat(position.lng.toFixed(6)));
       });
 
       // Add click handler to map
@@ -51,6 +62,8 @@ export default function PinModal({ workplace, onClose }) {
         const { lat, lng } = e.latlng;
         setSelectedLat(parseFloat(lat.toFixed(6)));
         setSelectedLng(parseFloat(lng.toFixed(6)));
+        setLat(parseFloat(lat.toFixed(6)));
+        setLng(parseFloat(lng.toFixed(6)));
         marker.setLatLng([lat, lng]);
       });
     };
@@ -98,16 +111,41 @@ export default function PinModal({ workplace, onClose }) {
     }
   }, [selectedLat, selectedLng]);
 
-  const handleSave = () => {
-    alert(`Pin placed at: ${selectedLat}, ${selectedLng}`);
-    onClose();
+  // Confirm/save handler: return updated workplace to parent
+  const handleConfirm = () => {
+    const updated = {
+      ...workplace,
+      lat,
+      lng,
+      __isNew: workplace?.__isNew || false
+    };
+    onClose && onClose(updated);
   };
 
-  const handleCoordinateChange = (lat, lng) => {
-    const newLat = parseFloat(lat) || 0;
-    const newLng = parseFloat(lng) || 0;
+  // Cancel handler: tell parent no changes
+  const handleCancel = () => {
+    onClose && onClose(null);
+  };
+
+  // Handle coordinate inputs and update marker/map
+  const handleCoordinateChange = (latValue, lngValue) => {
+    const parsedLat = parseFloat(latValue);
+    const parsedLng = parseFloat(lngValue);
+
+    const newLat = !isNaN(parsedLat) ? parseFloat(parsedLat.toFixed(6)) : selectedLat;
+    const newLng = !isNaN(parsedLng) ? parseFloat(parsedLng.toFixed(6)) : selectedLng;
+
     setSelectedLat(newLat);
     setSelectedLng(newLng);
+    setLat(newLat);
+    setLng(newLng);
+
+    if (markerRef.current) {
+      markerRef.current.setLatLng([newLat, newLng]);
+    }
+    if (leafletMapRef.current) {
+      leafletMapRef.current.setView([newLat, newLng]);
+    }
   };
 
   return (
@@ -177,13 +215,13 @@ export default function PinModal({ workplace, onClose }) {
         {/* Action Buttons */}
         <div className="flex justify-end gap-4">
           <button
-            onClick={onClose}
+            onClick={handleCancel}
             className="px-6 py-3 bg-gray-200 text-gray-700 rounded-2xl font-semibold hover:bg-gray-300 transition-all"
           >
             Cancel
           </button>
           <button
-            onClick={handleSave}
+            onClick={handleConfirm}
             className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
           >
             Save Location
