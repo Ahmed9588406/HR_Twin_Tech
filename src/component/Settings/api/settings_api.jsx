@@ -1,5 +1,5 @@
-// change absolute URL to relative path so requests go through the dev proxy
-const API_URL = '/api/v1/setting/branch';
+// use the provided absolute URL for all requests
+const API_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/setting/branch';
 
 export const fetchBranches = async () => {
   try {
@@ -147,4 +147,104 @@ export const createBranch = async (branchData) => {
   }
 
   throw new Error(`Failed to create branch. Tried: ${candidateUrls.join(', ')}. Last error: ${lastErrMsg}`);
+};
+
+// update branch by id: send {id, name, latitude, longitude} as JSON via PUT (only update, never create)
+export const updateBranch = async (id, branchData) => {
+  console.log('Updating branch id:', id, 'data:', branchData);
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Auth token not found; please log in again.');
+  }
+
+  // For this API, PUT uses base URL with id in body (not in URL)
+  const urlBase = API_URL;
+  
+  // Minimal payload - just the fields being updated
+  const minimalPayload = {
+    id: Number(id),
+    name: branchData.name,
+    latitude: branchData.latitude,
+    longitude: branchData.longitude
+  };
+
+  const headers = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    Authorization: `Bearer ${token}`,
+    'ngrok-skip-browser-warning': 'true'
+  };
+
+  console.log('Attempting PUT to', urlBase, 'with payload:', minimalPayload);
+  
+  try {
+    const res = await fetch(urlBase, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(minimalPayload)
+    });
+
+    const text = await res.text();
+    console.log('PUT response:', res.status, text);
+
+    if (!res.ok) {
+      throw new Error(`Update failed: ${res.status} - ${text}`);
+    }
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error('Invalid JSON response');
+    }
+
+    // Return the updated branch data in the format expected by the UI
+    return {
+      id: data.id,
+      name: data.name,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      type: data.type,
+      companyName: data.companyName
+    };
+  } catch (err) {
+    console.error('Error updating branch:', err);
+    throw err;
+  }
+};
+
+export const deleteBranch = async (id) => {
+  console.log('Deleting branch id:', id);
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Auth token not found; please log in again.');
+  }
+
+  const urlWithId = `${API_URL}/${id}`;
+  const headers = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    Authorization: `Bearer ${token}`,
+    'ngrok-skip-browser-warning': 'true'
+  };
+
+  try {
+    const res = await fetch(urlWithId, {
+      method: 'DELETE',
+      headers
+    });
+
+    const text = await res.text();
+    console.log('DELETE response:', res.status, text);
+
+    if (!res.ok) {
+      throw new Error(`Delete failed: ${res.status} - ${text}`);
+    }
+
+    // Assuming successful delete returns no content or a success message
+    return true;
+  } catch (err) {
+    console.error('Error deleting branch:', err);
+    throw err;
+  }
 };

@@ -8,7 +8,7 @@ const TABS = [
   { label: 'Work Place', icon: Home, path: '/settings/workplace' },
   { label: 'Departments', icon: Users, path: '/settings/departments' },
   { label: 'Positions', icon: FileText, path: '/settings/positions' },
-  { label: 'Work Timings', icon: DollarSign, path: '/settings/worktimings' },
+  { label: 'Shifts', icon: DollarSign, path: '/settings/worktimings' },
   { label: 'Attendance Profile', icon: Settings, path: '/settings/attendance' },
 ];
 
@@ -59,7 +59,7 @@ export default function SettingsDashboard() {
     } else if (location.pathname === '/settings/positions') {
       setActiveTab('Positions');
     } else if (location.pathname === '/settings/worktimings') {
-      setActiveTab('Work Timings');
+      setActiveTab('Shifts');
     } else if (location.pathname === '/settings/attendance') {
       setActiveTab('Attendance Profile');
     }
@@ -126,9 +126,9 @@ export default function SettingsDashboard() {
                     <p>Position management goes here.</p>
                   </div>
                 )}
-                {activeTab === 'Work Timings' && (
+                {activeTab === 'Shifts' && (
                   <div>
-                    <h2 className="text-lg font-semibold mb-2">Work Timings</h2>
+                    <h2 className="text-lg font-semibold mb-2">Shifts</h2>
                     <p>Work timings configuration goes here.</p>
                   </div>
                 )}

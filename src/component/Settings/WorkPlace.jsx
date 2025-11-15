@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { MapPin, Edit2, X, Check, Plus } from 'lucide-react';
 import EditModal from './editmodal';
 import PinModal from './pinmodal';
-import { fetchBranches, fetchBranchById, createBranch } from './api/settings_api';
+import { fetchBranches, fetchBranchById, createBranch, deleteBranch } from './api/settings_api';
+import { useOutletContext } from 'react-router-dom';
 
 export default function WorkPlace() {
-  const [workplaces, setWorkplaces] = useState([]);
+  const { workplaces, updateWorkplaces } = useOutletContext();
   const [isAdding, setIsAdding] = useState(false);
   const [newWorkplace, setNewWorkplace] = useState({ name: '', type: '', company: '', lat: '', lng: '' });
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -16,10 +17,10 @@ export default function WorkPlace() {
     const loadBranches = async () => {
       const data = await fetchBranches();
       console.log('Setting workplaces:', data);
-      setWorkplaces(data);
+      updateWorkplaces(data);
     };
     loadBranches();
-  }, []);
+  }, [updateWorkplaces]);
 
   const handleAdd = () => {
     setIsAdding(true);
@@ -58,7 +59,7 @@ export default function WorkPlace() {
           company: createdBranch.companyName
         }
       ];
-      setWorkplaces(updatedWorkplaces);
+      updateWorkplaces(updatedWorkplaces);
       setIsAdding(false);
       setNewWorkplace({ name: '', type: '', company: '', lat: '', lng: '' });
     } catch (error) {
@@ -76,8 +77,26 @@ export default function WorkPlace() {
     setIsModalOpen(true);
   };
 
-  const handleCloseModal = () => {
+  // Accept updated branch from EditModal
+  const handleCloseModal = (updated) => {
     setIsModalOpen(false);
+    if (updated) {
+      // updated: {id, name, latitude, longitude, type, companyName}
+      updateWorkplaces((prev) =>
+        prev.map((wp) =>
+          wp.id === updated.id
+            ? {
+                id: updated.id,
+                name: updated.name,
+                lat: updated.latitude,
+                lng: updated.longitude,
+                type: updated.type,
+                company: updated.companyName
+              }
+            : wp
+        )
+      );
+    }
     setSelectedWorkplace(null);
   };
 
@@ -107,7 +126,7 @@ export default function WorkPlace() {
         }));
       } else {
         // update existing workplace coords in list
-        setWorkplaces((prev) =>
+        updateWorkplaces((prev) =>
           prev.map((wp) =>
             wp.id === updatedWorkplace.id ? { ...wp, lat: updatedWorkplace.lat, lng: updatedWorkplace.lng } : wp
           )
@@ -116,6 +135,18 @@ export default function WorkPlace() {
     }
 
     setSelectedWorkplace(null);
+  };
+
+  const handleDelete = async (id) => {
+    const confirmed = window.confirm('Are you sure you want to delete this workplace?');
+    if (!confirmed) return;
+
+    try {
+      await deleteBranch(id);
+      updateWorkplaces((prev) => prev.filter((wp) => wp.id !== id));
+    } catch (error) {
+      alert('Failed to delete workplace: ' + (error.message || error));
+    }
   };
 
   return (
@@ -168,6 +199,7 @@ export default function WorkPlace() {
                       <Edit2 size={18} />
                     </button>
                     <button
+                      onClick={() => handleDelete(wp.id)}
                       className="text-red-500 hover:text-red-700 transition-colors"
                       title="Delete"
                     >
