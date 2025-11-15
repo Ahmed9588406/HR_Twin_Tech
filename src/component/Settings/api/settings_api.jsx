@@ -1,5 +1,7 @@
 // use the provided absolute URL for all requests
 const API_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/setting/branch';
+const COMPANY_API_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/setting/company';
+const SHIFTS_API_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/setting/shifts';
 
 export const fetchBranches = async () => {
   try {
@@ -246,5 +248,169 @@ export const deleteBranch = async (id) => {
   } catch (err) {
     console.error('Error deleting branch:', err);
     throw err;
+  }
+};
+
+export const fetchCompanySettings = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const res = await fetch(COMPANY_API_URL, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true'
+      }
+    });
+
+    console.log('Fetch company settings status:', res.status);
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`Failed to fetch company settings: ${res.status} - ${txt}`);
+    }
+
+    const contentType = res.headers.get('content-type') || '';
+    const text = await res.text();
+    if (!contentType.includes('application/json')) {
+      try {
+        // attempt to parse even if header is missing
+        return JSON.parse(text);
+      } catch {
+        console.error('Unexpected non-JSON response for company settings:', text);
+        throw new Error('Invalid JSON response for company settings');
+      }
+    }
+
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Error fetching company settings:', error);
+    return null;
+  }
+};
+
+export const updateCompanySettings = async (settings) => {
+  // settings expected shape:
+  // { delayTime, delayHour, discountPercent, overTimePercent }
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Auth token not found; please log in again.');
+
+    const payload = {
+      delayTime: Number(settings.delayTime) || 0,
+      delayHour: Number(settings.delayHour) || 0,
+      // removed overTimeMins
+      discountPercent: Number(settings.discountPercent) || 0,
+      overTimePercent: Number(settings.overTimePercent) || 0
+    };
+
+    console.log('Updating company settings with payload:', payload);
+
+    const res = await fetch(COMPANY_API_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const text = await res.text();
+    console.log('Update company response:', res.status, text);
+
+    if (!res.ok) {
+      throw new Error(`Failed to update company settings: ${res.status} - ${text}`);
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch (err) {
+      console.error('Failed to parse JSON response for company update:', err);
+      throw new Error('Invalid JSON response from server');
+    }
+  } catch (error) {
+    console.error('Error in updateCompanySettings:', error);
+    throw error;
+  }
+};
+
+export const fetchShifts = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const response = await fetch(SHIFTS_API_URL, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true'
+      }
+    });
+    console.log('Fetch shifts response status:', response.status);
+
+    if (!response.ok) {
+      const txt = await response.text().catch(() => '');
+      console.error('Failed to fetch shifts:', response.status, txt);
+      throw new Error(`Failed to fetch shifts: ${response.status}`);
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    const text = await response.text();
+    let data;
+    try {
+      data = contentType.includes('application/json') ? JSON.parse(text) : JSON.parse(text);
+    } catch (err) {
+      console.error('Invalid JSON response for shifts:', text);
+      throw new Error('Invalid JSON response for shifts');
+    }
+
+    if (!Array.isArray(data)) {
+      console.warn('Shifts endpoint returned non-array, converting to array if possible', data);
+      data = Array.isArray(data.items) ? data.items : [];
+    }
+
+    // Normalize each shift object and ensure branchName is present
+    const mapped = data.map((shift) => {
+      // possible locations / naming for branch name
+      const branchName =
+        // explicit top-level branchName
+        (shift && (shift.branchName || shift.branchname || shift.branch_name)) ||
+        // nested branch object with name property
+        (shift && shift.branch && (shift.branch.name || shift.branch.branchName || shift.branch.branch_name)) ||
+        // nested branch info sometimes under branchInfo or branchData
+        (shift && shift.branchInfo && (shift.branchInfo.name || shift.branchInfo.branchName)) ||
+        // fallback to branchId string if no name
+        (shift && shift.branchId ? `Branch ${shift.branchId}` : 'Unknown');
+
+      return {
+        // keep original keys but normalize where helpful
+        id: shift.id,
+        name: shift.name,
+        start: shift.start,
+        end: shift.end,
+        branchName: branchName,
+        branchId: shift.branchId ?? null,
+        freeDays: shift.freeDays ?? (shift.free_days ?? '') ,
+        companyId: shift.companyId ?? shift.company_id ?? null,
+        // include full original object for debugging if needed
+        _raw: shift
+      };
+    });
+
+    console.log('Mapped shifts data:', mapped);
+    return mapped;
+  } catch (error) {
+    console.error('Error fetching shifts:', error);
+    return [];
   }
 };
