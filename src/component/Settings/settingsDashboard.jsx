@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Home, Users, FileText, DollarSign, Settings } from 'lucide-react';
 import Sidebar from '../ui/Sidebar';
-import { useNavigate, useLocation, Outlet } from 'react-router-dom'; // Add imports
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 
 // Tab labels and icons should match Sidebar menu items for consistency
 const TABS = [
@@ -12,26 +12,12 @@ const TABS = [
   { label: 'Attendance Profile', icon: Settings, path: '/settings/attendance' },
 ];
 
-// Shared workplaces data
-const initialWorkplaces = [
-  { id: 1, name: 'Alexandria, EG', type: 'Office', company: 'TwinTech', lat: 31.2001, lng: 29.9187 },
-  { id: 2, name: 'Saudi Arabia', type: 'Office', company: 'TwinTech', lat: 23.8859, lng: 45.0792 },
-  { id: 3, name: 'Agami', type: 'Office', company: 'TwinTech', lat: 31.0409, lng: 29.7714 },
-];
-
-// Shared attendance profiles data
-const initialAttendanceProfiles = [
-  { id: 1, name: 'Alexandria, EG', daysOff: 'Fri', normalWorkTiming: 'Shift: 9 AM - 5 PM' },
-  { id: 2, name: 'Saudi Arabia', daysOff: 'Fri', normalWorkTiming: 'Shift: 9 AM - 5 PM' },
-  { id: 3, name: 'Agami', daysOff: 'Fri', normalWorkTiming: 'Shift: 9 AM - 5 PM' },
-];
-
 export default function SettingsDashboard() {
   const [activeTab, setActiveTab] = useState(TABS[0].label);
   const navigate = useNavigate();
   const location = useLocation();
-  const [workplaces, setWorkplaces] = useState(initialWorkplaces);
-  const [attendanceProfiles, setAttendanceProfiles] = useState(initialAttendanceProfiles);
+  const [workplaces, setWorkplaces] = useState([]);
+  const [attendanceProfiles, setAttendanceProfiles] = useState([]);
 
   // Function to update workplaces
   const updateWorkplaces = (newWorkplaces) => {
@@ -74,7 +60,7 @@ export default function SettingsDashboard() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar /> {/* Add Sidebar here */}
+      <Sidebar />
       <div className="flex-1 p-6 lg:p-8 overflow-auto ml-20 xl:ml-72 transition-all duration-300">
         <div className="max-w-7xl mx-auto">
           {/* Header */}

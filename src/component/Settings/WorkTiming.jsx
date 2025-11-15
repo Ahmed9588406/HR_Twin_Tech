@@ -1,15 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit2 } from 'lucide-react';
-import { useOutletContext } from 'react-router-dom';
 import WorkTEditModal from './WorkT_editmodal';
+import { fetchShifts } from './api/settings_api';
 
 export default function WorkTiming() {
-  const { workplaces } = useOutletContext();
+  const [shifts, setShifts] = useState([]);
+  const [shiftsLoading, setShiftsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTiming, setSelectedTiming] = useState(null);
 
-  const handleEdit = (timing) => {
-    setSelectedTiming(timing);
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setShiftsLoading(true);
+      const data = await fetchShifts();
+      if (mounted) {
+        setShifts(data || []);
+        setShiftsLoading(false);
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, []);
+
+  const handleEdit = (shift) => {
+    setSelectedTiming(shift);
     setIsModalOpen(true);
   };
 
@@ -18,9 +33,15 @@ export default function WorkTiming() {
     setSelectedTiming(null);
   };
 
-  const handleSaveTiming = (updatedTiming) => {
-    // Placeholder: Implement save logic here (e.g., update workplaces state or API call)
-    console.log('Saving updated timing:', updatedTiming);
+  const handleSaveTiming = (updatedShift) => {
+    console.log('Received updated shift:', updatedShift);
+    if (updatedShift) {
+      setShifts(prevShifts => 
+        prevShifts.map(s => s.id === updatedShift.id ? updatedShift : s)
+      );
+    }
+    setIsModalOpen(false);
+    setSelectedTiming(null);
   };
 
   return (
@@ -30,37 +51,63 @@ export default function WorkTiming() {
           <thead>
             <tr className="bg-green-50">
               <th className="px-6 py-4 text-green-600 font-semibold">Name</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">Sign In Range</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">Work Hours</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">Missing Sign in</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">Start Time</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">End Time</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">Branch</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">Free Days</th>
               <th className="px-6 py-4 text-green-600 font-semibold">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {workplaces.map((wp) => (
-              <tr
-                key={wp.id}
-                className="border-t border-green-200 hover:bg-green-50 transition-colors"
-              >
-                <td className="px-6 py-4 font-medium text-green-600">
-                  {wp.name}
-                </td>
-                <td className="px-6 py-4 text-gray-500">30 min</td>
-                <td className="px-6 py-4 text-gray-500">8 hours</td>
-                <td className="px-6 py-4 text-gray-500">2 hours</td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => handleEdit(wp)}
-                      className="text-green-400 hover:text-green-600 transition-colors"
-                      title="Edit"
-                    >
-                      <Edit2 size={18} />
-                    </button>
-                  </div>
+            {shiftsLoading ? (
+              <tr>
+                <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                  Loading shifts...
                 </td>
               </tr>
-            ))}
+            ) : shifts.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                  No shifts found
+                </td>
+              </tr>
+            ) : (
+              shifts.map((shift) => (
+                <tr
+                  key={shift.id}
+                  className="border-t border-green-200 hover:bg-green-50 transition-colors"
+                >
+                  <td className="px-6 py-4 font-medium text-green-600">
+                    {shift.name}
+                  </td>
+                  <td className="px-6 py-4 text-gray-500">{shift.start}</td>
+                  <td className="px-6 py-4 text-gray-500">{shift.end}</td>
+                  <td className="px-6 py-4 text-gray-500">
+                    {/*
+                      Prefer normalized branchName from fetchShifts.
+                      Fallback to raw payload shapes in case mapping didn't catch it.
+                    */}
+                    {shift.branchName
+                      ?? shift._raw?.branchName
+                      ?? shift._raw?.branch?.name
+                      ?? shift._raw?.branch?.branchName
+                      ?? (shift.branchId ? `Branch ${shift.branchId}` : 'Unknown')}
+                  </td>
+                  <td className="px-6 py-4 text-gray-500">{shift.freeDays}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={() => handleEdit(shift)}
+                        className="text-green-400 hover:text-green-600 transition-colors"
+                        title="Edit shift"
+                      >
+                        <Edit2 size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
