@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, TrendingDown, Calendar, DollarSign, X, Filter, Plus, Edit2, Trash2, AlertTriangle } from 'lucide-react';
+import { Search, TrendingDown, Calendar, DollarSign, X, AlertTriangle } from 'lucide-react';
 
 export default function DiscountsDashboard() {
   const navigate = useNavigate();
@@ -200,7 +200,6 @@ export default function DiscountsDashboard() {
             </select>
 
             <button className="px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 whitespace-nowrap">
-              <Plus size={18} />
               <span className="hidden sm:inline">Add Discount</span>
             </button>
           </div>

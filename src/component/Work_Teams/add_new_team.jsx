@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, User, Save, X } from 'lucide-react';
+import { Users, User, X } from 'lucide-react';
 
 export default function AddNewTeam({ onClose, onAddTeam, initialData }) {
   const [formData, setFormData] = useState({

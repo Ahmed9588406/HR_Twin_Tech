@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../ui/Sidebar';
 import AddNewTeam from './add_new_team';
 import AddNewMembers from './add_new_members';
-import { Search, Eye, Edit2, X, Users, User, Calendar, Heart, Plus } from 'lucide-react';
+import { Search, Eye, Edit2, X, Users, User, Calendar, Plus } from 'lucide-react';
 
 export default function EmployeeManager() {
   const navigate = useNavigate();
@@ -230,19 +230,23 @@ export default function EmployeeManager() {
 
       {/* Modal for Add/Edit Team */}
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <AddNewTeam
-            onClose={handleCloseModal}
-            onAddTeam={handleAddOrUpdateTeam}
-            initialData={editingTeam} // Pass initial data for editing
-          />
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-[100] p-4 animate-fadeIn">
+          <div onClick={(e) => e.stopPropagation()}>
+            <AddNewTeam
+              onClose={handleCloseModal}
+              onAddTeam={handleAddOrUpdateTeam}
+              initialData={editingTeam}
+            />
+          </div>
         </div>
       )}
 
       {/* Modal for View/Add Members */}
       {isMembersModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <AddNewMembers team={selectedTeam} onClose={handleCloseMembersModal} />
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-[100] p-4 animate-fadeIn">
+          <div onClick={(e) => e.stopPropagation()}>
+            <AddNewMembers team={selectedTeam} onClose={handleCloseMembersModal} />
+          </div>
         </div>
       )}
     </div>

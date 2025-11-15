@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react'
-import axios from 'axios'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Users } from 'lucide-react'
 import Sidebar from './ui/Sidebar'
 import AttendanceCards from './ui/AttendanceCard.jsx'
@@ -11,6 +10,7 @@ import AttendanceHistoryFilter from './ui/Attendance_history.jsx'
 function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  // eslint-disable-next-line no-unused-vars
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -20,7 +20,7 @@ function Dashboard() {
   });
 
   // Dummy data for demonstration
-  const dummyData = {
+  const dummyData = useMemo(() => ({
     totalEmployees: 150,
     totalAttendaceToday: 142,
     totalAbsentToday: 5,
@@ -38,7 +38,7 @@ function Dashboard() {
       { name: "Legal", numberOfEmp: 8 },
       { name: "Administration", numberOfEmp: 12 }
     ]
-  };
+  }), []);
 
   // Dummy employee data with more details
   const allEmployees = [
@@ -99,34 +99,10 @@ function Dashboard() {
   ];
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('/api/v1/dashboard', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        console.log('Dashboard data received:', response.data);
-        setDashboardData(response.data);
-      } catch (err) {
-        console.log('Using dummy data for demonstration');
-        setDashboardData(dummyData);
-        // setError('Failed to fetch dashboard data');
-        // console.error('Error fetching dashboard data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     // For demonstration, use dummy data directly
     setDashboardData(dummyData);
     setLoading(false);
-
-    // Uncomment below to fetch real data
-    // fetchDashboardData();
-  }, []);
+  }, [dummyData]);
 
   const handleFilterChange = (newFilters) => {
     console.log('Filters changed:', newFilters);
