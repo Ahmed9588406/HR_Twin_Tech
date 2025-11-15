@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Gift, Calendar, DollarSign, X, Filter, Plus, Edit2, Trash2, Award } from 'lucide-react';
+import { Search, Gift, Calendar, DollarSign, X, Plus, Edit2, Trash2, Award } from 'lucide-react';
 
 export default function RewardsDashboard() {
   const navigate = useNavigate();

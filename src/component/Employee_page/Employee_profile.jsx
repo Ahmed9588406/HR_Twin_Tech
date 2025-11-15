@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Clock, Calendar, TrendingUp, QrCode, Edit, Trash2, LogOut, UserCheck, ArrowLeft } from 'lucide-react';
 
@@ -6,7 +6,6 @@ export default function EmployeeProfile() {
   const location = useLocation();
   const navigate = useNavigate();
   const { employee } = location.state || {};
-  const [activeTab, setActiveTab] = useState('attendance');
 
   // Status configurations matching EmployeeCard
   const statusConfig = {

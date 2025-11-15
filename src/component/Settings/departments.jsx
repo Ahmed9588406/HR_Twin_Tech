@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Edit2, X, User, Check, Plus } from 'lucide-react';
+import { Edit2, X, Check, Plus } from 'lucide-react';
 import DepEditModal from './Dep_editmodal';
 
 const initialDepartments = [

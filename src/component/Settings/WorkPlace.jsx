@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { MapPin, Edit2, X, Check, Plus } from 'lucide-react';
 import EditModal from './editmodal';
 import PinModal from './pinmodal';

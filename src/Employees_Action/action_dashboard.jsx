@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../component/ui/Sidebar';
-import { Search, Users, User, Calendar, Heart, AlertTriangle, X } from 'lucide-react';
+import { Search, Users, User, Calendar, AlertTriangle, X } from 'lucide-react';
 
 export default function ActionDashboard() {
   const navigate = useNavigate();
@@ -40,10 +40,6 @@ export default function ActionDashboard() {
     if (location.pathname !== tab.path) {
       navigate(tab.path);
     }
-  };
-
-  const handleDelete = (id) => {
-    setActions(actions.filter(action => action.id !== id));
   };
 
   const handleSelectAll = (e) => {

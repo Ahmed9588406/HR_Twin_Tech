@@ -1,5 +1,5 @@
 import React from 'react';
-import { DollarSign, Gift, TrendingDown, MoreVertical, Search, Filter, Download } from 'lucide-react';
+import { DollarSign, Gift, TrendingDown, MoreVertical, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function PayrollDashboard() {

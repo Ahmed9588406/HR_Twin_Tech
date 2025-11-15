@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home, 
@@ -8,11 +8,11 @@ import {
   Bell, 
   X,
   ChevronDown,
-  Search,
   Globe,
   DollarSign
 } from 'lucide-react';
 import logo from '../../assets/images/logo.png';
+import { NotificationModal } from './notification';
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -20,7 +20,10 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
   const [activeItem, setActiveItem] = useState('Dashboard');
   const [expandedItems, setExpandedItems] = useState({});
-
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(3);
+  const bellButtonRef = useRef(null);
+  
   const menuItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard' },
     { icon: Users, label: 'Employees', path: '/employees' },
@@ -68,6 +71,24 @@ export default function Sidebar() {
       navigate(path);
     }
   };
+
+  // Simulate unread count updates
+  useEffect(() => {
+    const loadUnreadCount = async () => {
+      try {
+        // Replace with actual API call to fetch unread count
+        const count = 3; // Mock count
+        setUnreadCount(count);
+      } catch (error) {
+        console.error('Failed to load unread count:', error);
+      }
+    };
+    
+    loadUnreadCount();
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(loadUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div 
@@ -120,20 +141,6 @@ export default function Sidebar() {
           </button>
         )}
       </div>
-
-      {/* Search */}
-      {isOpen && (
-        <div className="px-5 py-4">
-          <div className="relative group">
-            <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-green-200 group-focus-within:text-white transition-colors duration-200" size={18} />
-            <input
-              type="text"
-              placeholder="Search menu..."
-              className="w-full bg-white/10 text-white pl-11 pr-4 py-2.5 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-white/40 focus:bg-white/15 placeholder-green-100 transition-all duration-200"
-            />
-          </div>
-        </div>
-      )}
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-4 py-3 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
@@ -241,10 +248,17 @@ export default function Sidebar() {
                 <p className="font-semibold text-sm truncate">John Doe</p>
                 <div className="flex items-center gap-1">
                   <button 
-                    className="p-1.5 hover:bg-white/10 rounded-lg transition-all duration-200 hover:scale-110"
+                    ref={bellButtonRef}
+                    onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                    className="p-1.5 hover:bg-white/10 rounded-lg transition-all duration-200 hover:scale-110 relative"
                     aria-label="Notifications"
                   >
-                    <Bell size={15} />
+                    <Bell size={15} className="text-white" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
                   </button>
                   <button 
                     className="p-1.5 hover:bg-white/10 rounded-lg transition-all duration-200 hover:scale-110"
@@ -259,6 +273,12 @@ export default function Sidebar() {
           )}
         </div>
       </div>
+      
+      <NotificationModal
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+        buttonRef={bellButtonRef}
+      />
     </div>
   );
 }

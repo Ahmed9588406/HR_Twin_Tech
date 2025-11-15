@@ -10,11 +10,6 @@ export default function Attendance() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
 
-  const handleAdd = () => {
-    setIsAdding(true);
-    setNewProfile({ name: '', daysOff: '', normalWorkTiming: '' });
-  };
-
   const handleSaveNew = () => {
     if (newProfile.name && newProfile.daysOff) {
       const newId = Math.max(...attendanceProfiles.map(ap => ap.id)) + 1;

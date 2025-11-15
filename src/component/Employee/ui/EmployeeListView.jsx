@@ -9,7 +9,7 @@ export default function EmployeeListView() {
   const [selectedLocation, setSelectedLocation] = useState('all');
   const navigate = useNavigate();
 
-  const employees = [
+  const employees = useMemo(() => [
     {
       name: "Abdulrahman Ahmed",
       department: "Information Technology",
@@ -106,18 +106,18 @@ export default function EmployeeListView() {
       status: "Present",
       location: "New York Office"
     }
-  ];
+  ], []);
 
   // Get unique departments and locations for filter options
   const departments = useMemo(() => {
     const unique = [...new Set(employees.map(emp => emp.department))];
     return unique.sort();
-  }, []);
+  }, [employees]);
 
   const locations = useMemo(() => {
     const unique = [...new Set(employees.map(emp => emp.location))];
     return unique.sort();
-  }, []);
+  }, [employees]);
 
   // Filter employees based on search and filters
   const filteredEmployees = useMemo(() => {
@@ -128,7 +128,7 @@ export default function EmployeeListView() {
       
       return matchesSearch && matchesDepartment && matchesLocation;
     });
-  }, [searchQuery, selectedDepartment, selectedLocation]);
+  }, [searchQuery, selectedDepartment, selectedLocation, employees]);
 
   const handleEdit = (employee) => {
     console.log("Edit:", employee.name);
