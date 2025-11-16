@@ -1,19 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { Building2, X } from 'lucide-react';
+import { fetchEmployees } from './api/employees_api';
 
 export default function DepEditModal({ department, onClose, onSave }) {
   const [name, setName] = useState('');
-  const [manager, setManager] = useState('');
+  const [managerId, setManagerId] = useState('');
+  const [employees, setEmployees] = useState([]);
+
+  useEffect(() => {
+    const loadEmployees = async () => {
+      const fetchedEmployees = await fetchEmployees();
+      setEmployees(fetchedEmployees);
+    };
+
+    loadEmployees();
+  }, []); // Fetch employees only once on mount
 
   useEffect(() => {
     if (department) {
       setName(department.name);
-      setManager(department.manager);
+      // Find manager ID from the manager name if it exists
+      const managerEmployee = employees.find(emp => emp.name === department.manager);
+      setManagerId(managerEmployee?.id || '');
     }
-  }, [department]);
+  }, [department, employees]); // Set form values when department or employees change
 
   const handleSave = () => {
-    const updatedDepartment = { ...department, name, manager };
+    const updatedDepartment = { 
+      ...department, 
+      name, 
+      managerId: managerId ? Number(managerId) : null 
+    };
     onSave(updatedDepartment);
     onClose();
   };
@@ -51,18 +68,23 @@ export default function DepEditModal({ department, onClose, onSave }) {
           />
         </div>
 
-        {/* Manager Input */}
+        {/* Manager Select */}
         <div className="mb-10">
           <label className="block text-gray-500 text-sm font-medium mb-3 tracking-wide">
             Manager
           </label>
-          <input
-            type="text"
-            value={manager}
-            onChange={(e) => setManager(e.target.value)}
+          <select
+            value={managerId}
+            onChange={(e) => setManagerId(e.target.value)}
             className="w-full px-4 py-3 border-b-2 border-gray-200 focus:border-green-400 focus:outline-none text-lg transition-colors"
-            placeholder="Enter manager name"
-          />
+          >
+            <option value="">Select Manager</option>
+            {employees.map((emp) => (
+              <option key={emp.id} value={emp.id}>
+                {emp.name} - {emp.position}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Action Buttons */}

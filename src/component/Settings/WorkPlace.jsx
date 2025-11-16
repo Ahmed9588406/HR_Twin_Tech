@@ -12,15 +12,21 @@ export default function WorkPlace() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedWorkplace, setSelectedWorkplace] = useState(null);
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const loadBranches = async () => {
-      const data = await fetchBranches();
-      console.log('Setting workplaces:', data);
-      updateWorkplaces(data);
+      // Only load if workplaces is empty to avoid redundant fetches
+      if (workplaces.length === 0 && !loading) {
+        setLoading(true);
+        const data = await fetchBranches();
+        console.log('Setting workplaces:', data);
+        updateWorkplaces(data);
+        setLoading(false);
+      }
     };
     loadBranches();
-  }, [updateWorkplaces]);
+  }, []); // Remove updateWorkplaces from dependencies
 
   const handleAdd = () => {
     setIsAdding(true);

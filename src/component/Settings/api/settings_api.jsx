@@ -295,7 +295,7 @@ export const fetchCompanySettings = async () => {
 
 export const updateCompanySettings = async (settings) => {
   // settings expected shape:
-  // { delayTime, delayHour, discountPercent, overTimePercent }
+  // { delayTime, delayHour, overTimeMins, discountPercent, overTimePercent }
   try {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('Auth token not found; please log in again.');
@@ -303,7 +303,7 @@ export const updateCompanySettings = async (settings) => {
     const payload = {
       delayTime: Number(settings.delayTime) || 0,
       delayHour: Number(settings.delayHour) || 0,
-      // removed overTimeMins
+      overTimeMins: Number(settings.overTimeMins) || 0,
       discountPercent: Number(settings.discountPercent) || 0,
       overTimePercent: Number(settings.overTimePercent) || 0
     };
@@ -412,5 +412,161 @@ export const fetchShifts = async () => {
   } catch (error) {
     console.error('Error fetching shifts:', error);
     return [];
+  }
+};
+
+export const updateShift = async (shiftData) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Auth token not found; please log in again.');
+
+    // Expecting payload shape:
+    // { id, branchId, name, start, end, selectedDays, timeZone }
+    const res = await fetch(SHIFTS_API_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true'
+      },
+      body: JSON.stringify(shiftData)
+    });
+
+    const text = await res.text();
+    console.log('Update shift response:', res.status, text);
+
+    if (!res.ok) {
+      throw new Error(`Failed to update shift: ${res.status} - ${text}`);
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  } catch (err) {
+    console.error('Error in updateShift:', err);
+    throw err;
+  }
+};
+
+export const createShift = async (shiftData) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Auth token not found; please log in again.');
+
+    // Expecting payload shape: { branchId, name, start, end, selectedDays, timeZone }
+    const res = await fetch(SHIFTS_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true'
+      },
+      body: JSON.stringify(shiftData)
+    });
+
+    const text = await res.text();
+    console.log('Create shift response:', res.status, text);
+
+    if (!res.ok) {
+      throw new Error(`Failed to create shift: ${res.status} - ${text}`);
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  } catch (err) {
+    console.error('Error in createShift:', err);
+    throw err;
+  }
+};
+
+export const fetchShiftById = async (id) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const url = `${SHIFTS_API_URL}/${id}`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true'
+      }
+    });
+
+    console.log('Fetch shift by ID response status:', response.status);
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Failed to fetch shift with ID ${id}: ${response.status} - ${text}`);
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    const text = await response.text();
+    let data;
+    try {
+      data = contentType.includes('application/json') ? JSON.parse(text) : JSON.parse(text);
+    } catch (err) {
+      console.error('Invalid JSON response for shift by ID:', text);
+      throw new Error('Invalid JSON response for shift by ID');
+    }
+
+    // Normalize the response data
+    return {
+      id: data.id,
+      name: data.name,
+      start: data.start,
+      end: data.end,
+      branchName: data.branchName,
+      branchId: data.branchId,
+      freeDays: data.freeDays,
+      companyId: data.companyId
+    };
+  } catch (error) {
+    console.error('Error fetching shift by ID:', error);
+    return null;
+  }
+};
+
+export const deleteShift = async (id) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const url = `${SHIFTS_API_URL}/${id}`;
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true'
+      }
+    });
+
+    console.log('Delete shift response status:', response.status);
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Failed to delete shift with ID ${id}: ${response.status} - ${text}`);
+    }
+
+    // Assuming successful delete returns no content or a success message
+    return true;
+  } catch (error) {
+    console.error('Error deleting shift by ID:', error);
+    throw error;
   }
 };
