@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from '../ui/Sidebar'
 import EmployeeListView from './ui/EmployeeListView'
+import CreateNewEmployee from '../Employee_page/Create_new_Employee'
 import { Users, Calendar, User } from 'lucide-react'
 
 function Employee() {
   const location = useLocation()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('Employees')
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
   const tabs = [
     { id: 'Employees', label: 'Employees', icon: User, path: '/employees' },
@@ -44,8 +46,20 @@ function Employee() {
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-6">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Employee Dashboard</h1>
-              <p className="text-gray-600">Manage and monitor employee information</p>
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Employee Dashboard</h1>
+                  <p className="text-gray-600">Manage and monitor employee information</p>
+                </div>
+                {activeTab === 'Employees' && (
+                  <button 
+                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                    onClick={() => setIsAddModalOpen(true)}
+                  >
+                    <span>+</span> Add Employee
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Tab Navigation */}
@@ -86,6 +100,21 @@ function Employee() {
                   ? 'Work teams management content goes here...'
                   : 'Employee actions content goes here...'}
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Add Employee Modal */}
+        {isAddModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl relative">
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
+              >
+                ✕
+              </button>
+              <CreateNewEmployee />
             </div>
           </div>
         )}
