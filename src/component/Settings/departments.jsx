@@ -1,15 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit2, X, Check, Plus } from 'lucide-react';
 import DepEditModal from './Dep_editmodal';
+import { fetchDepartments, deleteDepartment, createDepartment, updateDepartment as updateDepartmentApi } from './api/department_api';
 
-const initialDepartments = [
-  { id: 1, name: 'Engineering', manager: 'John Doe', date: '2023-01-15' },
-  { id: 2, name: 'Marketing', manager: 'Jane Smith', date: '2023-02-20' },
-  { id: 3, name: 'HR', manager: 'Alice Johnson', date: '2023-03-10' },
-];
+// Helper function to format dates
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
+};
 
 export default function Departments() {
-  const [departments, setDepartments] = useState(initialDepartments);
+  const [departments, setDepartments] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
   const [newDepartment, setNewDepartment] = useState({
     name: '',
@@ -19,17 +24,39 @@ export default function Departments() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
 
+  useEffect(() => {
+    const loadDepartments = async () => {
+      const fetchedDepartments = await fetchDepartments();
+      setDepartments(fetchedDepartments);
+    };
+
+    loadDepartments();
+  }, []);
+
   const handleAdd = () => {
     setIsAdding(true);
     setNewDepartment({ name: '', manager: '', date: '' });
   };
 
-  const handleSaveNew = () => {
-    if (newDepartment.name && newDepartment.manager && newDepartment.date) {
-      const newId = Math.max(...departments.map((dept) => dept.id)) + 1;
-      setDepartments([...departments, { ...newDepartment, id: newId }]);
-      setIsAdding(false);
-      setNewDepartment({ name: '', manager: '', date: '' });
+  const handleSaveNew = async () => {
+    if (newDepartment.name && newDepartment.date) {
+      try {
+        await createDepartment({
+          branchId: 1, // Assuming default branchId, adjust as needed
+          name: newDepartment.name,
+          date: newDepartment.date
+        });
+
+        // Reload departments after creation
+        const fetchedDepartments = await fetchDepartments();
+        setDepartments(fetchedDepartments);
+
+        setIsAdding(false);
+        setNewDepartment({ name: '', manager: '', date: '' });
+      } catch (error) {
+        console.error('Error saving new department:', error);
+        alert(`Failed to add department: ${error.message}`);
+      }
     }
   };
 
@@ -48,12 +75,45 @@ export default function Departments() {
     setSelectedDepartment(null);
   };
 
-  const updateDepartment = (updatedDepartment) => {
-    setDepartments((prev) =>
-      prev.map((dept) =>
-        dept.id === updatedDepartment.id ? updatedDepartment : dept
-      )
-    );
+  const updateDepartment = async (updatedDepartment) => {
+    const current = departments.find(d => d.id === updatedDepartment.id);
+    if (!current) {
+      alert('Department not found.');
+      return;
+    }
+
+    try {
+      await updateDepartmentApi({
+        id: updatedDepartment.id,
+        branchId: current.branchId,
+        name: updatedDepartment.name,
+        date: updatedDepartment.date,
+        managerId: updatedDepartment.managerId || null
+      });
+
+      // Reload departments after update
+      const fetchedDepartments = await fetchDepartments();
+      setDepartments(fetchedDepartments);
+
+      setIsModalOpen(false);
+      setSelectedDepartment(null);
+    } catch (error) {
+      console.error('Error updating department:', error);
+      alert(`Failed to update department: ${error.message}`);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this department?')) {
+      try {
+        await deleteDepartment(id);
+        const fetchedDepartments = await fetchDepartments();
+        setDepartments(fetchedDepartments);
+      } catch (error) {
+        console.error('Error deleting department:', error);
+        alert(`Failed to delete department: ${error.message}`);
+      }
+    }
   };
 
   return (
@@ -78,7 +138,9 @@ export default function Departments() {
                   {dept.name}
                 </td>
                 <td className="px-6 py-4 text-gray-500">{dept.manager}</td>
-                <td className="px-6 py-4 text-gray-500">{dept.date}</td>
+                <td className="px-6 py-4 text-gray-500">
+                  {formatDate(dept.date)}
+                </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-4">
                     <button
@@ -89,6 +151,7 @@ export default function Departments() {
                       <Edit2 size={18} />
                     </button>
                     <button
+                      onClick={() => handleDelete(dept.id)}
                       className="text-red-500 hover:text-red-700 transition-colors"
                       title="Delete"
                     >

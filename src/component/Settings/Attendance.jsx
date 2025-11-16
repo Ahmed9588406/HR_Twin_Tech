@@ -9,7 +9,13 @@ export default function Attendance() {
   const [loadingCompany, setLoadingCompany] = useState(true);
   const [companyError, setCompanyError] = useState(null);
   const [isEditingCompany, setIsEditingCompany] = useState(false);
-  const [companyForm, setCompanyForm] = useState({ delayTime: '', delayHour: '' });
+  const [companyForm, setCompanyForm] = useState({
+    delayTime: '',
+    delayHour: '',
+    overTimeMins: '',
+    discountPercent: '',
+    overTimePercent: ''
+  });
   const [savingCompany, setSavingCompany] = useState(false);
 
   // Fetch company settings on mount
@@ -25,7 +31,10 @@ export default function Attendance() {
           setCompanySettings(data);
           setCompanyForm({
             delayTime: String(data.delayTime ?? ''),
-            delayHour: String(data.delayHour ?? '')
+            delayHour: String(data.delayHour ?? ''),
+            overTimeMins: String(data.overTimeMins ?? 0),
+            discountPercent: String(data.discountPercent ?? 0),
+            overTimePercent: String(data.overTimePercent ?? 0)
           });
         } else {
           setCompanyError('No company data returned');
@@ -51,8 +60,9 @@ export default function Attendance() {
       const payload = {
         delayTime: Number(companyForm.delayTime) || 0,
         delayHour: Number(companyForm.delayHour) || 0,
-        discountPercent: (companySettings && companySettings.discountPercent) ? Number(companySettings.discountPercent) : 0,
-        overTimePercent: (companySettings && companySettings.overTimePercent) ? Number(companySettings.overTimePercent) : 0
+        overTimeMins: Number(companyForm.overTimeMins) || 0,
+        discountPercent: Number(companyForm.discountPercent) || 0,
+        overTimePercent: Number(companyForm.overTimePercent) || 0
       };
 
       const updated = await updateCompanySettings(payload);
@@ -61,6 +71,7 @@ export default function Attendance() {
           ...(prev || {}),
           delayTime: payload.delayTime,
           delayHour: payload.delayHour,
+          overTimeMins: payload.overTimeMins,
           discountPercent: payload.discountPercent,
           overTimePercent: payload.overTimePercent,
           ...(updated.id ? { id: updated.id } : {})
@@ -211,6 +222,57 @@ export default function Attendance() {
                     <div className="text-sm text-gray-500">minutes total</div>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Additional editable fields row */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Overtime Minutes */}
+              <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                <div className="text-sm text-gray-600 mb-2">Overtime Minutes</div>
+                {!isEditingCompany ? (
+                  <div className="text-2xl font-bold text-gray-900">{loadingCompany ? '—' : (companySettings?.overTimeMins ?? 0)} min</div>
+                ) : (
+                  <input
+                    type="number"
+                    min="0"
+                    className="w-full px-3 py-2 rounded border"
+                    value={companyForm.overTimeMins}
+                    onChange={(e) => setCompanyForm({ ...companyForm, overTimeMins: e.target.value })}
+                  />
+                )}
+              </div>
+
+              {/* Discount Percent */}
+              <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                <div className="text-sm text-gray-600 mb-2">Discount %</div>
+                {!isEditingCompany ? (
+                  <div className="text-2xl font-bold text-gray-900">{loadingCompany ? '—' : `${companySettings?.discountPercent ?? 0}%`}</div>
+                ) : (
+                  <input
+                    type="number"
+                    min="0"
+                    className="w-full px-3 py-2 rounded border"
+                    value={companyForm.discountPercent}
+                    onChange={(e) => setCompanyForm({ ...companyForm, discountPercent: e.target.value })}
+                  />
+                )}
+              </div>
+
+              {/* Overtime Percent */}
+              <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                <div className="text-sm text-gray-600 mb-2">Overtime %</div>
+                {!isEditingCompany ? (
+                  <div className="text-2xl font-bold text-gray-900">{loadingCompany ? '—' : `${companySettings?.overTimePercent ?? 0}%`}</div>
+                ) : (
+                  <input
+                    type="number"
+                    min="0"
+                    className="w-full px-3 py-2 rounded border"
+                    value={companyForm.overTimePercent}
+                    onChange={(e) => setCompanyForm({ ...companyForm, overTimePercent: e.target.value })}
+                  />
+                )}
               </div>
             </div>
 
