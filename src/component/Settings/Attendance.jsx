@@ -137,7 +137,7 @@ export default function Attendance() {
           </div>
 
           <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Delay Time Card */}
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
@@ -202,25 +202,6 @@ export default function Attendance() {
                       <div className="text-sm text-gray-500 mt-2">hours</div>
                     </div>
                   )}
-                </div>
-              </div>
-
-              {/* Total Card */}
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-500 rounded-2xl opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
-                <div className="relative bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-100 hover:border-purple-300 transition-all duration-300">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="bg-purple-500 p-2 rounded-xl">
-                      <TrendingUp className="w-5 h-5 text-white" />
-                    </div>
-                    <span className="text-sm font-medium text-gray-600">Total Delay</span>
-                  </div>
-                  <div>
-                    <div className="text-4xl font-bold text-purple-700 mb-1">
-                      {totalDelayMinutes}
-                    </div>
-                    <div className="text-sm text-gray-500">minutes total</div>
-                  </div>
                 </div>
               </div>
             </div>
