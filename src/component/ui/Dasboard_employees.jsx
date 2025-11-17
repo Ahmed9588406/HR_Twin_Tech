@@ -1,59 +1,32 @@
 import React from "react";
 import { useNavigate } from 'react-router-dom';
-import { Phone, AlertCircle, Edit, Send, Trash2, Lock } from 'lucide-react';
 
 /**
- * Modern Employee Card Component
+ * Modern Employee Card Component for Dashboard - No Actions
  * 
  * Props:
- *  - employee (object) - { name, role, department, avatar, status, checkInTime }
- *  - onClick (function) - optional click handler
+ *  - employee (object) - { name, role, department, contentType, image, status, checkInTime }
  */
-export default function EmployeeCard({ 
-  employee,
-  onClick,
-  onEdit,
-  onNotify,
-  onDelete,
-  onLock,
-  onPhone,
-  onInfo,
-  showActions = true // New prop to control action icons
-}) {
+export default function DashboardEmployeeCard({ employee }) {
   const navigate = useNavigate();
-
-  const defaultEmployee = {
-    name: "Abdulrahman Ahmed",
-    role: "Backend Developer",
-    department: "Programming",
-    avatar: "https://i.pravatar.cc/150?img=12",
-    status: "Stay here", // "Stay here", "Checked out", "On break", "In meeting"
-    checkInTime: "10:01"
-  };
-
-  const emp = employee || defaultEmployee;
 
   // Construct avatar URL from base64 data
   const getAvatarSrc = () => {
-    if (emp.contentType && emp.image) {
-      return `data:${emp.contentType};base64,${emp.image}`;
+    if (employee.contentType && employee.data) {
+      return `data:${employee.contentType};base64,${employee.data}`;
     }
-    return emp.avatar || defaultEmployee.avatar;
+    return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop";
   };
 
   const avatarSrc = getAvatarSrc();
 
   const handleCardClick = () => {
-    if (onClick) {
-      onClick(emp);
-    } else {
-      navigate('/employee-portal', { state: { employee: emp } });
-    }
+    navigate('/employee-portal', { state: { employee } });
   };
 
   // Status configurations
   const statusConfig = {
-    "Stay here": {
+    "Present": {
       color: "text-emerald-600",
       bgColor: "bg-emerald-50",
       dotColor: "bg-emerald-500",
@@ -83,7 +56,7 @@ export default function EmployeeCard({
         </svg>
       )
     },
-    "Left": {
+    "On Leave": {
       color: "text-yellow-600",
       bgColor: "bg-yellow-50",
       dotColor: "bg-yellow-500",
@@ -116,13 +89,7 @@ export default function EmployeeCard({
     }
   };
 
-  const currentStatus = statusConfig[emp.status] || statusConfig["Stay here"];
-
-  // Helper to call action handlers without triggering card click
-  const callHandler = (e, handler) => {
-    e.stopPropagation();
-    if (typeof handler === 'function') handler(emp);
-  };
+  const currentStatus = statusConfig[employee.status] || statusConfig["Present"];
 
   return (
     <div 
@@ -143,7 +110,7 @@ export default function EmployeeCard({
           <div className="w-14 h-14 rounded-full ring-2 ring-gray-100 group-hover:ring-emerald-200 transition-all duration-300 overflow-hidden">
             <img 
               src={avatarSrc}
-              alt={`${emp.name} image`}
+              alt={`${employee.name} image`}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
             />
           </div>
@@ -156,13 +123,13 @@ export default function EmployeeCard({
         {/* Employee Info */}
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-gray-900 text-sm truncate group-hover:text-emerald-700 transition-colors duration-200">
-            {emp.name}
+            {employee.name}
           </h3>
           <p className="text-xs text-gray-600 truncate font-medium">
-            {emp.role}
+            {employee.role}
           </p>
           <p className="text-xs text-gray-400 truncate">
-            {emp.department}
+            {employee.department}
           </p>
         </div>
 
@@ -176,88 +143,35 @@ export default function EmployeeCard({
           `}>
             {currentStatus.icon}
             <span className="text-xs font-medium whitespace-nowrap">
-              {emp.status}
+              {employee.status}
             </span>
           </div>
 
           {/* Check-in time */}
-          {emp.checkInTime && (
+          {employee.checkInTime && (
             <div className="flex items-center gap-1 text-emerald-600">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
               <span className="text-xs font-semibold">
-                Arrival: {emp.checkInTime}
+                Arrival: {employee.checkInTime}
               </span>
             </div>
           )}
 
           {/* Leave time */}
-          {emp.leaveTime && (
+          {employee.leaveTime && (
             <div className="flex items-center gap-1 text-blue-600">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
               <span className="text-xs font-semibold">
-                Leave: {emp.leaveTime}
+                Leave: {employee.leaveTime}
               </span>
             </div>
           )}
         </div>
       </div>
-
-      {/* Action icons row (new) */}
-      {showActions && (
-        <div className="mt-3 flex items-center justify-end gap-2">
-          <button
-            onClick={(e) => callHandler(e, onPhone)}
-            className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            title="Call"
-          >
-            <Phone className="w-4 h-4 text-gray-600" />
-          </button>
-
-          <button
-            onClick={(e) => callHandler(e, onNotify)}
-            className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            title="Notify"
-          >
-            <AlertCircle className="w-4 h-4 text-gray-600" />
-          </button>
-
-          <button
-            onClick={(e) => callHandler(e, onEdit)}
-            className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Edit className="w-4 h-4 text-gray-600" />
-          </button>
-
-          <button
-            onClick={(e) => callHandler(e, onInfo)}
-            className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            title="Send"
-          >
-            <Send className="w-4 h-4 text-gray-600" />
-          </button>
-
-          <button
-            onClick={(e) => callHandler(e, onDelete)}
-            className="p-2 bg-gray-100 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete"
-          >
-            <Trash2 className="w-4 h-4 text-red-600" />
-          </button>
-
-          <button
-            onClick={(e) => callHandler(e, onLock)}
-            className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            title="Lock"
-          >
-            <Lock className="w-4 h-4 text-gray-600" />
-          </button>
-        </div>
-      )}
 
       {/* Hover effect border */}
       <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-emerald-200/50 transition-all duration-300 pointer-events-none" />
