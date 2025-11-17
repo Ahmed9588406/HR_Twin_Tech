@@ -1,114 +1,39 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Search, Filter, X, MapPin, Building } from "lucide-react";
 import EmployeeCard from "../../ui/EmployeeCard";
+import CreateNewEmployee from "../../Employee_page/Create_new_Employee"; // Import the modal
+import { fetchEmployeeById } from "../../Settings/api/employees_api"; // Import the API function
 import { useNavigate } from "react-router-dom";
+import { fetchEmployees } from '../../Employee_page/api/emplyee_api';
 
 export default function EmployeeListView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [selectedLocation, setSelectedLocation] = useState('all');
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // State for edit modal
+  const [editEmployeeData, setEditEmployeeData] = useState(null); // State for edit employee data
   const navigate = useNavigate();
 
-  const employees = useMemo(() => [
-    {
-      name: "Abdulrahman Ahmed",
-      department: "Information Technology",
-      role: "Backend Developer",
-      avatar: "https://i.pravatar.cc/150?img=12",
-      status: "Present",
-      location: "New York Office"
-    },
-    {
-      name: "Sarah Johnson",
-      department: "Information Technology",
-      role: "Frontend Developer",
-      avatar: "https://i.pravatar.cc/150?img=45",
-      status: "Present",
-      location: "San Francisco Office"
-    },
-    {
-      name: "Michael Chen",
-      department: "Marketing",
-      role: "Marketing Manager",
-      avatar: "https://i.pravatar.cc/150?img=33",
-      status: "On Leave",
-      location: "New York Office"
-    },
-    {
-      name: "Emily Davis",
-      department: "Information Technology",
-      role: "UI/UX Designer",
-      avatar: "https://i.pravatar.cc/150?img=25",
-      status: "Late",
-      location: "London Office"
-    },
-    {
-      name: "James Wilson",
-      department: "Human Resources",
-      role: "HR Manager",
-      avatar: "https://i.pravatar.cc/150?img=51",
-      status: "Absent",
-      location: "San Francisco Office"
-    },
-    {
-      name: "Lisa Anderson",
-      department: "Finance",
-      role: "Accountant",
-      avatar: "https://i.pravatar.cc/150?img=14",
-      status: "Present",
-      location: "London Office"
-    },
-    {
-      name: "Robert Taylor",
-      department: "Sales",
-      role: "Sales Representative",
-      avatar: "https://i.pravatar.cc/150?img=68",
-      status: "Present",
-      location: "Chicago Office"
-    },
-    {
-      name: "Maria Garcia",
-      department: "Operations",
-      role: "Operations Manager",
-      avatar: "https://i.pravatar.cc/150?img=32",
-      status: "On Leave",
-      location: "New York Office"
-    },
-    {
-      name: "David Kim",
-      department: "Customer Service",
-      role: "Customer Support Lead",
-      avatar: "https://i.pravatar.cc/150?img=77",
-      status: "Present",
-      location: "San Francisco Office"
-    },
-    {
-      name: "Jennifer Brown",
-      department: "Legal",
-      role: "Legal Counsel",
-      avatar: "https://i.pravatar.cc/150?img=43",
-      status: "Present",
-      location: "London Office"
-    },
-    {
-      name: "Thomas Wright",
-      department: "Administration",
-      role: "Administrative Assistant",
-      avatar: "https://i.pravatar.cc/150?img=56",
-      status: "Absent",
-      location: "Chicago Office"
-    },
-    {
-      name: "Anna Martinez",
-      department: "Finance",
-      role: "Financial Analyst",
-      avatar: "https://i.pravatar.cc/150?img=29",
-      status: "Present",
-      location: "New York Office"
-    }
-  ], []);
+  useEffect(() => {
+    const loadEmployees = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchEmployees();
+        console.log('Fetched employees data:', data); // Log the fetched data to debug the issue
+        setEmployees(data || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Get unique departments and locations for filter options
+    loadEmployees();
+  }, []);
+
   const departments = useMemo(() => {
     const unique = [...new Set(employees.map(emp => emp.department))];
     return unique.sort();
@@ -119,7 +44,6 @@ export default function EmployeeListView() {
     return unique.sort();
   }, [employees]);
 
-  // Filter employees based on search and filters
   const filteredEmployees = useMemo(() => {
     return employees.filter(employee => {
       const matchesSearch = employee.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -130,9 +54,14 @@ export default function EmployeeListView() {
     });
   }, [searchQuery, selectedDepartment, selectedLocation, employees]);
 
-  const handleEdit = (employee) => {
-    console.log("Edit:", employee.name);
-    // Open edit modal
+  const handleEdit = async (employee) => {
+    try {
+      const data = await fetchEmployeeById(employee.code); // Fetch employee data by code
+      setEditEmployeeData(data); // Set the fetched data
+      setIsEditModalOpen(true); // Open the modal
+    } catch (error) {
+      console.error("Error fetching employee data:", error);
+    }
   };
 
   const handleNotify = (employee) => {
@@ -170,8 +99,39 @@ export default function EmployeeListView() {
 
   // navigate to Employee_profile.jsx (route: /employee-portal)
   const handleCardClick = (employee) => {
-    navigate('/employee-portal', { state: { employee } });
+    navigate('/employee-portal', { state: { employee } }); // Pass the full employee object
   };
+
+  if (loading) {
+    return (
+      <div className="p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+            <span className="ml-4 text-gray-600">Loading employees...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-12">
+            <div className="text-red-600 mb-4">Error: {error}</div>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6">
@@ -223,8 +183,8 @@ export default function EmployeeListView() {
                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 hover:border-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg text-sm outline-none transition-all appearance-none cursor-pointer"
               >
                 <option value="all">All Departments</option>
-                {departments.map((dept) => (
-                  <option key={dept} value={dept}>{dept}</option>
+                {departments.map((dept, index) => (
+                  <option key={index} value={dept}>{dept}</option> // Added key prop
                 ))}
               </select>
             </div>
@@ -241,8 +201,8 @@ export default function EmployeeListView() {
                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 hover:border-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg text-sm outline-none transition-all appearance-none cursor-pointer"
               >
                 <option value="all">All Locations</option>
-                {locations.map((location) => (
-                  <option key={location} value={location}>{location}</option>
+                {locations.map((location, index) => (
+                  <option key={index} value={location}>{location}</option> // Added key prop
                 ))}
               </select>
             </div>
@@ -379,15 +339,21 @@ export default function EmployeeListView() {
                 <EmployeeCard
                   key={index}
                   employee={{
+                    id: employee.code, // Add the employee ID (code) for fetching
                     name: employee.name,
-                    role: employee.role,
-                    department: employee.department,
-                    avatar: employee.avatar,
-                    status: mappedStatus,
-                    checkInTime: "10:00" // Default check-in time
+                    role: employee.jobPositionName, // Use jobPositionName for the role
+                    department: employee.departmentName,
+                    contentType: employee.contentType, // Pass contentType
+                    image: employee.data, // Pass base64 image data
+                    status: employee.status,
+                    checkInTime: employee.checkInTime || "10:00", // Default check-in time
+                    absenceDays: employee.absenceDays || 0, // Pass absence days
+                    onLeaveDays: employee.onLeaveDays || 0, // Pass on-leave days
+                    remainingDays: employee.remainingDays || 0, // Pass remaining days
+                    attendanceRate: employee.attendanceRate || "N/A", // Pass attendance rate
                   }}
-                  onClick={handleCardClick}
-                  onEdit={() => handleEdit(employee)}
+                  onClick={() => handleCardClick(employee)} // Pass the full employee object
+                  onEdit={() => handleEdit(employee)} // Pass the edit handler
                   onNotify={() => handleNotify(employee)}
                   onDelete={() => handleDelete(employee)}
                   onLock={() => handleLock(employee)}
@@ -407,6 +373,23 @@ export default function EmployeeListView() {
           )}
         </div>
       </div>
+
+      {/* Edit Employee Modal */}
+      {isEditModalOpen && (
+        <CreateNewEmployee
+          employeeData={editEmployeeData} // Pass the fetched employee data
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditEmployeeData(null);
+          }} // Close modal handler
+          onSuccess={() => {
+            setIsEditModalOpen(false);
+            setEditEmployeeData(null);
+            // Optionally refetch employees after update
+            // loadEmployees();
+          }}
+        />
+      )}
     </div>
   );
 }

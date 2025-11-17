@@ -32,6 +32,16 @@ export default function EmployeeCard({
 
   const emp = employee || defaultEmployee;
 
+  // Construct avatar URL from base64 data like in Dep_editmodal.jsx
+  const getAvatarSrc = () => {
+    if (emp.contentType && emp.image) {
+      return `data:${emp.contentType};base64,${emp.image}`;
+    }
+    return emp.avatar || defaultEmployee.avatar;
+  };
+
+  const avatarSrc = getAvatarSrc();
+
   const handleCardClick = () => {
     if (onClick) {
       onClick(emp);
@@ -131,8 +141,8 @@ export default function EmployeeCard({
         <div className="relative flex-shrink-0">
           <div className="w-14 h-14 rounded-full ring-2 ring-gray-100 group-hover:ring-emerald-200 transition-all duration-300 overflow-hidden">
             <img 
-              src={emp.avatar} 
-              alt={emp.name}
+              src={avatarSrc}
+              alt={`${emp.name} image`}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
             />
           </div>

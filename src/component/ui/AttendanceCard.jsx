@@ -3,9 +3,9 @@ import React, { useState, useEffect } from 'react';
 const formatCount = (value) => new Intl.NumberFormat().format(value);
 
 const AttendanceCard = ({ count, label, color }) => (
-  <div className={`${color} rounded-lg p-6 text-white shadow-lg`}>
-    <div className="text-4xl font-bold mb-2">{formatCount(count)}</div>
-    <div className="text-lg font-medium">{label}</div>
+  <div className={`${color} rounded-lg p-4 text-white shadow-lg`}>
+    <div className="text-2xl font-bold mb-2">{formatCount(count)}</div>
+    <div className="text-base font-medium">{label}</div>
   </div>
 );
 
@@ -56,7 +56,7 @@ export default function AttendanceCards({ data }) {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {cards.map((card, index) => (
         <AttendanceCard
           key={index}
