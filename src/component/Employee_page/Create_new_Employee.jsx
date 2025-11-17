@@ -36,6 +36,8 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
     { icon: DollarSign, label: 'Salary & Access' }
   ];
 
+  const isEditing = Boolean(employeeData && employeeData.id); // <-- added
+
   // Fetch departments, positions, and shifts on component mount
   useEffect(() => {
     const fetchData = async () => {
@@ -85,10 +87,13 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
     if (employeeData) {
       setFormData({
         ...employeeData,
-        password: '' // Clear password for security
+        password: '', // Clear password for security
+        file: null,   // Ensure file is null unless user uploads a new file
       });
-      if (employeeData.contentType && employeeData.image) {
-        setImagePreview(`data:${employeeData.contentType};base64,${employeeData.image}`);
+      // Set image preview from the 'data' field (base64) or fallback to 'image' field
+      const base64Image = employeeData.data || employeeData.image;
+      if (employeeData.contentType && base64Image) {
+        setImagePreview(`data:${employeeData.contentType};base64,${base64Image}`);
       }
     }
   }, [employeeData]);
@@ -129,12 +134,14 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
       setLoading(true);
       setError(null);
 
-      // Validate required fields
-      const requiredFields = [
+      // Validation: password is required only when creating a new employee
+      const baseRequiredFields = [
         'name', 'number', 'dateOfBirth', 'gender', 'email',
         'department', 'position', 'startDate', 'shift', 'salary',
-        'username', 'password'
+        'username'
       ];
+      const requiredFields = isEditing ? baseRequiredFields : baseRequiredFields.concat('password');
+
       const missingFields = requiredFields.filter(field => !formData[field]);
       if (missingFields.length > 0) {
         setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
@@ -466,7 +473,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                           value={formData.password}
                           onChange={handleInputChange}
                           placeholder="Password"
-                          required
+                          required={!isEditing} // <-- changed to require only when creating
                           className="w-full px-4 py-3 border-b border-gray-300 focus:border-green-500 outline-none transition-all text-gray-800 bg-transparent"
                         />
                       </div>
@@ -801,7 +808,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                     value={formData.password}
                     onChange={handleInputChange}
                     placeholder="Password"
-                    required
+                    required={!isEditing} // <-- changed to require only when creating
                     className="w-full px-4 py-3 border-b border-gray-300 focus:border-green-500 outline-none transition-all text-gray-800 bg-transparent"
                   />
                 </div>

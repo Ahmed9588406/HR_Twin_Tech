@@ -1,14 +1,24 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Clock, Calendar, TrendingUp, QrCode, Edit, Trash2, LogOut, UserCheck, ArrowLeft } from 'lucide-react';
+import { markAttendance, fetchEmployeeProfile, markLeave, fetchEmployeeSalary, fetchEmployeeAttendanceHistory } from '../Employee_page/api/emplyee_api';
+import AttendanceModal from './Attendance_modal';
+import OnLeaveModal from './OnLeave_modal';
+import EmployeeSalaryCard from './employee_salary';
+import EmployeeAttendanceHistory from './employee_history';
 
 export default function EmployeeProfile() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { employee } = location.state || {}; // Get the employee object from state
-
-  // Log the employee data for debugging
-  console.log('Employee data:', employee);
+  const { employee } = location.state || {};
+  const [profileData, setProfileData] = useState(null);
+  const [salaryData, setSalaryData] = useState(null);
+  const [historyData, setHistoryData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [attendanceRate, setAttendanceRate] = useState(0);
 
   // Status configurations matching EmployeeCard
   const statusConfig = {
@@ -23,12 +33,122 @@ export default function EmployeeProfile() {
     "on-leave": { dotColor: "bg-yellow-500" }
   };
 
-  // If no employee data, show default or redirect
-  if (!employee) {
+  // Fetch employee profile, salary, and attendance history data on mount
+  useEffect(() => {
+    const loadData = async () => {
+      if (!employee || !employee.code) {
+        setError('No employee code available');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const [profile, salary, history] = await Promise.all([
+          fetchEmployeeProfile(employee.code),
+          fetchEmployeeSalary(employee.code),
+          fetchEmployeeAttendanceHistory(employee.code, 0, 5)
+        ]);
+        console.log('Fetched employee profile data:', profile);
+        console.log('Fetched employee salary data:', salary);
+        console.log('Fetched employee attendance history:', history);
+        setProfileData(profile);
+        setSalaryData(salary);
+        setHistoryData(history);
+
+        // Calculate attendance rate from history
+        if (history && history.content && history.content.length > 0) {
+          const totalRecords = history.content.length;
+          const presentRecords = history.content.filter(record => record.status === 'PRESENT').length;
+          const rate = totalRecords > 0 ? (presentRecords / totalRecords) * 100 : 0;
+          setAttendanceRate(rate);
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [employee]);
+
+  const handleMarkAttendance = () => {
+    setShowAttendanceModal(true);
+  };
+
+  const handleMarkLeave = () => {
+    setShowLeaveModal(true);
+  };
+
+  const handleAttendanceSuccess = () => {
+    alert('Attendance marked successfully!');
+    // Optionally refresh profile data
+  };
+
+  const handleLeaveSuccess = () => {
+    alert('Leave marked successfully!');
+    // Optionally refresh profile data
+  };
+
+  // Helper function to format last sign-in date
+  const formatLastSignIn = (dateString) => {
+    if (!dateString) return { display: 'N/A', fullDate: 'N/A' };
+    
+    const date = new Date(dateString);
+    const today = new Date();
+    const isToday = date.toDateString() === today.toDateString();
+    
+    const timeOptions = { 
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    const timeStr = date.toLocaleString('en-US', timeOptions);
+    
+    let display;
+    if (isToday) {
+      display = `Today, ${timeStr}`;
+    } else {
+      const dateOptions = { 
+        weekday: 'short', 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric'
+      };
+      const dateStr = date.toLocaleString('en-US', dateOptions);
+      display = `${dateStr}, ${timeStr}`;
+    }
+    
+    const fullDate = date.toLocaleString('en-US', { 
+      weekday: 'short', 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    return { display, fullDate };
+  };
+
+  // Loading state
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">No Employee Data</h2>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !employee) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{error || 'No Employee Data'}</h2>
           <button 
             onClick={() => navigate('/dashboard')}
             className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
@@ -41,6 +161,15 @@ export default function EmployeeProfile() {
   }
 
   const currentStatus = statusConfig[employee.status] || statusConfig["present"];
+  const photoSrc = profileData?.empPhoto 
+    ? `data:${profileData.contentType || 'image/jpeg'};base64,${profileData.empPhoto}`
+    : (employee.contentType && employee.data 
+        ? `data:${employee.contentType};base64,${employee.data}` 
+        : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop");
+
+  const lastSignIn = profileData?.lastSignIn 
+    ? formatLastSignIn(profileData.lastSignIn) 
+    : { display: employee.checkInTime || 'N/A', fullDate: employee.checkInTime || 'N/A' };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -78,31 +207,38 @@ export default function EmployeeProfile() {
               <div className="px-6 pb-6">
                 <div className="flex flex-col items-center -mt-16">
                   <div className="relative">
-                    {/* Profile Image */}
                     <img
-                      src={employee.contentType && employee.data 
-                        ? `data:${employee.contentType};base64,${employee.data}` 
-                        : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop"}
-                      alt={employee.name}
+                      src={photoSrc}
+                      alt={profileData?.empName || employee.name}
                       className="w-32 h-32 rounded-full border-4 border-white shadow-xl object-cover"
                     />
                     <div className={`absolute bottom-2 right-2 w-5 h-5 rounded-full border-2 border-white ${currentStatus.dotColor} animate-pulse`} />
                   </div>
                   
-                  <h2 className="mt-4 text-2xl font-bold text-slate-800">{employee.name}</h2>
-                  <p className="text-green-600 font-medium mt-1">{employee.jobPositionName || 'N/A'}</p>
+                  <h2 className="mt-4 text-2xl font-bold text-slate-800">
+                    {profileData?.empName || employee.name}
+                  </h2>
+                  <p className="text-green-600 font-medium mt-1">
+                    {profileData?.jobPosition || employee.jobPositionName || 'N/A'}
+                  </p>
                   
                   <div className="flex items-center gap-2 mt-3 text-sm text-slate-600">
                     <Clock className="w-4 h-4" />
-                    <span>Last signed in: <strong>{employee.checkInTime || 'N/A'}</strong></span>
+                    <span>Last signed in: <strong title={lastSignIn.fullDate}>{lastSignIn.display}</strong></span>
                   </div>
 
                   <div className="flex gap-2 mt-6 w-full">
-                    <button className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                    <button 
+                      onClick={handleMarkAttendance}
+                      className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                    >
                       <UserCheck className="w-4 h-4" />
                       Attendance
                     </button>
-                    <button className="flex-1 px-4 py-2.5 bg-green-50 text-green-700 rounded-xl font-medium hover:bg-green-100 transition-colors flex items-center justify-center gap-2">
+                    <button 
+                      onClick={handleMarkLeave}
+                      className="flex-1 px-4 py-2.5 bg-green-50 text-green-700 rounded-xl font-medium hover:bg-green-100 transition-colors flex items-center justify-center gap-2"
+                    >
                       <LogOut className="w-4 h-4" />
                       Leave
                     </button>
@@ -112,15 +248,21 @@ export default function EmployeeProfile() {
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-slate-200">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-slate-800">{employee.absenceDays || 0}</div>
+                    <div className="text-2xl font-bold text-slate-800">
+                      {profileData?.absencesCount || employee.absenceDays || 0}
+                    </div>
                     <div className="text-xs text-slate-600 mt-1">Absence</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-indigo-600">{employee.onLeaveDays || 0}</div>
+                    <div className="text-2xl font-bold text-indigo-600">
+                      {profileData?.onLeave ? 'Yes' : 'No'}
+                    </div>
                     <div className="text-xs text-slate-600 mt-1">On Leave</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-slate-800">{employee.remainingDays || 0}</div>
+                    <div className="text-2xl font-bold text-slate-800">
+                      {profileData?.daysLeftInVacation || employee.remainingDays || 0}
+                    </div>
                     <div className="text-xs text-slate-600 mt-1">Days Left</div>
                   </div>
                 </div>
@@ -138,24 +280,46 @@ export default function EmployeeProfile() {
                     <TrendingUp className="w-5 h-5 text-green-600" />
                     Attendance Rate
                   </h3>
-                  <p className="text-sm text-slate-600 mt-1">Since last month</p>
+                  <p className="text-sm text-slate-600 mt-1">Based on recent records</p>
                 </div>
                 <div className="text-right">
                   <div className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-green-500 bg-clip-text text-transparent">
-                    {employee.attendanceRate || 'N/A'}%
+                    {attendanceRate.toFixed(1)}%
                   </div>
                 </div>
               </div>
               
               <div className="h-8 bg-slate-100 rounded-full overflow-hidden flex">
-                <div className="w-[2%] bg-amber-400"></div>
-                <div className="w-[3%] bg-cyan-400"></div>
-                <div className="w-[95%] bg-gradient-to-r from-emerald-500 to-green-500"></div>
+                <div className={`w-[${attendanceRate}%] bg-gradient-to-r from-emerald-500 to-green-500`}></div>
+                <div className={`w-[${100 - attendanceRate}%] bg-amber-400`}></div>
               </div>
             </div>
+
+            {/* Salary Details Card */}
+            <EmployeeSalaryCard salaryData={salaryData} />
+
+            {/* Attendance History Table */}
+            <EmployeeAttendanceHistory historyData={historyData} />
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      {showAttendanceModal && (
+        <AttendanceModal
+          employee={employee}
+          onClose={() => setShowAttendanceModal(false)}
+          onSuccess={handleAttendanceSuccess}
+        />
+      )}
+
+      {showLeaveModal && (
+        <OnLeaveModal
+          employee={employee}
+          onClose={() => setShowLeaveModal(false)}
+          onSuccess={handleLeaveSuccess}
+        />
+      )}
     </div>
   );
 }
