@@ -4,7 +4,7 @@ import EmployeeCard from "../../ui/EmployeeCard";
 import CreateNewEmployee from "../../Employee_page/Create_new_Employee"; // Import the modal
 import { fetchEmployeeById } from "../../Settings/api/employees_api"; // Import the API function
 import { useNavigate } from "react-router-dom";
-import { fetchEmployees } from '../../Employee_page/api/emplyee_api';
+import { fetchEmployees, deleteEmployee } from '../../Employee_page/api/emplyee_api'; // Added deleteEmployee import
 
 export default function EmployeeListView() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,9 +69,19 @@ export default function EmployeeListView() {
     // Send notification
   };
 
-  const handleDelete = (employee) => {
-    console.log("Delete:", employee.name);
-    // Show confirmation dialog
+  const handleDelete = async (employee) => {
+    const confirmDelete = window.confirm(`Are you sure you want to delete ${employee.name}? This action cannot be undone.`);
+    if (!confirmDelete) return;
+
+    try {
+      await deleteEmployee(employee.code); // Use employee.code as the ID
+      // Remove the employee from the list
+      setEmployees(prev => prev.filter(emp => emp.code !== employee.code));
+      alert('Employee deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting employee:', error);
+      alert(`Error deleting employee: ${error.message}`);
+    }
   };
 
   const handleLock = (employee) => {

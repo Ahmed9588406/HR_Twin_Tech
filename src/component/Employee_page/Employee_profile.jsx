@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Clock, Calendar, TrendingUp, QrCode, Edit, Trash2, LogOut, UserCheck, ArrowLeft } from 'lucide-react';
+import { markAttendance } from '../Employee_page/api/emplyee_api'; // Import the API function
 
 export default function EmployeeProfile() {
   const location = useLocation();
@@ -41,6 +42,18 @@ export default function EmployeeProfile() {
   }
 
   const currentStatus = statusConfig[employee.status] || statusConfig["present"];
+
+  const handleMarkAttendance = async () => {
+    try {
+      const now = new Date();
+      const arrivalTime = now.toTimeString().split(' ')[0].substring(0, 5); // HH:MM format
+      await markAttendance(employee.code, arrivalTime);
+      alert('Attendance marked successfully!');
+    } catch (error) {
+      console.error('Error marking attendance:', error);
+      alert(`Error: ${error.message}`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -98,7 +111,10 @@ export default function EmployeeProfile() {
                   </div>
 
                   <div className="flex gap-2 mt-6 w-full">
-                    <button className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                    <button 
+                      onClick={handleMarkAttendance}
+                      className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                    >
                       <UserCheck className="w-4 h-4" />
                       Attendance
                     </button>

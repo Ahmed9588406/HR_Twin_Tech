@@ -6,6 +6,23 @@ const getHeaders = () => ({
   'Content-Type': 'application/json',
 });
 
+// Helper to convert base64 to File object
+function base64ToFile(base64, contentType, filename) {
+  const byteCharacters = atob(base64);
+  const byteArrays = [];
+  for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+    const slice = byteCharacters.slice(offset, offset + 512);
+    const byteNumbers = new Array(slice.length);
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    byteArrays.push(byteArray);
+  }
+  const blob = new Blob(byteArrays, { type: contentType });
+  return new File([blob], filename, { type: contentType });
+}
+
 // Fetch departments
 export const fetchDepartments = async () => {
   try {
@@ -63,10 +80,10 @@ export const createEmployee = async (employeeData) => {
     formData.append('gender', employeeData.gender);
     formData.append('email', employeeData.email);
     formData.append('startDate', employeeData.startDate);
-    formData.append('jobPositionId', parseInt(employeeData.position)); // Parse as integer
+    formData.append('jobPositionId', parseInt(employeeData.position));
     formData.append('salary', employeeData.salary);
-    formData.append('departmentId', parseInt(employeeData.department)); // Parse as integer
-    formData.append('shiftId', parseInt(employeeData.shift)); // Parse as integer
+    formData.append('departmentId', parseInt(employeeData.department));
+    formData.append('shiftId', parseInt(employeeData.shift));
     formData.append('username', employeeData.username);
     formData.append('password', employeeData.password);
     
@@ -86,7 +103,6 @@ export const createEmployee = async (employeeData) => {
       headers: {
         'ngrok-skip-browser-warning': 'true',
         Authorization: `Bearer ${token}`,
-        // Don't set Content-Type for FormData, browser will set it automatically with boundary
       },
       body: formData,
     });
@@ -97,7 +113,6 @@ export const createEmployee = async (employeeData) => {
         const errorData = await response.json();
         errorMessage = errorData.message || errorMessage;
       } catch (e) {
-        // If response is not JSON, use status text
         errorMessage = `${response.status}: ${response.statusText}`;
       }
       throw new Error(errorMessage);
@@ -156,46 +171,63 @@ export const updateEmployee = async (employeeData) => {
     formData.append('gender', employeeData.gender);
     formData.append('email', employeeData.email);
     formData.append('startDate', employeeData.startDate);
-    formData.append('jobPositionId', parseInt(employeeData.position)); // Parse as integer
+    formData.append('jobPositionId', parseInt(employeeData.position));
     formData.append('salary', employeeData.salary);
-    formData.append('departmentId', parseInt(employeeData.department)); // Parse as integer
-    formData.append('shiftId', parseInt(employeeData.shift)); // Parse as integer
+    formData.append('departmentId', parseInt(employeeData.department));
+    formData.append('shiftId', parseInt(employeeData.shift));
     formData.append('username', employeeData.username);
+
     // Only append password if it's provided and not empty
     if (employeeData.password && employeeData.password.trim() !== '') {
       formData.append('password', employeeData.password);
     }
     
-    // Append file if exists
+    // Handle file upload
     if (employeeData.file) {
+      // User uploaded a new file
       formData.append('file', employeeData.file);
+    } else if (employeeData.image && employeeData.contentType) {
+      // No new file uploaded, convert existing base64 image to File
+      const extension = employeeData.contentType.split('/')[1] || 'png';
+      const filename = `employee-${employeeData.id}.${extension}`;
+      const imageFile = base64ToFile(employeeData.image, employeeData.contentType, filename);
+      formData.append('file', imageFile);
+    } else if (employeeData.data && employeeData.contentType) {
+      // Fallback: if 'image' field doesn't exist, try 'data' field
+      const extension = employeeData.contentType.split('/')[1] || 'png';
+      const filename = `employee-${employeeData.id}.${extension}`;
+      const imageFile = base64ToFile(employeeData.data, employeeData.contentType, filename);
+      formData.append('file', imageFile);
     }
 
     // Log the FormData for debugging
     console.log('FormData being sent to the server for update:');
     for (const [key, value] of formData.entries()) {
-      console.log(`${key}: ${value}`);
+      console.log(`${key}:`, value);
     }
 
     const response = await fetch(`${BASE_URL}/employees/${employeeData.id}`, {
-      method: 'PUT', // Reverted from PATCH to PUT to resolve CORS
+      method: 'PUT',
       headers: {
         'ngrok-skip-browser-warning': 'true',
         Authorization: `Bearer ${token}`,
-        // Don't set Content-Type for FormData, browser will set it automatically with boundary
       },
       body: formData,
     });
 
     if (!response.ok) {
-      let errorMessage = 'Failed to update employee';
+      let details = '';
       try {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
+        const json = await response.json();
+        details = json.message || JSON.stringify(json);
       } catch (e) {
-        // If response is not JSON, use status text
-        errorMessage = `${response.status}: ${response.statusText}`;
+        try {
+          details = await response.text();
+        } catch (e2) {
+          details = `${response.status}: ${response.statusText}`;
+        }
       }
+      let errorMessage = details ? `Failed to update employee: ${details}` : 'Failed to update employee';
       throw new Error(errorMessage);
     }
 
@@ -203,6 +235,81 @@ export const updateEmployee = async (employeeData) => {
     return data;
   } catch (error) {
     console.error('Error updating employee:', error);
+    throw error;
+  }
+};
+
+// Delete existing employee
+export const deleteEmployee = async (employeeId) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const response = await fetch(`${BASE_URL}/employees/delete/${employeeId}`, {
+      method: 'DELETE',
+      headers: {
+        'ngrok-skip-browser-warning': 'true',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to delete employee';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+        errorMessage = `${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    // Assuming successful deletion returns no content or a success message
+    return true;
+  } catch (error) {
+    console.error('Error deleting employee:', error);
+    throw error;
+  }
+};
+
+// Mark attendance
+export const markAttendance = async (empCode, arrivalTime) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const response = await fetch(`${BASE_URL}/dashboard/mark-attendance`, {
+      method: 'POST',
+      headers: {
+        'ngrok-skip-browser-warning': 'true',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        empCode: parseInt(empCode),
+        arrivalTime: arrivalTime,
+      }),
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to mark attendance';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+        errorMessage = `${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    return data; // Expected: true
+  } catch (error) {
+    console.error('Error marking attendance:', error);
     throw error;
   }
 };

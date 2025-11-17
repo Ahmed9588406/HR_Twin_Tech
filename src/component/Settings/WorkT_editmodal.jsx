@@ -5,15 +5,15 @@ import { updateShift, createShift, fetchBranches } from './api/settings_api';
 export default function WorkTEditModal({ timing, onClose, onSave }) {
   const [name, setName] = useState('');
   const [branchId, setBranchId] = useState(null);
-  const [branches, setBranches] = useState([]); // List of branches
-  const [start, setStart] = useState(''); // user input hh:mm or hh:mm:ss
+  const [branches, setBranches] = useState([]);
+  const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
-  const [selectedDays, setSelectedDays] = useState([]); // numbers 0..6 for display
+  const [selectedDays, setSelectedDays] = useState([]); // 0=SUN, 1=MON, ..., 6=SAT
   const [timeZone, setTimeZone] = useState('Africa/Cairo');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  // days mapping per your table
+  // Days mapping: 0=SUN, 1=MON, 2=TUE, 3=WED, 4=THU, 5=FRI, 6=SAT
   const DAYS = [
     { label: 'الأحد (SUN)', short: 'SUN', value: 0 },
     { label: 'الإثنين (MON)', short: 'MON', value: 1 },
@@ -25,7 +25,6 @@ export default function WorkTEditModal({ timing, onClose, onSave }) {
   ];
 
   useEffect(() => {
-    // Fetch branches when the modal is opened
     const loadBranches = async () => {
       try {
         const data = await fetchBranches();
@@ -44,9 +43,12 @@ export default function WorkTEditModal({ timing, onClose, onSave }) {
     setStart(timing.start ? String(timing.start) : '');
     setEnd(timing.end ? String(timing.end) : '');
     setTimeZone(timing.timeZone ?? 'Africa/Cairo');
+    
+    // Convert API days to internal format (0-6)
+    // If API uses 7 for Sunday, convert to 0; otherwise use as-is
     setSelectedDays(
       Array.isArray(timing.selectedDays)
-        ? timing.selectedDays.map((d) => (d === 7 ? 0 : d - 1))
+        ? timing.selectedDays.map((d) => (d === 7 ? 0 : d))
         : []
     );
     setError(null);
@@ -61,13 +63,10 @@ export default function WorkTEditModal({ timing, onClose, onSave }) {
   const normalizeTime = (t) => {
     if (!t && t !== 0) return '';
     const s = String(t).trim();
-    // if HH:MM -> add :00
     const m = s.match(/^(\d{1,2}):(\d{2})$/);
     if (m) return `${m[1].padStart(2,'0')}:${m[2]}:00`;
-    // if HH:MM:SS -> return as-is
     const m2 = s.match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
     if (m2) return `${m2[1].padStart(2,'0')}:${m2[2]}:${m2[3]}`;
-    // try parse Date and format hh:mm:ss
     const d = new Date(s);
     if (!isNaN(d.getTime())) {
       const hh = String(d.getHours()).padStart(2,'0');
@@ -80,28 +79,24 @@ export default function WorkTEditModal({ timing, onClose, onSave }) {
 
   const handleSave = async () => {
     setError(null);
-    // basic validation
     if (!name) return setError('Name is required');
     if (!branchId) return setError('branchId is required');
     if (!start || !end) return setError('Start and end are required');
 
-    // Map selectedDays for API: 0->7 (Sun), 1->1 (Mon), etc.
-    const apiSelectedDays = selectedDays.map(d => d === 0 ? 7 : d);
-
+    // Send selectedDays as-is (0-6) to match the table mapping
     const payload = {
-      ...(timing?.id ? { id: timing.id } : {}), // include id if editing
+      ...(timing?.id ? { id: timing.id } : {}),
       branchId: Number(branchId),
       name: String(name),
       start: normalizeTime(start),
       end: normalizeTime(end),
-      selectedDays: apiSelectedDays,
+      selectedDays: selectedDays, // 0=SUN, 1=MON, ..., 6=SAT
       timeZone: timeZone || 'Africa/Cairo'
     };
 
     setIsSaving(true);
     try {
       const updated = timing?.id ? await updateShift(payload) : await createShift(payload);
-      // onSave expects the returned shift object
       onSave(updated);
       onClose();
     } catch (err) {
