@@ -389,3 +389,75 @@ export const fetchEmployeeProfile = async (empCode) => {
     throw error;
   }
 };
+
+// Fetch employee salary details by empCode
+export const fetchEmployeeSalary = async (empCode) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const response = await fetch(`${BASE_URL}/dashboard/${empCode}/salary-details`, {
+      method: 'GET',
+      headers: {
+        'ngrok-skip-browser-warning': 'true',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to fetch employee salary details';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+        errorMessage = `${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching employee salary:', error);
+    throw error;
+  }
+};
+
+// Fetch employee attendance history by empCode with pagination
+export const fetchEmployeeAttendanceHistory = async (empCode, page = 0, size = 5) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const response = await fetch(`${BASE_URL}/dashboard/${empCode}/attendance-history?page=${page}&size=${size}`, {
+      method: 'GET',
+      headers: {
+        'ngrok-skip-browser-warning': 'true',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to fetch employee attendance history';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+        errorMessage = `${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching employee attendance history:', error);
+    throw error;
+  }
+};

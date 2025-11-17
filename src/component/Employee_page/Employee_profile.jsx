@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Clock, Calendar, TrendingUp, QrCode, Edit, Trash2, LogOut, UserCheck, ArrowLeft } from 'lucide-react';
-import { markAttendance, fetchEmployeeProfile, markLeave } from '../Employee_page/api/emplyee_api';
+import { markAttendance, fetchEmployeeProfile, markLeave, fetchEmployeeSalary, fetchEmployeeAttendanceHistory } from '../Employee_page/api/emplyee_api';
+import AttendanceModal from './Attendance_modal';
+import OnLeaveModal from './OnLeave_modal';
+import EmployeeSalaryCard from './employee_salary';
+import EmployeeAttendanceHistory from './employee_history';
 
 export default function EmployeeProfile() {
   const location = useLocation();
   const navigate = useNavigate();
   const { employee } = location.state || {};
   const [profileData, setProfileData] = useState(null);
+  const [salaryData, setSalaryData] = useState(null);
+  const [historyData, setHistoryData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [attendanceRate, setAttendanceRate] = useState(0);
 
   // Status configurations matching EmployeeCard
   const statusConfig = {
@@ -24,9 +33,9 @@ export default function EmployeeProfile() {
     "on-leave": { dotColor: "bg-yellow-500" }
   };
 
-  // Fetch employee profile data on mount
+  // Fetch employee profile, salary, and attendance history data on mount
   useEffect(() => {
-    const loadProfile = async () => {
+    const loadData = async () => {
       if (!employee || !employee.code) {
         setError('No employee code available');
         setLoading(false);
@@ -35,8 +44,25 @@ export default function EmployeeProfile() {
 
       try {
         setLoading(true);
-        const data = await fetchEmployeeProfile(employee.code);
-        setProfileData(data);
+        const [profile, salary, history] = await Promise.all([
+          fetchEmployeeProfile(employee.code),
+          fetchEmployeeSalary(employee.code),
+          fetchEmployeeAttendanceHistory(employee.code, 0, 5)
+        ]);
+        console.log('Fetched employee profile data:', profile);
+        console.log('Fetched employee salary data:', salary);
+        console.log('Fetched employee attendance history:', history);
+        setProfileData(profile);
+        setSalaryData(salary);
+        setHistoryData(history);
+
+        // Calculate attendance rate from history
+        if (history && history.content && history.content.length > 0) {
+          const totalRecords = history.content.length;
+          const presentRecords = history.content.filter(record => record.status === 'PRESENT').length;
+          const rate = totalRecords > 0 ? (presentRecords / totalRecords) * 100 : 0;
+          setAttendanceRate(rate);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -44,31 +70,25 @@ export default function EmployeeProfile() {
       }
     };
 
-    loadProfile();
+    loadData();
   }, [employee]);
 
-  const handleMarkAttendance = async () => {
-    try {
-      const now = new Date();
-      const arrivalTime = now.toTimeString().split(' ')[0].substring(0, 5);
-      await markAttendance(employee.code, arrivalTime);
-      alert('Attendance marked successfully!');
-    } catch (error) {
-      console.error('Error marking attendance:', error);
-      alert(`Error: ${error.message}`);
-    }
+  const handleMarkAttendance = () => {
+    setShowAttendanceModal(true);
   };
 
-  const handleMarkLeave = async () => {
-    try {
-      const now = new Date();
-      const leaveTime = now.toTimeString().split(' ')[0].substring(0, 5);
-      await markLeave(employee.code, leaveTime);
-      alert('Leave marked successfully!');
-    } catch (error) {
-      console.error('Error marking leave:', error);
-      alert(`Error: ${error.message}`);
-    }
+  const handleMarkLeave = () => {
+    setShowLeaveModal(true);
+  };
+
+  const handleAttendanceSuccess = () => {
+    alert('Attendance marked successfully!');
+    // Optionally refresh profile data
+  };
+
+  const handleLeaveSuccess = () => {
+    alert('Leave marked successfully!');
+    // Optionally refresh profile data
   };
 
   // Helper function to format last sign-in date
@@ -260,24 +280,46 @@ export default function EmployeeProfile() {
                     <TrendingUp className="w-5 h-5 text-green-600" />
                     Attendance Rate
                   </h3>
-                  <p className="text-sm text-slate-600 mt-1">Since last month</p>
+                  <p className="text-sm text-slate-600 mt-1">Based on recent records</p>
                 </div>
                 <div className="text-right">
                   <div className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-green-500 bg-clip-text text-transparent">
-                    {employee.attendanceRate || 'N/A'}%
+                    {attendanceRate.toFixed(1)}%
                   </div>
                 </div>
               </div>
               
               <div className="h-8 bg-slate-100 rounded-full overflow-hidden flex">
-                <div className="w-[2%] bg-amber-400"></div>
-                <div className="w-[3%] bg-cyan-400"></div>
-                <div className="w-[95%] bg-gradient-to-r from-emerald-500 to-green-500"></div>
+                <div className={`w-[${attendanceRate}%] bg-gradient-to-r from-emerald-500 to-green-500`}></div>
+                <div className={`w-[${100 - attendanceRate}%] bg-amber-400`}></div>
               </div>
             </div>
+
+            {/* Salary Details Card */}
+            <EmployeeSalaryCard salaryData={salaryData} />
+
+            {/* Attendance History Table */}
+            <EmployeeAttendanceHistory historyData={historyData} />
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      {showAttendanceModal && (
+        <AttendanceModal
+          employee={employee}
+          onClose={() => setShowAttendanceModal(false)}
+          onSuccess={handleAttendanceSuccess}
+        />
+      )}
+
+      {showLeaveModal && (
+        <OnLeaveModal
+          employee={employee}
+          onClose={() => setShowLeaveModal(false)}
+          onSuccess={handleLeaveSuccess}
+        />
+      )}
     </div>
   );
 }
