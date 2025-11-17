@@ -5,7 +5,10 @@ import { Clock, Calendar, TrendingUp, QrCode, Edit, Trash2, LogOut, UserCheck, A
 export default function EmployeeProfile() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { employee } = location.state || {};
+  const { employee } = location.state || {}; // Get the employee object from state
+
+  // Log the employee data for debugging
+  console.log('Employee data:', employee);
 
   // Status configurations matching EmployeeCard
   const statusConfig = {
@@ -38,15 +41,6 @@ export default function EmployeeProfile() {
   }
 
   const currentStatus = statusConfig[employee.status] || statusConfig["present"];
-
-  const attendanceData = [
-    { date: 'Thu Nov 13', checkIn: '10:00', checkOut: '-', hours: '-', status: 'active' },
-    { date: 'Wed Nov 12', checkIn: '10:01', checkOut: '18:22', hours: '8:00', status: 'complete' },
-    { date: 'Tue Nov 11', checkIn: '10:00', checkOut: '18:01', hours: '8:00', status: 'complete' },
-    { date: 'Mon Nov 10', checkIn: '10:01', checkOut: '18:10', hours: '8:00', status: 'complete' },
-    { date: 'Sun Nov 09', checkIn: '10:00', checkOut: '18:09', hours: '8:00', status: 'complete' },
-    { date: 'Sat Nov 08', checkIn: '10:00', checkOut: '18:06', hours: '8:00', status: 'complete' },
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -86,7 +80,9 @@ export default function EmployeeProfile() {
                   <div className="relative">
                     {/* Profile Image */}
                     <img
-                      src={employee.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop"}
+                      src={employee.contentType && employee.data 
+                        ? `data:${employee.contentType};base64,${employee.data}` 
+                        : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop"}
                       alt={employee.name}
                       className="w-32 h-32 rounded-full border-4 border-white shadow-xl object-cover"
                     />
@@ -94,11 +90,11 @@ export default function EmployeeProfile() {
                   </div>
                   
                   <h2 className="mt-4 text-2xl font-bold text-slate-800">{employee.name}</h2>
-                  <p className="text-green-600 font-medium mt-1">{employee.role}</p>
+                  <p className="text-green-600 font-medium mt-1">{employee.jobPositionName || 'N/A'}</p>
                   
                   <div className="flex items-center gap-2 mt-3 text-sm text-slate-600">
                     <Clock className="w-4 h-4" />
-                    <span>Last signed in: <strong>{employee.checkInTime || '10:00 Today'}</strong></span>
+                    <span>Last signed in: <strong>{employee.checkInTime || 'N/A'}</strong></span>
                   </div>
 
                   <div className="flex gap-2 mt-6 w-full">
@@ -111,61 +107,22 @@ export default function EmployeeProfile() {
                       Leave
                     </button>
                   </div>
-
-                  <div className="flex gap-2 mt-3 w-full">
-                    <button className="p-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors">
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button className="p-2.5 bg-slate-100 text-red-600 rounded-xl hover:bg-red-50 transition-colors">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
                 </div>
 
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-slate-200">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-slate-800">0</div>
+                    <div className="text-2xl font-bold text-slate-800">{employee.absenceDays || 0}</div>
                     <div className="text-xs text-slate-600 mt-1">Absence</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-indigo-600">✕</div>
+                    <div className="text-2xl font-bold text-indigo-600">{employee.onLeaveDays || 0}</div>
                     <div className="text-xs text-slate-600 mt-1">On Leave</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-slate-800">0</div>
+                    <div className="text-2xl font-bold text-slate-800">{employee.remainingDays || 0}</div>
                     <div className="text-xs text-slate-600 mt-1">Days Left</div>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* QR Code Card */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 mt-6 border border-slate-200">
-              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <QrCode className="w-5 h-5 text-green-600" />
-                Scan QR to Login
-              </h3>
-              <div className="bg-slate-50 rounded-xl p-6 flex items-center justify-center">
-                <div className="w-48 h-48 bg-white p-4 rounded-lg shadow-inner">
-                  <svg viewBox="0 0 100 100" className="w-full h-full">
-                    <rect width="100" height="100" fill="white"/>
-                    {[...Array(10)].map((_, i) => 
-                      [...Array(10)].map((_, j) => {
-                        const shouldFill = (i + j) % 2 === 0 || (i === j) || (i === 9 - j);
-                        return shouldFill ? (
-                          <rect 
-                            key={`${i}-${j}`}
-                            x={i * 10} 
-                            y={j * 10} 
-                            width="10" 
-                            height="10" 
-                            fill="black"
-                          />
-                        ) : null;
-                      })
-                    )}
-                  </svg>
                 </div>
               </div>
             </div>
@@ -185,7 +142,7 @@ export default function EmployeeProfile() {
                 </div>
                 <div className="text-right">
                   <div className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-green-500 bg-clip-text text-transparent">
-                    100%
+                    {employee.attendanceRate || 'N/A'}%
                   </div>
                 </div>
               </div>
@@ -194,94 +151,6 @@ export default function EmployeeProfile() {
                 <div className="w-[2%] bg-amber-400"></div>
                 <div className="w-[3%] bg-cyan-400"></div>
                 <div className="w-[95%] bg-gradient-to-r from-emerald-500 to-green-500"></div>
-              </div>
-
-              <div className="flex items-center gap-6 mt-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-amber-400"></div>
-                  <span className="text-slate-600">Absent</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-cyan-400"></div>
-                  <span className="text-slate-600">Delay</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  <span className="text-slate-600">On Time</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Salary Details Card */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
-              <h3 className="text-lg font-bold text-slate-800 mb-4">Salary Details</h3>
-              <div className="grid grid-cols-3 gap-6">
-                <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-100">
-                  <div className="text-sm text-slate-600 mb-1">Total Days</div>
-                  <div className="text-3xl font-bold text-slate-800">26</div>
-                </div>
-                <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl p-4 border border-cyan-100">
-                  <div className="text-sm text-slate-600 mb-1">Total Hours</div>
-                  <div className="text-3xl font-bold text-slate-800">208.0 h</div>
-                </div>
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
-                  <div className="text-sm text-slate-600 mb-1">Salary</div>
-                  <div className="text-3xl font-bold text-slate-800">8000.0</div>
-                  <div className="text-xs text-slate-600 mt-1">EGP</div>
-                </div>
-              </div>
-            </div>
-
-            {/* History Card */}
-            <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
-              <div className="p-6 border-b border-slate-200">
-                <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-green-600" />
-                  Attendance History
-                </h3>
-              </div>
-              
-              <div className="overflow-x-auto overflow-y-auto max-h-96">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Check In</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Check Out</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Hours</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200">
-                    {attendanceData.map((day, index) => (
-                      <tr key={index} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-slate-800">{day.date}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-green-600 font-medium">{day.checkIn}</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-red-600 font-medium">{day.checkOut}</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-slate-800 font-medium">{day.hours}</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {day.status === 'active' ? (
-                            <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                              Active
-                            </span>
-                          ) : (
-                            <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                              Completed
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
             </div>
           </div>
