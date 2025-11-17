@@ -313,3 +313,39 @@ export const markAttendance = async (empCode, arrivalTime) => {
     throw error;
   }
 };
+
+// Fetch employee profile by code
+export const fetchEmployeeProfile = async (empCode) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const response = await fetch(`${BASE_URL}/dashboard/${empCode}/profile`, {
+      method: 'GET',
+      headers: {
+        'ngrok-skip-browser-warning': 'true',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to fetch employee profile';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+        errorMessage = `${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching employee profile:', error);
+    throw error;
+  }
+};
