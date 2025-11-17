@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Clock, Calendar, TrendingUp, QrCode, Edit, Trash2, LogOut, UserCheck, ArrowLeft } from 'lucide-react';
-import { markAttendance, fetchEmployeeProfile } from '../Employee_page/api/emplyee_api';
+import { markAttendance, fetchEmployeeProfile, markLeave } from '../Employee_page/api/emplyee_api';
 
 export default function EmployeeProfile() {
   const location = useLocation();
@@ -55,6 +55,18 @@ export default function EmployeeProfile() {
       alert('Attendance marked successfully!');
     } catch (error) {
       console.error('Error marking attendance:', error);
+      alert(`Error: ${error.message}`);
+    }
+  };
+
+  const handleMarkLeave = async () => {
+    try {
+      const now = new Date();
+      const leaveTime = now.toTimeString().split(' ')[0].substring(0, 5);
+      await markLeave(employee.code, leaveTime);
+      alert('Leave marked successfully!');
+    } catch (error) {
+      console.error('Error marking leave:', error);
       alert(`Error: ${error.message}`);
     }
   };
@@ -203,7 +215,10 @@ export default function EmployeeProfile() {
                       <UserCheck className="w-4 h-4" />
                       Attendance
                     </button>
-                    <button className="flex-1 px-4 py-2.5 bg-green-50 text-green-700 rounded-xl font-medium hover:bg-green-100 transition-colors flex items-center justify-center gap-2">
+                    <button 
+                      onClick={handleMarkLeave}
+                      className="flex-1 px-4 py-2.5 bg-green-50 text-green-700 rounded-xl font-medium hover:bg-green-100 transition-colors flex items-center justify-center gap-2"
+                    >
                       <LogOut className="w-4 h-4" />
                       Leave
                     </button>

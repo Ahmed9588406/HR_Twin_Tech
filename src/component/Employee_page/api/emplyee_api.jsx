@@ -314,6 +314,46 @@ export const markAttendance = async (empCode, arrivalTime) => {
   }
 };
 
+// Mark leave
+export const markLeave = async (empCode, leaveTime) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const response = await fetch(`${BASE_URL}/dashboard/mark-leave`, {
+      method: 'POST',
+      headers: {
+        'ngrok-skip-browser-warning': 'true',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        empCode: parseInt(empCode),
+        leaveTime: leaveTime,
+      }),
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to mark leave';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+        errorMessage = `${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    return data; // Expected: true
+  } catch (error) {
+    console.error('Error marking leave:', error);
+    throw error;
+  }
+};
+
 // Fetch employee profile by code
 export const fetchEmployeeProfile = async (empCode) => {
   try {
