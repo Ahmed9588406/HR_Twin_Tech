@@ -22,7 +22,7 @@ export default function EmployeeProfile() {
 
   // Status configurations matching EmployeeCard
   const statusConfig = {
-    "Stay here": { dotColor: "bg-emerald-500" },
+    "Present": { dotColor: "bg-emerald-500" },
     "Checked out": { dotColor: "bg-gray-400" },
     "Absent": { dotColor: "bg-red-500" },
     "On Leave": { dotColor: "bg-yellow-500" },
@@ -255,7 +255,7 @@ export default function EmployeeProfile() {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-indigo-600">
-                      {profileData?.onLeave ? 'Yes' : 'No'}
+                      {employee.leaveTime ? 'Yes' : 'No'}
                     </div>
                     <div className="text-xs text-slate-600 mt-1">On Leave</div>
                   </div>

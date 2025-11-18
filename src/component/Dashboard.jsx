@@ -4,13 +4,14 @@ import Sidebar from './ui/Sidebar'
 import AttendanceCards from './ui/AttendanceCard.jsx'
 import AttendanceRate from './ui/Attendance_Rate.jsx'
 import Department from './ui/Department.jsx'
-import EmployeeCard from './ui/EmployeeCard.jsx'
+import EmployeeCard from './ui/EmployeeCard.jsx' // Changed to use EmployeeCard
 import AttendanceHistoryFilter from './ui/Attendance_history.jsx'
+import { fetchAttendanceStatistics, fetchDashboardData } from './api/dashboard_api'; // Import the new API function
 
 function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
+  const [attendanceData, setAttendanceData] = useState([]);
   const [loading, setLoading] = useState(true);
-  // eslint-disable-next-line no-unused-vars
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -18,27 +19,6 @@ function Dashboard() {
     status: 'all',
     search: ''
   });
-
-  // Dummy data for demonstration
-  const dummyData = useMemo(() => ({
-    totalEmployees: 150,
-    totalAttendaceToday: 142,
-    totalAbsentToday: 5,
-    totalFreeToday: 3,
-    totalDiscount: 12500,
-    totalRewards: 8750,
-    deptNumOfEmp: [
-      { name: "Human Resources", numberOfEmp: 25 },
-      { name: "Information Technology", numberOfEmp: 45 },
-      { name: "Finance", numberOfEmp: 20 },
-      { name: "Marketing", numberOfEmp: 18 },
-      { name: "Sales", numberOfEmp: 28 },
-      { name: "Operations", numberOfEmp: 22 },
-      { name: "Customer Service", numberOfEmp: 15 },
-      { name: "Legal", numberOfEmp: 8 },
-      { name: "Administration", numberOfEmp: 12 }
-    ]
-  }), []);
 
   // Dummy employee data with more details
   const allEmployees = [
@@ -99,18 +79,51 @@ function Dashboard() {
   ];
 
   useEffect(() => {
-    // For demonstration, use dummy data directly
-    setDashboardData(dummyData);
-    setLoading(false);
-  }, [dummyData]);
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [dashboard, attendance] = await Promise.all([
+          fetchDashboardData(), // Fetch dashboard data from API
+          fetchAttendanceStatistics()
+        ]);
+        setDashboardData(dashboard);
+        console.log('Fetched attendance data:', attendance); // Log the fetched attendance data for debugging
+        console.log('First employee data:', attendance && attendance.length > 0 ? attendance[0] : 'No data'); // Log first employee to see structure
+        setAttendanceData(attendance || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []); // Removed dummyData dependency
 
   const handleFilterChange = (newFilters) => {
     console.log('Filters changed:', newFilters);
     setFilters(newFilters);
   };
 
-  // Filter employees based on active filters - Date is primary, Department is secondary
-  const filteredEmployees = allEmployees.filter(emp => {
+  // Helper function to get display status
+  const getDisplayStatus = (status, leaveTime) => {
+    if (leaveTime) return 'Left';
+    if (status === 'PRESENT') return 'Stay here';
+    if (status === 'ABSENT') return 'Absent';
+    if (status === 'ON_LEAVE') return 'Left';
+    return 'Stay here';
+  };
+
+  // Helper function to map filter status to display status
+  const getFilterDisplayStatus = (filterStatus) => {
+    if (filterStatus === 'present') return 'Stay here';
+    if (filterStatus === 'absent') return 'Absent';
+    if (filterStatus === 'on-leave') return 'Left';
+    return 'all';
+  };
+
+  // Filter attendance data based on active filters
+  const filteredEmployees = attendanceData.filter(emp => {
     // Primary filter: Date (always applied)
     if (emp.date && emp.date !== filters.date) {
       return false;
@@ -122,7 +135,7 @@ function Dashboard() {
     }
     
     // Tertiary filter: Status
-    if (filters.status !== 'all' && emp.status !== filters.status) {
+    if (filters.status !== 'all' && getDisplayStatus(emp.status, emp.leaveTime) !== getFilterDisplayStatus(filters.status)) {
       return false;
     }
     
@@ -134,7 +147,7 @@ function Dashboard() {
     return true;
   });
 
-  const departments = dummyData.deptNumOfEmp.map(dept => dept.name);
+  const departments = dashboardData?.deptNumOfEmp?.map(dept => dept.name) || [];
 
   if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
   if (error) return <div className="flex items-center justify-center h-screen text-red-600">{error}</div>;
@@ -171,7 +184,7 @@ function Dashboard() {
                   <div>
                     <h2 className="text-xl font-bold text-gray-900">Employee Attendance</h2>
                     <p className="text-sm text-gray-500 mt-1">
-                      Showing {filteredEmployees.length} of {allEmployees.length} employees for {new Date(filters.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                      Showing {filteredEmployees.length} of {attendanceData.length} employees for {new Date(filters.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                     </p>
                   </div>
                   <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
@@ -181,20 +194,30 @@ function Dashboard() {
                 
                 {filteredEmployees.length > 0 ? (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {filteredEmployees.map((employee, index) => (
-                      <EmployeeCard 
-                        key={index}
-                        employee={{
-                          name: employee.name,
-                          role: employee.role,
-                          department: employee.department,
-                          avatar: employee.avatar,
-                          checkInTime: employee.checkInTime,
-                          status: employee.status === 'present' ? 'Stay here' : 
-                                 employee.status === 'absent' ? 'Absent' : 'On Leave'
-                        }}
-                      />
-                    ))}
+                    {filteredEmployees.map((employee, index) => {
+                      console.log('Mapping employee:', employee); // Debug log
+                      return (
+                        <EmployeeCard 
+                          key={employee.empCode || index}
+                          employee={{
+                            code: employee.empCode,
+                            name: employee.empName,
+                            role: employee.jobPosition,
+                            department: employee.deptartment, // Note: API has 'deptartment' (typo in API?)
+                            contentType: employee.contentType,
+                            image: employee.empPhoto, // Changed from 'data' to 'empPhoto'
+                            checkInTime: employee.arrivalTime,
+                            leaveTime: employee.leaveTime, // Add leave time
+                            status: employee.leaveTime ? 'Left' : 
+                                   (employee.status === 'PRESENT' ? 'Stay here' : 
+                                   employee.status === 'ABSENT' ? 'Absent' : 
+                                   employee.status === 'ON_LEAVE' ? 'Left' : 
+                                   'Stay here')
+                          }}
+                          showActions={false} // Hide action buttons for dashboard
+                        />
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-12">

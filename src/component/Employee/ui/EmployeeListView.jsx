@@ -5,11 +5,14 @@ import CreateNewEmployee from "../../Employee_page/Create_new_Employee"; // Impo
 import { fetchEmployeeById } from "../../Settings/api/employees_api"; // Import the API function
 import { useNavigate } from "react-router-dom";
 import { fetchEmployees, deleteEmployee } from '../../Employee_page/api/emplyee_api'; // Added deleteEmployee import
+import { fetchBranches, fetchDepartments } from '../../Settings/api/settings_api' // fetch lists for filters
 
 export default function EmployeeListView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [selectedLocation, setSelectedLocation] = useState('all');
+  const [departments, setDepartments] = useState([]) // will hold {id,name}
+  const [branches, setBranches] = useState([]) // will hold {id,name}
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,26 +36,70 @@ export default function EmployeeListView() {
 
     loadEmployees();
   }, []);
+  
+  // fetch branches & departments for the filter selects
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const [b, d] = await Promise.all([
+          fetchBranches().catch(err => { console.error('fetchBranches', err); return [] }),
+          fetchDepartments().catch(err => { console.error('fetchDepartments', err); return [] })
+        ])
+        if (!mounted) return
+        setBranches(Array.isArray(b) ? b.map(x => ({ id: x.id, name: x.name })) : [])
+        setDepartments(Array.isArray(d) ? d.map(x => ({ id: x.id, name: x.name })) : [])
+      } catch (err) {
+        console.error('Error loading filter lists:', err)
+        if (!mounted) return
+        setBranches([]); setDepartments([])
+      }
+    })()
+    return () => { mounted = false }
+  }, [])
 
-  const departments = useMemo(() => {
-    const unique = [...new Set(employees.map(emp => emp.department))];
-    return unique.sort();
-  }, [employees]);
+  // derive selected names (for display) if needed
+  const selectedDepartmentName = useMemo(() => {
+    if (selectedDepartment === 'all') return null
+    const d = departments.find(dd => String(dd.id) === String(selectedDepartment))
+    return d ? d.name : selectedDepartment
+  }, [selectedDepartment, departments])
 
-  const locations = useMemo(() => {
-    const unique = [...new Set(employees.map(emp => emp.location))];
-    return unique.sort();
-  }, [employees]);
+  const selectedLocationName = useMemo(() => {
+    if (selectedLocation === 'all') return null
+    const b = branches.find(bb => String(bb.id) === String(selectedLocation))
+    return b ? b.name : selectedLocation
+  }, [selectedLocation, branches])
 
   const filteredEmployees = useMemo(() => {
     return employees.filter(employee => {
       const matchesSearch = employee.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesDepartment = selectedDepartment === 'all' || employee.department === selectedDepartment;
-      const matchesLocation = selectedLocation === 'all' || employee.location === selectedLocation;
+      // department match: accept when selected 'all' or when employee matches by id or by name/string
+      const matchesDepartment = (() => {
+        if (selectedDepartment === 'all') return true
+        if (!employee) return false
+        // compare against common possible fields
+        if (String(employee.departmentId) === String(selectedDepartment)) return true
+        if (String(employee.department) === String(selectedDepartment)) return true
+        if (String(employee.departmentName) === String(selectedDepartment)) return true
+        // if we have department name from list, compare by name
+        if (selectedDepartmentName && (employee.departmentName === selectedDepartmentName || employee.department === selectedDepartmentName)) return true
+        return false
+      })()
+
+      const matchesLocation = (() => {
+        if (selectedLocation === 'all') return true
+        if (!employee) return false
+        if (String(employee.branchId) === String(selectedLocation)) return true
+        if (String(employee.location) === String(selectedLocation)) return true
+        if (String(employee.branchName) === String(selectedLocation)) return true
+        if (selectedLocationName && (employee.branchName === selectedLocationName || employee.location === selectedLocationName)) return true
+        return false
+      })()
       
       return matchesSearch && matchesDepartment && matchesLocation;
     });
-  }, [searchQuery, selectedDepartment, selectedLocation, employees]);
+  }, [searchQuery, selectedDepartment, selectedLocation, employees, selectedDepartmentName, selectedLocationName]);
 
   const handleEdit = async (employee) => {
     try {
@@ -193,8 +240,8 @@ export default function EmployeeListView() {
                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 hover:border-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg text-sm outline-none transition-all appearance-none cursor-pointer"
               >
                 <option value="all">All Departments</option>
-                {departments.map((dept, index) => (
-                  <option key={index} value={dept}>{dept}</option> // Added key prop
+                {departments.map((dept) => (
+                  <option key={dept.id ?? dept.name} value={dept.id ?? dept.name}>{dept.name}</option>
                 ))}
               </select>
             </div>
@@ -211,8 +258,8 @@ export default function EmployeeListView() {
                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 hover:border-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg text-sm outline-none transition-all appearance-none cursor-pointer"
               >
                 <option value="all">All Locations</option>
-                {locations.map((location, index) => (
-                  <option key={index} value={location}>{location}</option> // Added key prop
+                {branches.map((br) => (
+                  <option key={br.id ?? br.name} value={br.id ?? br.name}>{br.name}</option>
                 ))}
               </select>
             </div>
@@ -236,7 +283,7 @@ export default function EmployeeListView() {
                 )}
                 {selectedDepartment !== 'all' && (
                   <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full border border-blue-200">
-                    {selectedDepartment}
+                    {selectedDepartmentName ?? selectedDepartment}
                     <button
                       onClick={() => setSelectedDepartment('all')}
                       className="hover:bg-blue-100 rounded-full p-0.5"
@@ -247,7 +294,7 @@ export default function EmployeeListView() {
                 )}
                 {selectedLocation !== 'all' && (
                   <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-purple-50 text-purple-700 rounded-full border border-purple-200">
-                    {selectedLocation}
+                    {selectedLocationName ?? selectedLocation}
                     <button
                       onClick={() => setSelectedLocation('all')}
                       className="hover:bg-purple-100 rounded-full p-0.5"
