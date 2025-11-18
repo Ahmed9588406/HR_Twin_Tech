@@ -1,33 +1,175 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Phone, AlertCircle, Edit, Send, Trash2, Lock, Calendar, Clock, DollarSign, MessageSquare, CheckCircle } from 'lucide-react';
+import { fetchRequestById, approveVacationRequest, rejectVacationRequest } from './requests_api';
 
 export default function VacationRequestPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { employee } = location.state || {};
+  const { requestId } = location.state || {};
+  const [requestData, setRequestData] = useState(null);
   const [status, setStatus] = useState('Pending');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [approving, setApproving] = useState(false); // new state
+  const [rejecting, setRejecting] = useState(false); // new state
 
-  const handleAccept = () => setStatus('Accepted');
-  const handleReject = () => setStatus('Rejected');
+  useEffect(() => {
+    const loadRequestData = async () => {
+      if (!requestId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const data = await fetchRequestById(requestId);
+        setRequestData(data);
+        setStatus(data.requestStatus || 'Pending');
+      } catch (err) {
+        console.error('Failed to fetch request data:', err);
+        setError('Failed to load request data. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRequestData();
+  }, [requestId]);
+
+  const handleAccept = async () => {
+    if (!requestId) return;
+    const prevStatus = status;
+    try {
+      setApproving(true);
+      setStatus('Approving...');
+      await approveVacationRequest(requestId, true);
+      setStatus('APPROVED');
+      // refresh request data to reflect server state
+      try {
+        const fresh = await fetchRequestById(requestId);
+        setRequestData(fresh);
+      } catch (refreshErr) {
+        console.warn('Failed to refresh request after approve:', refreshErr);
+      }
+    } catch (err) {
+      console.error('Approve failed:', err);
+      alert('Failed to approve request: ' + (err.message || 'Please try again.'));
+      setStatus(prevStatus || 'PENDING');
+    } finally {
+      setApproving(false);
+    }
+  };
+  const handleReject = async () => {
+    if (!requestId) return;
+    const prevStatus = status;
+    try {
+      setRejecting(true);
+      setStatus('Rejecting...');
+      await rejectVacationRequest(requestId);
+      setStatus('REJECTED');
+      try {
+        const fresh = await fetchRequestById(requestId);
+        setRequestData(fresh);
+      } catch (refreshErr) {
+        console.warn('Failed to refresh request after reject:', refreshErr);
+      }
+    } catch (err) {
+      console.error('Reject failed:', err);
+      alert('Failed to reject request: ' + (err.message || 'Please try again.'));
+      setStatus(prevStatus || 'PENDING');
+    } finally {
+      setRejecting(false);
+    }
+  };
   const handleBack = () => navigate(-1);
 
-  // If no employee data, show default or redirect
-  if (!employee) {
+  // Calculate duration in days
+  const calculateDuration = (start, end) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const diffTime = Math.abs(endDate - startDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays + 1; // Include both start and end dates
+  };
+
+  // Function to navigate through proxy and download file with Authorization header
+  const downloadFile = async (fileUrl) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Auth token not found; please log in again.');
+        return;
+      }
+
+      // Turn absolute ngrok URL into relative path for the dev proxy
+      // e.g. https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/requests/download?path=...
+      // -> /api/v1/requests/download?path=...
+      const relativeUrl = fileUrl.replace(/^https?:\/\/[^/]+/, '');
+
+      // Build a URL object to extract filename (from query param 'path' or pathname)
+      const urlForParsing = new URL(relativeUrl, window.location.origin);
+      const pathParam = urlForParsing.searchParams.get('path');
+      const fileName = pathParam ? pathParam.split('/').pop() : (urlForParsing.pathname.split('/').pop() || 'document');
+
+      const resp = await fetch(relativeUrl, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'ngrok-skip-browser-warning': 'true',
+        },
+      });
+
+      if (!resp.ok) {
+        const text = await resp.text().catch(() => '');
+        throw new Error(`Failed to fetch file: ${resp.status} ${resp.statusText} ${text}`);
+      }
+
+      const blob = await resp.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      console.error('Error downloading file:', err);
+      alert('Failed to download file. ' + (err.message || ''));
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading request details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!requestId || !requestData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">No Employee Data</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">No Request Data</h2>
+          <p className="text-gray-600 mb-4">{error || 'No request information available.'}</p>
           <button 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/req-dashboard')}
             className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
           >
-            Go to Dashboard
+            Go to Requests Dashboard
           </button>
         </div>
       </div>
     );
   }
+
+  const employee = requestData.empDetails;
+  const duration = calculateDuration(requestData.startDate, requestData.endDate);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -52,66 +194,33 @@ export default function VacationRequestPage() {
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
               <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 h-32"></div>
               <div className="px-6 pb-6 -mt-16">
-                {/* Profile Image */}
                 <div className="flex flex-col items-center">
                   <div className="relative">
                     <img
-                      src={employee.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop"}
-                      alt={employee.name}
+                      src={employee.data ? `data:${employee.contentType};base64,${employee.data}` : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop"}
+                      alt={employee.empName}
                       className="w-32 h-32 rounded-full border-4 border-white shadow-xl object-cover"
                     />
                     <div className={`absolute bottom-2 right-2 w-5 h-5 rounded-full border-2 border-white ${
-                      employee.status === 'present' ? 'bg-green-500' : 
-                      employee.status === 'absent' ? 'bg-red-500' : 'bg-yellow-500'
+                      employee.empStatus === 'USER' ? 'bg-green-500' : 'bg-yellow-500'
                     } animate-pulse`}></div>
                   </div>
 
-                  {/* Employee Info */}
                   <div className="mt-4 text-center">
-                    <h2 className="text-2xl font-bold text-gray-900">{employee.name}</h2>
-                    <p className="text-green-600 font-medium mt-1">{employee.role}</p>
+                    <h2 className="text-2xl font-bold text-gray-900">{employee.empName}</h2>
+                    <p className="text-green-600 font-medium mt-1">{employee.empPosition}</p>
                     <span className="inline-block mt-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                      {employee.department}
+                      {employee.empDepartment}
                     </span>
                   </div>
 
-                  {/* Present Badge */}
                   <div className="mt-6 w-full">
-                    <div className={`border rounded-lg py-3 text-center ${
-                      employee.status === 'present' 
-                        ? 'bg-green-50 border-green-200' 
-                        : employee.status === 'absent'
-                        ? 'bg-red-50 border-red-200'
-                        : 'bg-yellow-50 border-yellow-200'
-                    }`}>
-                      <CheckCircle className={`w-6 h-6 mx-auto mb-1 ${
-                        employee.status === 'present' 
-                          ? 'text-green-600' 
-                          : employee.status === 'absent'
-                          ? 'text-red-600'
-                          : 'text-yellow-600'
-                      }`} />
-                      <span className={`font-semibold ${
-                        employee.status === 'present' 
-                          ? 'text-green-700' 
-                          : employee.status === 'absent'
-                          ? 'text-red-700'
-                          : 'text-yellow-700'
-                      }`}>
-                        {employee.status === 'present' ? 'Present' : employee.status === 'absent' ? 'Absent' : 'On Leave'}
-                      </span>
+                    <div className="border rounded-lg py-3 text-center bg-green-50 border-green-200">
+                      <CheckCircle className="w-6 h-6 mx-auto mb-1 text-green-600" />
+                      <span className="font-semibold text-green-700">Active Employee</span>
                     </div>
                   </div>
 
-                  {/* Check-in Time */}
-                  {employee.checkInTime && employee.status === 'present' && (
-                    <div className="mt-4 text-center">
-                      <p className="text-sm text-gray-500">Check-in Time</p>
-                      <p className="text-lg font-semibold text-gray-900">{employee.checkInTime}</p>
-                    </div>
-                  )}
-
-                  {/* Action Icons */}
                   <div className="mt-6 flex justify-center gap-4">
                     <button className="p-3 bg-green-50 hover:bg-green-100 rounded-full transition-colors">
                       <Phone className="w-5 h-5 text-green-600" />
@@ -121,7 +230,6 @@ export default function VacationRequestPage() {
                     </button>
                   </div>
 
-                  {/* Bottom Actions */}
                   <div className="mt-6 flex justify-center gap-3 pt-6 border-t border-gray-200 w-full">
                     <button className="p-2.5 hover:bg-green-50 rounded-lg transition-colors">
                       <Edit className="w-5 h-5 text-green-600" />
@@ -148,28 +256,29 @@ export default function VacationRequestPage() {
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-gray-900">Request Status</h3>
                 <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                  status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
-                  status === 'Accepted' ? 'bg-green-100 text-green-700' :
+                  status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                  status === 'APPROVED' || status === 'Accepted' ? 'bg-green-100 text-green-700' :
                   'bg-red-100 text-red-700'
                 }`}>
                   {status}
                 </span>
               </div>
               
-              {/* Action Buttons */}
-              {status === 'Pending' && (
+              {status === 'PENDING' && (
                 <div className="flex gap-4">
                   <button
                     onClick={handleReject}
-                    className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    disabled={rejecting}
+                    className={`flex-1 ${rejecting ? 'bg-red-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'} text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl`}
                   >
-                    Reject
+                    {rejecting ? 'Rejecting...' : 'Reject'}
                   </button>
                   <button
                     onClick={handleAccept}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    disabled={approving}
+                    className={`flex-1 ${approving ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl`}
                   >
-                    Accept
+                    {approving ? 'Approving...' : 'Accept'}
                   </button>
                 </div>
               )}
@@ -180,60 +289,72 @@ export default function VacationRequestPage() {
               <h3 className="text-xl font-bold text-gray-900 mb-6">Request Details</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Request Type */}
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Request Type</label>
                   <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-green-600" />
-                    <span className="text-gray-900 font-medium capitalize">Vacation</span>
+                    <span className="text-gray-900 font-medium capitalize">{requestData.requestType}</span>
                   </div>
                 </div>
 
-                {/* Request Date */}
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Request Date</label>
                   <div className="flex items-center gap-2">
                     <Clock className="w-5 h-5 text-green-600" />
-                    <span className="text-gray-900 font-medium">2025-06-03</span>
+                    <span className="text-gray-900 font-medium">{requestData.requestDate}</span>
                   </div>
                 </div>
 
-                {/* Start Date */}
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Start Date</label>
                   <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-green-600" />
-                    <span className="text-gray-900 font-medium">2025-06-03</span>
+                    <span className="text-gray-900 font-medium">{requestData.startDate}</span>
                   </div>
                 </div>
 
-                {/* End Date */}
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">End Date</label>
                   <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-red-600" />
-                    <span className="text-gray-900 font-medium">2025-06-07</span>
+                    <span className="text-gray-900 font-medium">{requestData.endDate}</span>
                   </div>
                 </div>
 
-                {/* Duration Badge */}
                 <div className="md:col-span-2">
                   <div className="inline-flex items-center gap-2 bg-green-50 px-4 py-2 rounded-lg">
                     <Clock className="w-4 h-4 text-green-600" />
-                    <span className="text-green-700 font-semibold">Duration: 5 Days</span>
+                    <span className="text-green-700 font-semibold">Duration: {duration} Days</span>
                   </div>
                 </div>
 
-                {/* Comment */}
                 <div className="md:col-span-2 space-y-2">
                   <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
                     <MessageSquare className="w-4 h-4" />
                     Comment
                   </label>
                   <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <p className="text-gray-700">ffffffffffffffffffffffffffffffff</p>
+                    <p className="text-gray-700">{requestData.comment || 'No comment provided.'}</p>
                   </div>
                 </div>
+
+                {/* File Paths */}
+                {requestData.filePaths && requestData.filePaths.length > 0 && (
+                  <div className="md:col-span-2 space-y-2">
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Attached Files</label>
+                    <div className="space-y-2">
+                      {requestData.filePaths.map((filePath, index) => (
+                        <button
+                          key={index}
+                          onClick={() => downloadFile(filePath)}
+                          className="block bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg p-3 transition-colors font-medium text-left w-full"
+                        >
+                          📎 Download Document {index + 1}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -245,25 +366,21 @@ export default function VacationRequestPage() {
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* OverTime Hours */}
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">OverTime Hours</label>
                   <div className="text-2xl font-bold text-gray-400">-</div>
                 </div>
 
-                {/* Advance Amount */}
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Advance Amount</label>
                   <div className="text-2xl font-bold text-gray-400">-</div>
                 </div>
 
-                {/* OverTime Amount */}
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">OverTime Amount</label>
                   <div className="text-2xl font-bold text-gray-400">-</div>
                 </div>
 
-                {/* Paid Status */}
                 <div className="md:col-span-3 pt-4 border-t border-gray-200">
                   <label className="flex items-center gap-3 cursor-pointer group">
                     <input type="checkbox" className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500" />
