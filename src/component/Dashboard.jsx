@@ -6,7 +6,7 @@ import AttendanceRate from './ui/Attendance_Rate.jsx'
 import Department from './ui/Department.jsx'
 import EmployeeCard from './ui/EmployeeCard.jsx' // Changed to use EmployeeCard
 import AttendanceHistoryFilter from './ui/Attendance_history.jsx'
-import { fetchAttendanceStatistics } from './api/dashboard_api'; // Import the API function
+import { fetchAttendanceStatistics, fetchDashboardData } from './api/dashboard_api'; // Import the new API function
 
 function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
@@ -19,27 +19,6 @@ function Dashboard() {
     status: 'all',
     search: ''
   });
-
-  // Dummy data for demonstration
-  const dummyData = useMemo(() => ({
-    totalEmployees: 150,
-    totalAttendaceToday: 142,
-    totalAbsentToday: 5,
-    totalFreeToday: 3,
-    totalDiscount: 12500,
-    totalRewards: 8750,
-    deptNumOfEmp: [
-      { name: "Human Resources", numberOfEmp: 25 },
-      { name: "Information Technology", numberOfEmp: 45 },
-      { name: "Finance", numberOfEmp: 20 },
-      { name: "Marketing", numberOfEmp: 18 },
-      { name: "Sales", numberOfEmp: 28 },
-      { name: "Operations", numberOfEmp: 22 },
-      { name: "Customer Service", numberOfEmp: 15 },
-      { name: "Legal", numberOfEmp: 8 },
-      { name: "Administration", numberOfEmp: 12 }
-    ]
-  }), []);
 
   // Dummy employee data with more details
   const allEmployees = [
@@ -104,8 +83,7 @@ function Dashboard() {
       try {
         setLoading(true);
         const [dashboard, attendance] = await Promise.all([
-          // Assuming dashboard data is fetched elsewhere, use dummy for now
-          Promise.resolve(dummyData),
+          fetchDashboardData(), // Fetch dashboard data from API
           fetchAttendanceStatistics()
         ]);
         setDashboardData(dashboard);
@@ -120,11 +98,28 @@ function Dashboard() {
     };
 
     loadData();
-  }, [dummyData]);
+  }, []); // Removed dummyData dependency
 
   const handleFilterChange = (newFilters) => {
     console.log('Filters changed:', newFilters);
     setFilters(newFilters);
+  };
+
+  // Helper function to get display status
+  const getDisplayStatus = (status, leaveTime) => {
+    if (leaveTime) return 'Left';
+    if (status === 'PRESENT') return 'Stay here';
+    if (status === 'ABSENT') return 'Absent';
+    if (status === 'ON_LEAVE') return 'Left';
+    return 'Stay here';
+  };
+
+  // Helper function to map filter status to display status
+  const getFilterDisplayStatus = (filterStatus) => {
+    if (filterStatus === 'present') return 'Stay here';
+    if (filterStatus === 'absent') return 'Absent';
+    if (filterStatus === 'on-leave') return 'Left';
+    return 'all';
   };
 
   // Filter attendance data based on active filters
@@ -140,7 +135,7 @@ function Dashboard() {
     }
     
     // Tertiary filter: Status
-    if (filters.status !== 'all' && emp.status !== filters.status) {
+    if (filters.status !== 'all' && getDisplayStatus(emp.status, emp.leaveTime) !== getFilterDisplayStatus(filters.status)) {
       return false;
     }
     
@@ -152,7 +147,7 @@ function Dashboard() {
     return true;
   });
 
-  const departments = dummyData.deptNumOfEmp.map(dept => dept.name);
+  const departments = dashboardData?.deptNumOfEmp?.map(dept => dept.name) || [];
 
   if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
   if (error) return <div className="flex items-center justify-center h-screen text-red-600">{error}</div>;

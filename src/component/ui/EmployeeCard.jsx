@@ -33,6 +33,16 @@ export default function EmployeeCard({
 
   const emp = employee || defaultEmployee;
 
+  // Helper function to format time to 12-hour with AM/PM
+  const formatTime12Hour = (time) => {
+    if (!time || time === 'N/A') return time;
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
   // Construct avatar URL from base64 data
   const getAvatarSrc = () => {
     if (emp.contentType && emp.image) {
@@ -187,7 +197,7 @@ export default function EmployeeCard({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
               <span className="text-xs font-semibold">
-                Arrival: {emp.checkInTime}
+                Arrival: {formatTime12Hour(emp.checkInTime)}
               </span>
             </div>
           )}
@@ -199,7 +209,7 @@ export default function EmployeeCard({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
               <span className="text-xs font-semibold">
-                Leave: {emp.leaveTime}
+                Leave: {formatTime12Hour(emp.leaveTime)}
               </span>
             </div>
           )}

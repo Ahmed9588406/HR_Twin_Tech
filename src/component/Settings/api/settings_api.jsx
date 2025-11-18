@@ -2,6 +2,7 @@
 const API_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/setting/branch';
 const COMPANY_API_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/setting/company';
 const SHIFTS_API_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/setting/shifts';
+const DEPARTMENTS_API_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/setting/departments';
 
 export const fetchBranches = async () => {
   try {
@@ -568,5 +569,52 @@ export const deleteShift = async (id) => {
   } catch (error) {
     console.error('Error deleting shift by ID:', error);
     throw error;
+  }
+};
+
+// New: fetch departments for dropdowns
+export const fetchDepartments = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const res = await fetch(DEPARTMENTS_API_URL, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true'
+      }
+    });
+
+    console.log('Fetch departments status:', res.status);
+
+    if (!res.ok) {
+      const txt = await res.text().catch(() => '');
+      throw new Error(`Failed to fetch departments: ${res.status} - ${txt}`);
+    }
+
+    const contentType = res.headers.get('content-type') || '';
+    const text = await res.text();
+    let data;
+    try {
+      data = contentType.includes('application/json') ? JSON.parse(text) : JSON.parse(text);
+    } catch (err) {
+      console.error('Invalid JSON response for departments:', text);
+      return [];
+    }
+
+    // Ensure array form and map to {id, name}
+    const arr = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
+    return arr.map(d => ({
+      id: d.id ?? d.departmentId ?? null,
+      name: d.name ?? d.department_name ?? d.title ?? 'Unknown'
+    }));
+  } catch (error) {
+    console.error('Error fetching departments:', error);
+    return [];
   }
 };

@@ -55,7 +55,7 @@ function E_dashboard() {
                     className={`
                       flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm transition-all duration-200 whitespace-nowrap
                       ${activeTab === tab.id
-                        ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md'
+                        ? 'bg-green-500 hover:bg-green-600 text-white shadow-md'
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                       }
                     `}

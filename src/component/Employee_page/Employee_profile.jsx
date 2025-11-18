@@ -255,7 +255,7 @@ export default function EmployeeProfile() {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-indigo-600">
-                      {profileData?.onLeave ? 'Yes' : 'No'}
+                      {employee.leaveTime ? 'Yes' : 'No'}
                     </div>
                     <div className="text-xs text-slate-600 mt-1">On Leave</div>
                   </div>

@@ -4,19 +4,18 @@ import Sidebar from '../ui/Sidebar';
 import AddNewTeam from './add_new_team';
 import AddNewMembers from './add_new_members';
 import { Search, Eye, Edit2, X, Users, User, Calendar, Plus } from 'lucide-react';
+import { fetchTeams, deleteTeam } from './api/work_teams_api'; // Import the delete API function
 
 export default function EmployeeManager() {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('Work Teams');
-  const [departments, setDepartments] = useState([
-    { id: 1, name: 'elbatee5', managers: 'abdo', employeeCount: 1, members: [] }
-  ]);
+  const [departments, setDepartments] = useState([]); // Start with empty array
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false); // State for members modal visibility
   const [editingTeam, setEditingTeam] = useState(null); // State for the team being edited
-  const [selectedTeam, setSelectedTeam] = useState(null); // State for the team being viewed
+  const [selectedTeam, setSelectedTeam] = useState(null); // State for the selected team in members modal
 
   const tabs = [
     { id: 'Employees', label: 'Employees', icon: User, path: '/employees' },
@@ -44,18 +43,62 @@ export default function EmployeeManager() {
     }
   };
 
-  const handleDelete = (id) => {
-    setDepartments(departments.filter(dept => dept.id !== id));
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this team?')) {
+      try {
+        await deleteTeam(id);
+        // Reload teams after deletion
+        const loadTeams = async () => {
+          try {
+            const fetchedTeams = await fetchTeams();
+            const mappedTeams = fetchedTeams.map(team => ({
+              id: team.id,
+              name: team.name,
+              managers: team.managerName,
+              employeeCount: team.employeeCount || 0,
+              members: team.members || []
+            }));
+            setDepartments(mappedTeams);
+          } catch (error) {
+            console.error('Error reloading teams:', error);
+          }
+        };
+        await loadTeams();
+      } catch (error) {
+        console.error('Error deleting team:', error);
+        alert(`Failed to delete team: ${error.message}`);
+      }
+    }
   };
 
   const handleEdit = (team) => {
-    setEditingTeam(team); // Set the team to be edited
-    setIsModalOpen(true); // Open the modal
+    setEditingTeam(team); // team already includes id
+    setIsModalOpen(true);
   };
 
   const handleViewMembers = (team) => {
-    setSelectedTeam(team); // Set the team to be viewed
-    setIsMembersModalOpen(true); // Open the members modal
+    setSelectedTeam(team); // Set the selected team for viewing members
+    setIsMembersModalOpen(true);
+  };
+
+  const handleMembersChange = () => {
+    // Reload teams when members change
+    const loadTeams = async () => {
+      try {
+        const fetchedTeams = await fetchTeams();
+        const mappedTeams = fetchedTeams.map(team => ({
+          id: team.id,
+          name: team.name,
+          managers: team.managerName,
+          employeeCount: team.employeeCount || 0,
+          members: team.members || []
+        }));
+        setDepartments(mappedTeams);
+      } catch (error) {
+        console.error('Error reloading teams:', error);
+      }
+    };
+    loadTeams();
   };
 
   const handleCloseModal = () => {
@@ -63,12 +106,29 @@ export default function EmployeeManager() {
   };
 
   const handleCloseMembersModal = () => {
-    setIsMembersModalOpen(false); // Close the members modal
+    setIsMembersModalOpen(false);
+    // Reload teams to update employee counts if needed
+    const loadTeams = async () => {
+      try {
+        const fetchedTeams = await fetchTeams();
+        const mappedTeams = fetchedTeams.map(team => ({
+          id: team.id,
+          name: team.name,
+          managers: team.managerName,
+          employeeCount: team.employeeCount || 0,
+          members: team.members || []
+        }));
+        setDepartments(mappedTeams);
+      } catch (error) {
+        console.error('Error reloading teams:', error);
+      }
+    };
+    loadTeams();
   };
 
   const handleAddOrUpdateTeam = (teamData) => {
     if (editingTeam) {
-      // Update existing team
+      // Update existing team in local state
       setDepartments(prev =>
         prev.map(dept =>
           dept.id === editingTeam.id
@@ -83,7 +143,7 @@ export default function EmployeeManager() {
         { id: prev.length + 1, name: teamData.teamName, managers: teamData.manager, employeeCount: 0, members: [] }
       ]);
     }
-    setIsModalOpen(false); // Close the modal
+    setIsModalOpen(false);
   };
 
   const filteredDepartments = departments.filter(dept =>
@@ -95,6 +155,28 @@ export default function EmployeeManager() {
     setEditingTeam(null); // Clear editing team
     setIsModalOpen(true); // Open the modal for adding new team
   };
+
+  useEffect(() => {
+    const loadTeams = async () => {
+      try {
+        const fetchedTeams = await fetchTeams();
+        // Assuming the API returns an array of teams with id, name, managerName, etc.
+        const mappedTeams = fetchedTeams.map(team => ({
+          id: team.id,
+          name: team.name,
+          managers: team.managerName,
+          employeeCount: team.employeeCount || 0, // Adjust based on API response
+          members: team.members || []
+        }));
+        setDepartments(mappedTeams);
+      } catch (error) {
+        console.error('Error loading teams:', error);
+        // alert('Failed to load teams');
+      }
+    };
+
+    loadTeams();
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-gray-50">

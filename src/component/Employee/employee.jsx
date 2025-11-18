@@ -3,13 +3,15 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from '../ui/Sidebar'
 import EmployeeListView from './ui/EmployeeListView'
 import CreateNewEmployee from '../Employee_page/Create_new_Employee'
-import { Users, Calendar, User } from 'lucide-react'
+import DeleteEmployeeModal from '../Employee_page/Delete_emp_logs'
+import { Users, Calendar, User, UserMinus, UserRoundPlus } from 'lucide-react'
 
 function Employee() {
   const location = useLocation()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('Employees')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
 
   const tabs = [
     { id: 'Employees', label: 'Employees', icon: User, path: '/employees' },
@@ -44,6 +46,13 @@ function Employee() {
     window.location.reload(); // Simple refresh, you can implement a better method
   };
 
+  const handleEmployeeDeleted = () => {
+    // Handle employee deletion logic here
+    console.log('Employee removed');
+    // Optionally refresh the employee list
+    window.location.reload();
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
@@ -58,12 +67,22 @@ function Employee() {
                   <p className="text-gray-600">Manage and monitor employee information</p>
                 </div>
                 {activeTab === 'Employees' && (
-                  <button 
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-                    onClick={() => setIsAddModalOpen(true)}
-                  >
-                    <span>+</span> Add Employee
-                  </button>
+                  <div className="flex gap-2">
+                    <button 
+                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-md transition-all duration-200"
+                      onClick={() => setIsAddModalOpen(true)}
+                    >
+                      <UserRoundPlus className="w-5 h-5" />
+                      Add Employee
+                    </button>
+                    <button 
+                      className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-md transition-all duration-200"
+                      onClick={() => setIsDeleteModalOpen(true)}
+                    >
+                      <UserMinus className="w-5 h-5" />
+                      Employee Logs
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -94,6 +113,8 @@ function Employee() {
             </div>
           </div>
         </div>
+
+        
 
         {/* Employee Content */}
         {activeTab === 'Employees' ? (
@@ -129,6 +150,12 @@ function Employee() {
             </div>
           </div>
         )}
+
+        {/* Delete Employee Modal */}
+        <DeleteEmployeeModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+        />
       </div>
     </div>
   )

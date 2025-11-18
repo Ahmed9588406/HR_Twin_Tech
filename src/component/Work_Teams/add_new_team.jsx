@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, User, X } from 'lucide-react';
+import { createTeam, updateTeam } from './api/work_teams_api'; // Import the update API function
 
 export default function AddNewTeam({ onClose, onAddTeam, initialData }) {
   const [formData, setFormData] = useState({
@@ -7,6 +8,7 @@ export default function AddNewTeam({ onClose, onAddTeam, initialData }) {
     manager: ''
   });
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false); // Add loading state
 
   useEffect(() => {
     if (initialData) {
@@ -33,11 +35,25 @@ export default function AddNewTeam({ onClose, onAddTeam, initialData }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      onAddTeam(formData); // Pass the new/updated team data to the parent
-      onClose(); // Close the modal after submission
+      setLoading(true);
+      try {
+        if (initialData) {
+          // Update existing team
+          await updateTeam(initialData.id, formData);
+        } else {
+          // Create new team
+          await createTeam(formData);
+        }
+        onAddTeam(formData); // Notify parent
+        onClose();
+      } catch (error) {
+        alert(`Failed to ${initialData ? 'update' : 'create'} team: ${error.message}`);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -112,9 +128,10 @@ export default function AddNewTeam({ onClose, onAddTeam, initialData }) {
           </button>
           <button
             type="submit"
-            className="flex-1 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+            disabled={loading}
+            className="flex-1 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition disabled:opacity-50"
           >
-            {initialData ? 'Update Team' : 'Create Team'}
+            {loading ? (initialData ? 'Updating...' : 'Creating...') : (initialData ? 'Update Team' : 'Create Team')}
           </button>
         </div>
       </form>

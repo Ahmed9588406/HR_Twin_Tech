@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Edit2, X, Check, Plus } from 'lucide-react';
 import DepEditModal from './Dep_editmodal';
 import { fetchDepartments, deleteDepartment, createDepartment, updateDepartment as updateDepartmentApi } from './api/department_api';
+import { fetchDashboardData } from '../api/dashboard_api'; // Import the dashboard API
 
 // Helper function to format dates
 const formatDate = (dateString) => {
@@ -26,8 +27,16 @@ export default function Departments() {
 
   useEffect(() => {
     const loadDepartments = async () => {
-      const fetchedDepartments = await fetchDepartments();
-      setDepartments(fetchedDepartments);
+      const fetchedData = await fetchDashboardData();
+      // Map deptNumOfEmp to departments format, assuming name is sufficient; add defaults for missing fields
+      const mappedDepartments = fetchedData.deptNumOfEmp.map((dept, index) => ({
+        id: index + 1, // Temporary ID since not provided
+        name: dept.name,
+        manager: 'N/A', // Default since not in API
+        date: new Date().toISOString().split('T')[0], // Default date
+        numberOfEmp: dept.numberOfEmp
+      }));
+      setDepartments(mappedDepartments);
     };
 
     loadDepartments();
@@ -55,7 +64,7 @@ export default function Departments() {
         setNewDepartment({ name: '', manager: '', date: '' });
       } catch (error) {
         console.error('Error saving new department:', error);
-        alert(`Failed to add department: ${error.message}`);
+        // alert(`Failed to add department: ${error.message}`);
       }
     }
   };
@@ -78,7 +87,8 @@ export default function Departments() {
   const updateDepartment = async (updatedDepartment) => {
     const current = departments.find(d => d.id === updatedDepartment.id);
     if (!current) {
-      alert('Department not found.');
+      // alert('Department not found.');
+      console.error('Department not found.');
       return;
     }
 
@@ -99,7 +109,7 @@ export default function Departments() {
       setSelectedDepartment(null);
     } catch (error) {
       console.error('Error updating department:', error);
-      alert(`Failed to update department: ${error.message}`);
+      // alert(`Failed to update department: ${error.message}`);
     }
   };
 
@@ -111,7 +121,7 @@ export default function Departments() {
         setDepartments(fetchedDepartments);
       } catch (error) {
         console.error('Error deleting department:', error);
-        alert(`Failed to delete department: ${error.message}`);
+        // alert(`Failed to delete department: ${error.message}`);
       }
     }
   };
