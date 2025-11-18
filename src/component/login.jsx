@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { loginUser } from "./api/login_api";
 import logo from "../assets/images/logo.png";
 import { QrCode } from "lucide-react";
 
@@ -18,30 +18,27 @@ function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        "https://noneffusive-reminiscent-tanna.ngrok-free.dev/login",
-        {
-          username,
-          password,
+      const data = await loginUser({ username, password });
+      console.log('Login response data:', data);
+      if (data && data.token) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('role', data.role ?? '');
+        localStorage.setItem('code', String(data.code ?? ''));
+        // store full response for user dashboard UI
+        localStorage.setItem('userData', JSON.stringify(data));
+
+        // Navigate based on role
+        if ((data.role || '').toUpperCase() === 'ADMIN') {
+          navigate('/Dashboard'); // admin dashboard file
+        } else {
+          navigate('/user-dashboard'); // user dashboard page for non-admin
         }
-      );
-      
-      console.log("Full response:", response);
-      console.log("Response data:", response.data);
-      
-      // Check if token exists in response
-      if (response.data && response.data.token) {
-        localStorage.setItem("token", response.data.token);
-        console.log("Token stored, navigating to dashboard...");
-        navigate("/dashboard");
       } else {
-        console.error("No token in response:", response.data);
-        setError("Login successful but no token received");
+        setError('Login succeeded but token missing in response');
       }
     } catch (err) {
-      console.error("Login error details:", err);
-      console.error("Error response:", err.response);
-      setError(err.response?.data?.message || err.message || "Login failed. Please try again.");
+      console.error('Login failed:', err);
+      setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }

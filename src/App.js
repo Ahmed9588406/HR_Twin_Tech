@@ -16,6 +16,7 @@ import Positions from './component/Settings/positions';
 import WorkTiming from './component/Settings/WorkTiming';
 import Attendance from './component/Settings/Attendance';
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import UserDashboard from './Employees_roles/userdashboard'; // added user dashboard route
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/user-dashboard" element={<UserDashboard />} />
         <Route path="/employee-dashboard" element={<Navigate to="/dashboard-teams" replace />} />
         <Route path="/employees" element={<Employee />} />
         <Route path="/dashboard-teams" element={<DashboardTeams />} />
