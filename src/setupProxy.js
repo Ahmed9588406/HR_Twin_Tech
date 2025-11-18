@@ -1,15 +1,25 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
+const url = require('url');
 
 module.exports = function(app) {
-	// forward any /api/* request to the ngrok host
 	app.use(
 		'/api',
 		createProxyMiddleware({
 			target: 'https://noneffusive-reminiscent-tanna.ngrok-free.dev',
 			changeOrigin: true,
-			secure: false, // ngrok uses HTTPS; set false if certificate issues
+			secure: false,
+			onProxyReq: (proxyReq, req, res) => {
+				// Extract token from query params and set Authorization header
+				const parsedUrl = url.parse(req.url, true);
+				const token = parsedUrl.query.token;
+				if (token) {
+					proxyReq.setHeader('Authorization', `Bearer ${token}`);
+					console.log('Added Authorization header with token from query param');
+				}
+				// Add ngrok bypass header
+				proxyReq.setHeader('ngrok-skip-browser-warning', 'true');
+			},
 			logLevel: 'debug'
-			// optional: onProxyReq to modify outgoing request headers if needed
 		})
 	);
 };

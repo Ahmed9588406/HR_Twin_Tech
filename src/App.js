@@ -7,7 +7,7 @@ import AddNewTeam from './component/Work_Teams/add_new_team';
 import ActionDashboard from './Employees_Action/action_dashboard';
 import ReqDashboard from './component/Requests/req_dashboard';
 import FinancialsDashboard from './component/Financials/financials_dashboard';
-import VacationRequestPage from './component/Employee_page/profile';
+import VacationRequestPage from './component/Requests/profile';
 import EmployeeProfile from './component/Employee_page/Employee_profile';
 import SettingsDashboard from './component/Settings/settingsDashboard';
 import WorkPlace from './component/Settings/WorkPlace';
