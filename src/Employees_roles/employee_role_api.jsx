@@ -1,21 +1,23 @@
-export const fetchEmpAttendanceHistory = async (options = {}) => {
-  // options optional: { page, size } — currently not used by backend but kept for future
+export const fetchEmpAttendanceHistory = async (empCode, options = {}) => {
+  // options optional: { page, size } — sent as query params
   try {
     const token = localStorage.getItem('token');
     if (!token) {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    // build URL (page/size optional)
-    const params = [];
-    if (options.page !== undefined) params.push(`page=${encodeURIComponent(options.page)}`);
-    if (options.size !== undefined) params.push(`size=${encodeURIComponent(options.size)}`);
-    const query = params.length ? `?${params.join('&')}` : '';
+    // Get current month and year or use provided options
+    const now = new Date();
+    const month = options.month !== undefined ? options.month : now.getMonth() + 1; // getMonth() returns 0-11
+    const year = options.year !== undefined ? options.year : now.getFullYear();
 
-    const res = await fetch(`https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/emp-dashboard/attendance-history${query}`, {
+    const url = `https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/emp-dashboard/attendance-history?month=${month}&year=${year}`;
+
+    console.log(`Fetching attendance history for month: ${month}, year: ${year}`);
+
+    const res = await fetch(url, {
       method: 'GET',
       headers: {
-        Accept: 'application/json',
         Authorization: `Bearer ${token}`,
         'ngrok-skip-browser-warning': 'true',
       },
@@ -23,52 +25,192 @@ export const fetchEmpAttendanceHistory = async (options = {}) => {
 
     const text = await res.text().catch(() => '');
     if (!res.ok) {
-      // try to include server body for diagnostics
       const body = text || res.statusText;
+      console.error(`Failed to fetch attendance history: ${res.status} - ${body}`);
+      console.error('Response headers:', Object.fromEntries(res.headers.entries()));
+      console.error('Request URL:', url);
+      console.error('Token present:', !!token);
       throw new Error(`Failed to fetch attendance history: ${res.status} - ${body}`);
     }
 
-    // parse JSON (handle empty body)
+    console.log('Endpoint return:', text);
     const data = text ? JSON.parse(text) : [];
-    // Expecting an array of records (see sample in prompt)
-    if (!Array.isArray(data)) {
+    console.debug('fetchEmpAttendanceHistory - raw response:', data);
+    
+    const records = Array.isArray(data) ? data : (Array.isArray(data?.content) ? data.content : []);
+    console.debug('fetchEmpAttendanceHistory - normalized records:', records);
+    
+    if (!Array.isArray(records)) {
       throw new Error('Unexpected response format for attendance history');
     }
 
-    return data;
+    console.log('Attendance history fetched successfully:', records);
+    return records;
   } catch (err) {
     console.error('Error in fetchEmpAttendanceHistory:', err);
     throw err;
   }
 };
 
-export const fetchEmployeeDetails = async (empCode) => {
+const BASE_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/emp-dashboard';
+
+export const fetchEmployeeProfile = async (empCode) => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const res = await fetch(`https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/emp-dashboard/employee-details?empCode=${encodeURIComponent(empCode)}`, {
+    const url = `${BASE_URL}/employee-details?empCode=${encodeURIComponent(empCode)}`;
+
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
+        'ngrok-skip-browser-warning': 'true',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
         Authorization: `Bearer ${token}`,
-        'ngrok-skip-browser-warning': 'true',
       },
     });
 
-    const text = await res.text().catch(() => '');
-    if (!res.ok) {
-      const body = text || res.statusText;
-      throw new Error(`Failed to fetch employee details: ${res.status} - ${body}`);
+    if (!response.ok) {
+      let errorMessage = 'Failed to fetch employee profile';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+        errorMessage = `${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
     }
 
-    const data = text ? JSON.parse(text) : {};
+    const data = await response.json();
     return data;
-  } catch (err) {
-    console.error('Error in fetchEmployeeDetails:', err);
-    throw err;
+  } catch (error) {
+    console.error('Error fetching employee profile:', error);
+    throw error;
+  }
+};
+
+export const fetchAttendanceRecords = async (empCode, options = {}) => {
+	// simple wrapper to keep caller code semantically clear
+	return fetchEmpAttendanceHistory(empCode, options);
+};
+
+export const fetchEmployeeSalary = async (empCode) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const url = `${BASE_URL}/financial-details?empCode=${encodeURIComponent(empCode)}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'ngrok-skip-browser-warning': 'true',
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to fetch employee salary';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+        errorMessage = `${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    console.log('Employee salary fetched successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Error fetching employee salary:', error);
+    throw error;
+  }
+};
+
+export const fetchEmployeeRewards = async (empCode) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const url = `${BASE_URL}/rewards-transactions?empCode=${encodeURIComponent(empCode)}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'ngrok-skip-browser-warning': 'true',
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to fetch employee rewards';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+        errorMessage = `${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    console.log('Employee rewards fetched successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Error fetching employee rewards:', error);
+    throw error;
+  }
+};
+
+export const fetchEmployeeDiscounts = async (empCode) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const url = `${BASE_URL}/discounts-transactions?empCode=${encodeURIComponent(empCode)}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'ngrok-skip-browser-warning': 'true',
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to fetch employee discounts';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+        errorMessage = `${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    console.log('Employee discounts fetched successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Error fetching employee discounts:', error);
+    throw error;
   }
 };
 

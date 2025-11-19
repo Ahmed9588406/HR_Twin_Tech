@@ -1,13 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, ArrowLeft, UserCheck, LogOut } from 'lucide-react';
-import { fetchEmployeeDetails } from './employee_role_api';
+import { ArrowLeft } from 'lucide-react';
+import { fetchEmployeeProfile } from './employee_role_api';
+import UserProfile from './userprofile';
+import EmployeeAttendanceHistory from './employee_role_history';
 import AttendanceModal from '../component/Employee_page/Attendance_modal';
 import OnLeaveModal from '../component/Employee_page/OnLeave_modal';
+import EmployeeSalary from './employee_salary';
+import EmployeeRewards from './rewards';
+import EmployeeDiscounts from './discount';
+
+// Constants for hard-coded values
+const DEFAULT_USERNAME = 'Employee';
+const DEFAULT_ROLE = 'USER';
+const LOCAL_STORAGE_KEYS = {
+  ROLE: 'role',
+  CODE: 'code',
+  USER_DATA: 'userData'
+};
+const UI_TEXT = {
+  MY_PROFILE: 'My Profile',
+  ACTIVE_STATUS: 'Active',
+  LOADING_MESSAGE: 'Loading profile...',
+  ERROR_MESSAGE: 'Failed to load detailed profile. Showing basic info.',
+  TODAY_PREFIX: 'Today, ',
+  NA_VALUE: 'N/A'
+};
+const DATE_FORMAT_OPTIONS = {
+  TIME: { hour: '2-digit', minute: '2-digit' },
+  SHORT_DATE: { weekday: 'short', month: 'short', day: 'numeric' },
+  FULL_DATE: {}
+};
 
 export default function UserProfileView() {
   const navigate = useNavigate();
-  const [user, setUser] = useState({ username: 'Employee', role: 'USER', code: null });
+  const [user, setUser] = useState({ username: DEFAULT_USERNAME, role: DEFAULT_ROLE, code: null });
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -15,11 +42,11 @@ export default function UserProfileView() {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
 
   useEffect(() => {
-    const role = localStorage.getItem('role') || 'USER';
-    const code = localStorage.getItem('code') || null;
-    let username = 'Employee';
+    const role = localStorage.getItem(LOCAL_STORAGE_KEYS.ROLE) || DEFAULT_ROLE;
+    const code = localStorage.getItem(LOCAL_STORAGE_KEYS.CODE) || null;
+    let username = DEFAULT_USERNAME;
     try {
-      const raw = localStorage.getItem('userData');
+      const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.USER_DATA);
       if (raw) {
         const parsed = JSON.parse(raw);
         username = parsed?.username || parsed?.sub || username;
@@ -36,11 +63,15 @@ export default function UserProfileView() {
       }
       try {
         setLoading(true);
-        const profile = await fetchEmployeeDetails(code);
-        setProfileData(profile);
-      } catch (err) {
-        console.error('Failed to load user profile data:', err);
-        setError('Failed to load detailed profile. Showing basic info.');
+
+        // Fetch profile only; attendance is fetched inside EmployeeAttendanceHistory component
+        try {
+          const profile = await fetchEmployeeProfile(code);
+          setProfileData(profile);
+        } catch (profileErr) {
+          console.error('Failed to load profile:', profileErr);
+          setError(UI_TEXT.ERROR_MESSAGE);
+        }
       } finally {
         setLoading(false);
       }
@@ -50,14 +81,15 @@ export default function UserProfileView() {
   }, []);
 
   const handleBack = () => navigate('/user-dashboard');
+  
   const formatLastSignIn = (dateString) => {
-    if (!dateString) return { display: 'N/A', fullDate: 'N/A' };
+    if (!dateString) return { display: UI_TEXT.NA_VALUE, fullDate: UI_TEXT.NA_VALUE };
     const date = new Date(dateString);
     const today = new Date();
     const isToday = date.toDateString() === today.toDateString();
-    const timeStr = date.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit' });
-    const display = isToday ? `Today, ${timeStr}` : `${date.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}, ${timeStr}`;
-    return { display, fullDate: date.toLocaleString('en-US') };
+    const timeStr = date.toLocaleString('en-US', DATE_FORMAT_OPTIONS.TIME);
+    const display = isToday ? `${UI_TEXT.TODAY_PREFIX}${timeStr}` : `${date.toLocaleString('en-US', DATE_FORMAT_OPTIONS.SHORT_DATE)}, ${timeStr}`;
+    return { display, fullDate: date.toLocaleString('en-US', DATE_FORMAT_OPTIONS.FULL_DATE) };
   };
 
   const photoSrc = profileData?.empPhoto
@@ -70,7 +102,7 @@ export default function UserProfileView() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto" />
-          <p className="mt-4 text-gray-600">Loading profile...</p>
+          <p className="mt-4 text-gray-600">{UI_TEXT.LOADING_MESSAGE}</p>
         </div>
       </div>
     );
@@ -89,10 +121,10 @@ export default function UserProfileView() {
               </button>
             </div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-500 bg-clip-text text-transparent">
-              My Profile
+              {UI_TEXT.MY_PROFILE}
             </h1>
             <div>
-              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">Active</span>
+              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">{UI_TEXT.ACTIVE_STATUS}</span>
             </div>
           </div>
         </div>
@@ -100,61 +132,24 @@ export default function UserProfileView() {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Profile Card (no edit icons) */}
+          {/* Profile Card */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-200">
-              <div className="h-32 bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400" />
-              <div className="px-6 pb-6">
-                <div className="flex flex-col items-center -mt-16">
-                  <div className="relative">
-                    <img src={photoSrc} alt={profileData?.empName || user.username} className="w-32 h-32 rounded-full border-4 border-white shadow-xl object-cover" />
-                    <div className="absolute bottom-2 right-2 w-5 h-5 rounded-full border-2 border-white bg-green-500 animate-pulse" />
-                  </div>
-
-                  <h2 className="mt-4 text-2xl font-bold text-slate-800">
-                    {profileData?.empName || user.username}
-                  </h2>
-                  <p className="text-green-600 font-medium mt-1">{profileData?.jobPosition || 'Employee'}</p>
-
-                  <div className="flex items-center gap-2 mt-3 text-sm text-slate-600">
-                    <Clock className="w-4 h-4" />
-                    <span>Last signed in: <strong>{profileData?.lastSignIn ? formatLastSignIn(profileData.lastSignIn).display : 'N/A'}</strong></span>
-                  </div>
-
-                  {/* Attendance / Leave buttons (optional for user) */}
-                  <div className="flex gap-2 mt-6 w-full">
-                    <button onClick={() => setShowAttendanceModal(true)} className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
-                      <UserCheck className="w-4 h-4" /> Mark Attendance
-                    </button>
-                    <button onClick={() => setShowLeaveModal(true)} className="flex-1 px-4 py-2.5 bg-green-50 text-green-700 rounded-xl font-medium hover:bg-green-100 transition-colors flex items-center justify-center gap-2">
-                      <LogOut className="w-4 h-4" /> Request Leave
-                    </button>
-                  </div>
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-slate-200 w-full">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-slate-800">{profileData?.absencesCount ?? 0}</div>
-                      <div className="text-xs text-slate-600 mt-1">Absence</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-indigo-600">{profileData?.onLeave ? 'Yes' : 'No'}</div>
-                      <div className="text-xs text-slate-600 mt-1">On Leave</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-slate-800">{profileData?.daysLeftInVacation ?? 0}</div>
-                      <div className="text-xs text-slate-600 mt-1">Days Left</div>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-            </div>
+            <UserProfile
+              profileData={profileData}
+              user={user}
+              photoSrc={photoSrc}
+              formatLastSignIn={formatLastSignIn}
+              onMarkAttendance={() => setShowAttendanceModal(true)}
+              onRequestLeave={() => setShowLeaveModal(true)}
+            />
           </div>
 
-          {/* Main Content - Removed attendance rate, salary, and history sections */}
-          <div className="lg:col-span-2">
-            {/* No additional content */}
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            <EmployeeAttendanceHistory empCode={user.code} />
+            <EmployeeSalary empCode={user.code} />
+            <EmployeeRewards empCode={user.code} />
+            <EmployeeDiscounts empCode={user.code} />
           </div>
         </div>
       </div>

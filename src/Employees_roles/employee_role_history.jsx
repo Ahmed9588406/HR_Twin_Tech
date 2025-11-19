@@ -1,20 +1,111 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, CheckCircle, XCircle } from 'lucide-react';
 
-export default function EmployeeRoleHistory({ roleHistoryData }) {
-  if (!roleHistoryData || !roleHistoryData.content || roleHistoryData.content.length === 0) {
-    return (
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
-        <div className="text-center text-gray-500">No role history available.</div>
-      </div>
-    );
+// API function
+const fetchAttendanceRecords = async (empCode, options = {}) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const now = new Date();
+    const month = options.month !== undefined ? options.month : now.getMonth() + 1;
+    const year = options.year !== undefined ? options.year : now.getFullYear();
+
+    const url = `https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/emp-dashboard/attendance-history?month=${month}&year=${year}`;
+
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true',
+      },
+    });
+
+    const text = await res.text().catch(() => '');
+    if (!res.ok) {
+      const body = text || res.statusText;
+      throw new Error(`Failed to fetch attendance history: ${res.status} - ${body}`);
+    }
+
+    const data = text ? JSON.parse(text) : [];
+    const records = Array.isArray(data) ? data : (Array.isArray(data?.content) ? data.content : []);
+    
+    if (!Array.isArray(records)) {
+      throw new Error('Unexpected response format for attendance history');
+    }
+
+    return records;
+  } catch (err) {
+    console.error('Error in fetchAttendanceRecords:', err);
+    throw err;
   }
+};
+
+// Constants for hard-coded values
+const NO_HISTORY_MESSAGE = "No attendance history available.";
+const ATTENDANCE_HISTORY_TITLE = "Attendance History";
+const RECENT_RECORDS_SUBTITLE = "Recent attendance records";
+const TABLE_HEADERS = {
+  DATE: "Date",
+  CHECK_IN: "Check In",
+  CHECK_OUT: "Check Out",
+  WORKING_HOURS: "Working Hours",
+  STATUS: "Status"
+};
+const NA_VALUE = "N/A";
+const STATUS_VALUES = {
+  PRESENT: 'PRESENT',
+  ABSENT: 'ABSENT',
+  DAY_OFF: 'DAY_OFF',
+  HOLIDAY: 'HOLIDAY'
+};
+const SHOWING_RECORDS_MESSAGE = "Showing {numberOfElements} of {totalElements} records";
+
+export default function EmployeeAttendanceHistory({ empCode }) {
+  const [historyData, setHistoryData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await fetchAttendanceRecords(empCode);
+        if (!mounted) return;
+        setHistoryData({
+          content: Array.isArray(data) ? data : [],
+          totalPages: 1,
+          numberOfElements: Array.isArray(data) ? data.length : 0,
+          totalElements: Array.isArray(data) ? data.length : 0
+        });
+      } catch (err) {
+        console.error('Failed to fetch attendance records:', err);
+        if (!mounted) return;
+        setError('Unable to load attendance history.');
+        setHistoryData({
+          content: [],
+          totalPages: 0,
+          numberOfElements: 0,
+          totalElements: 0
+        });
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    load();
+    return () => { mounted = false; };
+  }, [empCode]);
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'ACTIVE':
+      case STATUS_VALUES.PRESENT:
         return <CheckCircle className="w-5 h-5 text-green-600" />;
-      case 'INACTIVE':
+      case STATUS_VALUES.ABSENT:
         return <XCircle className="w-5 h-5 text-red-600" />;
       default:
         return <Clock className="w-5 h-5 text-gray-600" />;
@@ -23,14 +114,41 @@ export default function EmployeeRoleHistory({ roleHistoryData }) {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'ACTIVE':
+      case STATUS_VALUES.PRESENT:
         return 'text-green-700 bg-green-50';
-      case 'INACTIVE':
+      case STATUS_VALUES.ABSENT:
         return 'text-red-700 bg-red-50';
       default:
         return 'text-gray-700 bg-gray-50';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
+        <div className="text-center text-slate-600">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto" />
+          <div className="mt-3">Loading attendance...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
+        <div className="text-center text-red-600">{error}</div>
+      </div>
+    );
+  }
+
+  if (!historyData || !historyData.content || historyData.content.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
+        <div className="text-center text-gray-500">{NO_HISTORY_MESSAGE}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
@@ -38,9 +156,9 @@ export default function EmployeeRoleHistory({ roleHistoryData }) {
         <div>
           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-blue-600" />
-            Role History
+            {ATTENDANCE_HISTORY_TITLE}
           </h3>
-          <p className="text-sm text-slate-600 mt-1">Recent role change records</p>
+          <p className="text-sm text-slate-600 mt-1">{RECENT_RECORDS_SUBTITLE}</p>
         </div>
       </div>
 
@@ -48,58 +166,84 @@ export default function EmployeeRoleHistory({ roleHistoryData }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200">
-              <th className="text-left py-3 px-4 font-semibold text-slate-700">Date</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700">Role</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700">Department</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700">Effective From</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700">Effective To</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700">Status</th>
+              <th className="text-left py-3 px-4 font-semibold text-slate-700">{TABLE_HEADERS.DATE}</th>
+              <th className="text-left py-3 px-4 font-semibold text-slate-700">{TABLE_HEADERS.CHECK_IN}</th>
+              <th className="text-left py-3 px-4 font-semibold text-slate-700">{TABLE_HEADERS.CHECK_OUT}</th>
+              <th className="text-left py-3 px-4 font-semibold text-slate-700">{TABLE_HEADERS.WORKING_HOURS}</th>
+              <th className="text-left py-3 px-4 font-semibold text-slate-700">{TABLE_HEADERS.STATUS}</th>
             </tr>
           </thead>
           <tbody>
-            {roleHistoryData.content.map((record, index) => (
-              <tr key={record.roleHistoryId || index} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                <td className="py-4 px-4 text-slate-800 font-medium">
-                  {new Date(record.date).toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  })}
-                </td>
-                <td className="py-4 px-4 text-slate-600">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-blue-500" />
-                    {record.role || 'N/A'}
-                  </div>
-                </td>
-                <td className="py-4 px-4 text-slate-600">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-purple-500" />
-                    {record.department || 'N/A'}
-                  </div>
-                </td>
-                <td className="py-4 px-4 text-slate-600 font-medium">
-                  {record.effectiveFrom ? new Date(record.effectiveFrom).toLocaleDateString() : 'N/A'}
-                </td>
-                <td className="py-4 px-4 text-slate-600 font-medium">
-                  {record.effectiveTo ? new Date(record.effectiveTo).toLocaleDateString() : 'N/A'}
-                </td>
-                <td className="py-4 px-4">
-                  <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(record.status)}`}>
-                    {getStatusIcon(record.status)}
-                    {record.status}
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {historyData.content.map((record, index) => {
+              const statusUpper = record.status?.toUpperCase();
+              const isAbsent = statusUpper === 'ABSENT' || statusUpper === 'APSENT';
+              const isDayOff = statusUpper === 'DAY_OFF' || statusUpper === 'HOLIDAY';
+              const isWeekend = statusUpper === 'WEEKEND';
+              const isOnLeave = statusUpper === 'ON_LEAVE';
+              const isSpecialStatus = isAbsent || isDayOff || isWeekend;
+
+              console.log('Record status:', record.status, 'isAbsent:', isAbsent, 'isSpecialStatus:', isSpecialStatus);
+
+              return (
+                <tr key={record.attendanceId || index} className={`border-b border-slate-100 transition-colors ${
+                  isSpecialStatus ? (isAbsent ? 'bg-red-50' : 'bg-green-50') : 'hover:bg-slate-50'
+                }`}>
+                  <td className="py-4 px-4 text-slate-800 font-medium">
+                    {(() => {
+                      const dayStr = record.day || '';
+                      const d = new Date(dayStr.includes('T') ? dayStr : `${dayStr}T00:00:00`);
+                      return d.toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      });
+                    })()}
+                  </td>
+
+                  {isSpecialStatus ? (
+                    <td colSpan={4} className="py-4 px-4 text-center">
+                      <div className={`text-xl font-semibold ${
+                        isAbsent ? 'text-red-600' : 'text-green-600'
+                      }`}>
+                        {isDayOff ? 'Day Off - Holiday' : isWeekend ? 'Weekend' : 'APSENT'}
+                      </div>
+                    </td>
+                  ) : (
+                    <>
+                      <td className="py-4 px-4 text-slate-600">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-blue-500" />
+                          {record.checkIn || NA_VALUE}
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-slate-600">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-purple-500" />
+                          {record.checkOut || NA_VALUE}
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-slate-600 font-medium">
+                        {record.workingHours || NA_VALUE}
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(record.status)}`}>
+                          {getStatusIcon(record.status)}
+                          {record.status}
+                        </div>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      {roleHistoryData.totalPages > 1 && (
+      {historyData.totalPages > 1 && (
         <div className="mt-4 text-center text-sm text-slate-500">
-          Showing {roleHistoryData.numberOfElements} of {roleHistoryData.totalElements} records
+          {SHOWING_RECORDS_MESSAGE.replace('{numberOfElements}', historyData.numberOfElements).replace('{totalElements}', historyData.totalElements)}
         </div>
       )}
     </div>
