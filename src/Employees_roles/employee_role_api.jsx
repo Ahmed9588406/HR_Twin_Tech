@@ -214,4 +214,106 @@ export const fetchEmployeeDiscounts = async (empCode) => {
   }
 };
 
+export const postVacationRequest = async (empCode, payload = {}, file = null) => {
+  try {
+    const token = localStorage.getItem('token') || '';
+    const url = `${BASE_URL}/vacation-request`;
+
+    let res;
+    if (file) {
+      const form = new FormData();
+      // fields expected by API per image: requestDate, startDate, endDate, leaveType, comment, attachments
+      form.append('empCode', empCode || '');
+      if (payload.requestDate) form.append('requestDate', payload.requestDate);
+      if (payload.startDate) form.append('startDate', payload.startDate);
+      if (payload.endDate) form.append('endDate', payload.endDate);
+      if (payload.leaveType) form.append('leaveType', payload.leaveType);
+      if (payload.comment) form.append('comment', payload.comment);
+      // attachments key (single file). Adjust if API expects array.
+      form.append('attachments', file);
+
+      res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: token ? `Bearer ${token}` : '',
+          'ngrok-skip-browser-warning': 'true',
+          // do NOT set Content-Type for FormData
+        },
+        body: form,
+      });
+    } else {
+      // JSON payload (no attachments)
+      const body = {
+        empCode: empCode || '',
+        ...payload
+      };
+      res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token ? `Bearer ${token}` : '',
+          'ngrok-skip-browser-warning': 'true'
+        },
+        body: JSON.stringify(body)
+      });
+    }
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      let serverMsg = text || `${res.status} ${res.statusText}`;
+      try {
+        const json = text ? JSON.parse(text) : null;
+        if (json) serverMsg = json.message || json.error || JSON.stringify(json);
+      } catch {
+        /* keep raw text */
+      }
+      console.error('postVacationRequest failed:', { status: res.status, body: serverMsg });
+      throw new Error(serverMsg);
+    }
+
+    // try parse json response, otherwise return null
+    const data = await res.json().catch(() => null);
+    return data;
+  } catch (err) {
+    console.error('Error in postVacationRequest:', err);
+    throw err;
+  }
+};
+
+export const postAdvanceRequest = async (payload = {}) => {
+  try {
+    const token = localStorage.getItem('token') || '';
+    const url = `${BASE_URL}/advance-request`;
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token ? `Bearer ${token}` : '',
+        'ngrok-skip-browser-warning': 'true',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      let serverMsg = text || `${res.status} ${res.statusText}`;
+      try {
+        const json = text ? JSON.parse(text) : null;
+        if (json) serverMsg = json.message || json.error || JSON.stringify(json);
+      } catch {
+        /* keep raw text */
+      }
+      console.error('postAdvanceRequest failed:', { status: res.status, body: serverMsg });
+      throw new Error(serverMsg);
+    }
+
+    const data = await res.json().catch(() => null);
+    return data;
+  } catch (err) {
+    console.error('Error in postAdvanceRequest:', err);
+    throw err;
+  }
+};
+
 export default fetchEmpAttendanceHistory;

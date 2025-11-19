@@ -57,11 +57,37 @@ const TABLE_HEADERS = {
 const NA_VALUE = "N/A";
 const STATUS_VALUES = {
   PRESENT: 'PRESENT',
-  ABSENT: 'ABSENT',
+  ABSENT: 'Apsent',
   DAY_OFF: 'DAY_OFF',
   HOLIDAY: 'HOLIDAY'
 };
 const SHOWING_RECORDS_MESSAGE = "Showing {numberOfElements} of {totalElements} records";
+
+// Replace / improve status handling: normalize incoming values and provide display strings
+const normalizeStatus = (raw) => {
+  if (!raw) return 'OTHER';
+  const s = String(raw).trim().toUpperCase();
+
+  // common corrections / mappings
+  if (s === 'APSENT' || s === 'APESENT' || s === 'ABSENT' || s === 'ABSENTED' || s === 'Apsent'.toUpperCase()) return 'ABSENT';
+  if (s.includes('PRESENT')) return 'PRESENT';
+  if (s.includes('WEEKEND')) return 'WEEKEND';
+  if (s.includes('HOLIDAY') || s.includes('DAY_OFF') || s.includes('DAY OFF') || s.includes('DAY-OFF')) return 'DAY_OFF';
+  if (s.includes('LEAVE') || s.includes('ON_LEAVE')) return 'ON_LEAVE';
+  // keep ABSENT mapping broad (catch "APSENT", "APSENT")
+  if (s === 'APSENT') return 'ABSENT';
+
+  return s || 'OTHER';
+};
+
+const DISPLAY_STATUS = {
+  ABSENT: 'Absent',
+  PRESENT: 'Present',
+  WEEKEND: 'Weekend',
+  DAY_OFF: 'Day Off - Holiday',
+  ON_LEAVE: 'On Leave',
+  OTHER: 'Status'
+};
 
 export default function EmployeeAttendanceHistory({ empCode }) {
   const [historyData, setHistoryData] = useState(null);
@@ -102,10 +128,11 @@ export default function EmployeeAttendanceHistory({ empCode }) {
   }, [empCode]);
 
   const getStatusIcon = (status) => {
-    switch (status) {
-      case STATUS_VALUES.PRESENT:
+    const s = normalizeStatus(status);
+    switch (s) {
+      case 'PRESENT':
         return <CheckCircle className="w-5 h-5 text-green-600" />;
-      case STATUS_VALUES.ABSENT:
+      case 'ABSENT':
         return <XCircle className="w-5 h-5 text-red-600" />;
       default:
         return <Clock className="w-5 h-5 text-gray-600" />;
@@ -113,10 +140,11 @@ export default function EmployeeAttendanceHistory({ empCode }) {
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case STATUS_VALUES.PRESENT:
+    const s = normalizeStatus(status);
+    switch (s) {
+      case 'PRESENT':
         return 'text-green-700 bg-green-50';
-      case STATUS_VALUES.ABSENT:
+      case 'ABSENT':
         return 'text-red-700 bg-red-50';
       default:
         return 'text-gray-700 bg-gray-50';
@@ -175,11 +203,11 @@ export default function EmployeeAttendanceHistory({ empCode }) {
           </thead>
           <tbody>
             {historyData.content.map((record, index) => {
-              const statusUpper = record.status?.toUpperCase();
-              const isAbsent = statusUpper === 'ABSENT' || statusUpper === 'APSENT';
-              const isDayOff = statusUpper === 'DAY_OFF' || statusUpper === 'HOLIDAY';
-              const isWeekend = statusUpper === 'WEEKEND';
-              const isOnLeave = statusUpper === 'ON_LEAVE';
+              const normStatus = normalizeStatus(record.status);
+              const isAbsent = normStatus === 'ABSENT';
+              const isDayOff = normStatus === 'DAY_OFF';
+              const isWeekend = normStatus === 'WEEKEND';
+              const isOnLeave = normStatus === 'ON_LEAVE';
               const isSpecialStatus = isAbsent || isDayOff || isWeekend;
 
               console.log('Record status:', record.status, 'isAbsent:', isAbsent, 'isSpecialStatus:', isSpecialStatus);
@@ -203,10 +231,8 @@ export default function EmployeeAttendanceHistory({ empCode }) {
 
                   {isSpecialStatus ? (
                     <td colSpan={4} className="py-4 px-4 text-center">
-                      <div className={`text-xl font-semibold ${
-                        isAbsent ? 'text-red-600' : 'text-green-600'
-                      }`}>
-                        {isDayOff ? 'Day Off - Holiday' : isWeekend ? 'Weekend' : 'APSENT'}
+                      <div className={`text-xl font-semibold ${isAbsent ? 'text-red-600' : 'text-green-600'}`}>
+                        {DISPLAY_STATUS[normStatus] || String(record.status || '').trim()}
                       </div>
                     </td>
                   ) : (
@@ -229,7 +255,7 @@ export default function EmployeeAttendanceHistory({ empCode }) {
                       <td className="py-4 px-4">
                         <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(record.status)}`}>
                           {getStatusIcon(record.status)}
-                          {record.status}
+                          {DISPLAY_STATUS[normalizeStatus(record.status)] || record.status}
                         </div>
                       </td>
                     </>
