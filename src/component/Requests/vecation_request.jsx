@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { fetchVacationRequests } from './requests_api';
 
@@ -14,7 +13,7 @@ export default function VacationRequestsTable() {
       try {
         setLoading(true);
         const data = await fetchVacationRequests();
-        setRequests(data);
+        setRequests(data || []);
       } catch (err) {
         console.error('API fetch failed:', err);
         setError('Failed to load vacation requests. Please try again.');
@@ -71,18 +70,6 @@ export default function VacationRequestsTable() {
 
   return (
     <div className="space-y-6">
-      {/* Search Bar */}
-      <div className="bg-white rounded-xl p-4 shadow-sm">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="text"
-            placeholder="Search requests..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          />
-        </div>
-      </div>
-
       {/* Vacation Requests Table */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div className="overflow-x-auto">

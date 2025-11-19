@@ -5,10 +5,12 @@ import { fetchEmployeeProfile } from './employee_role_api';
 import UserProfile from './userprofile';
 import EmployeeAttendanceHistory from './employee_role_history';
 import AttendanceModal from '../component/Employee_page/Attendance_modal';
-import OnLeaveModal from '../component/Employee_page/OnLeave_modal';
 import EmployeeSalary from './employee_salary';
 import EmployeeRewards from './rewards';
 import EmployeeDiscounts from './discount';
+import EmployeeRequests from './emp_requests';
+import VacationRequest from './vacation_req';
+import AdvanceRequest from './advance_req';
 
 // Constants for hard-coded values
 const DEFAULT_USERNAME = 'Employee';
@@ -40,6 +42,7 @@ export default function UserProfileView() {
   const [error, setError] = useState(null);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [showAdvanceModal, setShowAdvanceModal] = useState(false);
 
   useEffect(() => {
     const role = localStorage.getItem(LOCAL_STORAGE_KEYS.ROLE) || DEFAULT_ROLE;
@@ -82,6 +85,8 @@ export default function UserProfileView() {
 
   const handleBack = () => navigate('/user-dashboard');
   
+  const handleAdvanceRequest = () => setShowAdvanceModal(true);
+
   const formatLastSignIn = (dateString) => {
     if (!dateString) return { display: UI_TEXT.NA_VALUE, fullDate: UI_TEXT.NA_VALUE };
     const date = new Date(dateString);
@@ -142,6 +147,10 @@ export default function UserProfileView() {
               onMarkAttendance={() => setShowAttendanceModal(true)}
               onRequestLeave={() => setShowLeaveModal(true)}
             />
+            <EmployeeRequests 
+              onVacationRequest={() => setShowLeaveModal(true)} 
+              onAdvanceRequest={handleAdvanceRequest} 
+            />
           </div>
 
           {/* Main Content */}
@@ -163,11 +172,21 @@ export default function UserProfileView() {
         />
       )}
 
-      {showLeaveModal && profileData && (
-        <OnLeaveModal
+      {/* Centered draggable VacationRequest modal */}
+      {showLeaveModal && (
+        <VacationRequest
           employee={{ code: user.code }}
           onClose={() => setShowLeaveModal(false)}
-          onSuccess={() => { setShowLeaveModal(false); /* refresh maybe */ }}
+          onSuccess={() => { setShowLeaveModal(false); /* optionally refresh profile */ }}
+        />
+      )}
+
+      {/* Centered draggable AdvanceRequest modal */}
+      {showAdvanceModal && (
+        <AdvanceRequest
+          employee={{ code: user.code }}
+          onClose={() => setShowAdvanceModal(false)}
+          onSuccess={() => { setShowAdvanceModal(false); /* optionally refresh profile */ }}
         />
       )}
     </div>

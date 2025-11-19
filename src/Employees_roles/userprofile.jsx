@@ -19,6 +19,16 @@ const ON_LEAVE_VALUES = {
   NO: 'No'
 };
 
+// add helper to normalize the word "Avesnt" (any case) to "Avesnt"
+const formatAvesntWord = (text) => {
+		if (!text) return text;
+		try {
+			return String(text).replace(/\bavesnt\b/ig, (m) => m.charAt(0).toUpperCase() + m.slice(1).toLowerCase());
+		} catch {
+			return text;
+		}
+};
+
 export default function UserProfile({ 
   profileData, 
   user, 
@@ -38,16 +48,16 @@ export default function UserProfile({
           <div className="relative">
             <img 
               src={photoSrc} 
-              alt={profileData?.empName || user.username} 
+              alt={formatAvesntWord(profileData?.empName || user.username)} 
               className="w-32 h-32 rounded-full border-4 border-white shadow-xl object-cover" 
             />
             <div className="absolute bottom-2 right-2 w-5 h-5 rounded-full border-2 border-white bg-green-500 animate-pulse" />
           </div>
 
           <h2 className="mt-4 text-2xl font-bold text-slate-800">
-            {profileData?.empName || user.username}
+            {formatAvesntWord(profileData?.empName || user.username)}
           </h2>
-          <p className="text-green-600 font-medium mt-1">{profileData?.jobPosition || DEFAULT_JOB_POSITION}</p>
+          <p className="text-green-600 font-medium mt-1">{formatAvesntWord(profileData?.jobPosition || DEFAULT_JOB_POSITION)}</p>
 
           <div className="flex items-center gap-2 mt-3 text-sm text-slate-600">
             <Clock className="w-4 h-4" />
