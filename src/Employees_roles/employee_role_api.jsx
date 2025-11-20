@@ -20,6 +20,8 @@ export const fetchEmpAttendanceHistory = async (empCode, options = {}) => {
       headers: {
         Authorization: `Bearer ${token}`,
         'ngrok-skip-browser-warning': 'true',
+        'X-Time-Zone': 'Africa/Cairo',
+        'Accept-Language': 'ar',
       },
     });
 
@@ -52,7 +54,7 @@ export const fetchEmpAttendanceHistory = async (empCode, options = {}) => {
   }
 };
 
-const BASE_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/emp-dashboard';
+const BASE_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/';
 
 export const fetchEmployeeProfile = async (empCode) => {
   try {
@@ -61,7 +63,7 @@ export const fetchEmployeeProfile = async (empCode) => {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const url = `${BASE_URL}/employee-details?empCode=${encodeURIComponent(empCode)}`;
+    const url = `${BASE_URL}emp-dashboard/employee-details?empCode=${encodeURIComponent(empCode)}`;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -70,6 +72,8 @@ export const fetchEmployeeProfile = async (empCode) => {
         'Content-Type': 'application/json',
         Accept: 'application/json',
         Authorization: `Bearer ${token}`,
+        'X-Time-Zone': 'Africa/Cairo',
+        'Accept-Language': 'ar',
       },
     });
 
@@ -104,7 +108,7 @@ export const fetchEmployeeSalary = async (empCode) => {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const url = `${BASE_URL}/financial-details?empCode=${encodeURIComponent(empCode)}`;
+    const url = `${BASE_URL}emp-dashboard/financial-details?empCode=${encodeURIComponent(empCode)}`;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -113,6 +117,8 @@ export const fetchEmployeeSalary = async (empCode) => {
         'Content-Type': 'application/json',
         Accept: 'application/json',
         Authorization: `Bearer ${token}`,
+        'X-Time-Zone': 'Africa/Cairo',
+        'Accept-Language': 'ar',
       },
     });
 
@@ -143,7 +149,7 @@ export const fetchEmployeeRewards = async (empCode) => {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const url = `${BASE_URL}/rewards-transactions?empCode=${encodeURIComponent(empCode)}`;
+    const url = `${BASE_URL}emp-dashboard/rewards-transactions?empCode=${encodeURIComponent(empCode)}`;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -152,6 +158,8 @@ export const fetchEmployeeRewards = async (empCode) => {
         'Content-Type': 'application/json',
         Accept: 'application/json',
         Authorization: `Bearer ${token}`,
+        'X-Time-Zone': 'Africa/Cairo',
+        'Accept-Language': 'ar',
       },
     });
 
@@ -182,7 +190,7 @@ export const fetchEmployeeDiscounts = async (empCode) => {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const url = `${BASE_URL}/discounts-transactions?empCode=${encodeURIComponent(empCode)}`;
+    const url = `${BASE_URL}emp-dashboard/discounts-transactions?empCode=${encodeURIComponent(empCode)}`;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -191,6 +199,8 @@ export const fetchEmployeeDiscounts = async (empCode) => {
         'Content-Type': 'application/json',
         Accept: 'application/json',
         Authorization: `Bearer ${token}`,
+        'X-Time-Zone': 'Africa/Cairo',
+        'Accept-Language': 'ar',
       },
     });
 
@@ -217,7 +227,7 @@ export const fetchEmployeeDiscounts = async (empCode) => {
 export const postVacationRequest = async (empCode, payload = {}, file = null) => {
   try {
     const token = localStorage.getItem('token') || '';
-    const url = `${BASE_URL}/vacation-request`;
+    const url = `${BASE_URL}emp-dashboard/vacation-request`;
 
     let res;
     if (file) {
@@ -237,6 +247,8 @@ export const postVacationRequest = async (empCode, payload = {}, file = null) =>
         headers: {
           Authorization: token ? `Bearer ${token}` : '',
           'ngrok-skip-browser-warning': 'true',
+          'X-Time-Zone': 'Africa/Cairo',
+          'Accept-Language': 'ar',
           // do NOT set Content-Type for FormData
         },
         body: form,
@@ -252,7 +264,9 @@ export const postVacationRequest = async (empCode, payload = {}, file = null) =>
         headers: {
           'Content-Type': 'application/json',
           Authorization: token ? `Bearer ${token}` : '',
-          'ngrok-skip-browser-warning': 'true'
+          'ngrok-skip-browser-warning': 'true',
+          'X-Time-Zone': 'Africa/Cairo',
+          'Accept-Language': 'ar',
         },
         body: JSON.stringify(body)
       });
@@ -283,7 +297,7 @@ export const postVacationRequest = async (empCode, payload = {}, file = null) =>
 export const postAdvanceRequest = async (payload = {}) => {
   try {
     const token = localStorage.getItem('token') || '';
-    const url = `${BASE_URL}/advance-request`;
+    const url = `${BASE_URL}emp-dashboard/advance-request`;
 
     const res = await fetch(url, {
       method: 'POST',
@@ -291,6 +305,8 @@ export const postAdvanceRequest = async (payload = {}) => {
         'Content-Type': 'application/json',
         Authorization: token ? `Bearer ${token}` : '',
         'ngrok-skip-browser-warning': 'true',
+        'X-Time-Zone': 'Africa/Cairo',
+        'Accept-Language': 'ar',
       },
       body: JSON.stringify(payload),
     });
@@ -313,6 +329,172 @@ export const postAdvanceRequest = async (payload = {}) => {
   } catch (err) {
     console.error('Error in postAdvanceRequest:', err);
     throw err;
+  }
+};
+
+export const uploadEmployeePhoto = async (empCode, file) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const url = `${BASE_URL}emp-dashboard/upload-file?empCode=${encodeURIComponent(empCode)}`; // Add empCode as query param
+
+    const formData = new FormData();
+    formData.append('file', file); // Only append the file
+
+    console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type, 'for empCode:', empCode);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true',
+        'X-Time-Zone': 'Africa/Cairo',
+        'Accept-Language': 'ar',
+        // Do not set Content-Type for FormData
+      },
+      body: formData,
+    });
+
+    console.log('Upload response status:', response.status);
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to upload photo';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+        console.log('Error data:', errorData);
+      } catch (e) {
+        // If not JSON, get text
+        const text = await response.text();
+        errorMessage = text || `${response.status}: ${response.statusText}`;
+        console.log('Error text:', text);
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    console.log('Photo uploaded successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Error uploading photo:', error);
+    throw error;
+  }
+};
+
+export const markAttendance = async (latitude, longitude) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const url = `${BASE_URL}emp-dashboard/mark-attendance`; // Changed from dashboard to emp-dashboard
+    
+    const requestBody = {
+      latitude: latitude.toString(),
+      longitude: longitude.toString(),
+    };
+
+    console.log('Marking attendance with URL:', url);
+    console.log('Request body:', JSON.stringify(requestBody));
+    console.log('Token present:', !!token);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true',
+        'X-Time-Zone': 'Africa/Cairo',
+        'Accept-Language': 'ar',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    console.log('Response status:', response.status);
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to mark attendance';
+      const responseText = await response.text();
+      console.log('Error response text:', responseText);
+      
+      try {
+        const errorData = JSON.parse(responseText);
+        errorMessage = errorData.message || errorMessage;
+        console.log('Error data:', errorData);
+      } catch (e) {
+        errorMessage = responseText || `${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    console.log('Attendance marked successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Error marking attendance:', error);
+    throw error;
+  }
+};
+
+export const markLeave = async (latitude, longitude) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const url = `${BASE_URL}emp-dashboard/mark-leave`;
+    
+    const requestBody = {
+      latitude: latitude.toString(),
+      longitude: longitude.toString(),
+    };
+
+    console.log('Marking leave with URL:', url);
+    console.log('Request body:', JSON.stringify(requestBody));
+    console.log('Token present:', !!token);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true',
+        'X-Time-Zone': 'Africa/Cairo',
+        'Accept-Language': 'ar',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    console.log('Response status:', response.status);
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to mark leave';
+      const responseText = await response.text();
+      console.log('Error response text:', responseText);
+      
+      try {
+        const errorData = JSON.parse(responseText);
+        errorMessage = errorData.message || errorMessage;
+        console.log('Error data:', errorData);
+      } catch (e) {
+        errorMessage = responseText || `${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    console.log('Leave marked successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Error marking leave:', error);
+    throw error;
   }
 };
 

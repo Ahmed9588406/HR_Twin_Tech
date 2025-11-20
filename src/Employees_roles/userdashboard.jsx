@@ -4,7 +4,6 @@ import { ArrowLeft, Bell } from 'lucide-react';
 import { fetchEmployeeProfile } from './employee_role_api';
 import UserProfile from './userprofile';
 import EmployeeAttendanceHistory from './employee_role_history';
-import AttendanceModal from '../component/Employee_page/Attendance_modal';
 import EmployeeSalary from './employee_salary';
 import EmployeeRewards from './rewards';
 import EmployeeDiscounts from './discount';
@@ -41,7 +40,6 @@ export default function UserProfileView() {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showAdvanceModal, setShowAdvanceModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
@@ -157,7 +155,7 @@ export default function UserProfileView() {
               user={user}
               photoSrc={photoSrc}
               formatLastSignIn={formatLastSignIn}
-              onMarkAttendance={() => setShowAttendanceModal(true)}
+              onMarkAttendance={() => {}} // Empty handler since marking is done in UserProfile
               onRequestLeave={() => setShowLeaveModal(true)}
             />
             <EmployeeRequests 
@@ -175,15 +173,6 @@ export default function UserProfileView() {
           </div>
         </div>
       </div>
-
-      {/* Modals (optional) */}
-      {showAttendanceModal && profileData && (
-        <AttendanceModal
-          employee={{ code: user.code }}
-          onClose={() => setShowAttendanceModal(false)}
-          onSuccess={() => { setShowAttendanceModal(false); /* refresh maybe */ }}
-        />
-      )}
 
       {/* Centered draggable VacationRequest modal */}
       {showLeaveModal && (
