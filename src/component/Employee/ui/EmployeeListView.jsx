@@ -402,12 +402,7 @@ export default function EmployeeListView() {
                     department: employee.departmentName,
                     contentType: employee.contentType, // Pass contentType
                     image: employee.data, // Pass base64 image data
-                    status: employee.status,
-                    checkInTime: employee.checkInTime || "10:00", // Default check-in time
-                    absenceDays: employee.absenceDays || 0, // Pass absence days
-                    onLeaveDays: employee.onLeaveDays || 0, // Pass on-leave days
-                    remainingDays: employee.remainingDays || 0, // Pass remaining days
-                    attendanceRate: employee.attendanceRate || "N/A", // Pass attendance rate
+                    status: employee.status
                   }}
                   onClick={() => handleCardClick(employee)} // Pass the full employee object
                   onEdit={() => handleEdit(employee)} // Pass the edit handler

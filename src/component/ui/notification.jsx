@@ -1,68 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, X, Check, Trash2, Clock, FileText, AlertCircle, CheckCircle } from 'lucide-react';
-
-// Mock API service - Replace with your actual API calls
-const notificationAPI = {
-  async fetchNotifications() {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Mock data - replace with actual API call
-    return [
-      {
-        id: 1,
-        type: 'success',
-        title: 'Leave Request Approved',
-        message: 'Your leave request for Dec 20-22 has been approved.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 min ago
-        read: false,
-        actionUrl: '/requests/123'
-      },
-      {
-        id: 2,
-        type: 'warning',
-        title: 'Timesheet Reminder',
-        message: 'Please submit your timesheet for this week.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-        read: false,
-        actionUrl: '/timesheets'
-      },
-      {
-        id: 3,
-        type: 'info',
-        title: 'New Document Shared',
-        message: 'HR Policy 2024 has been shared with you.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-        read: true,
-        actionUrl: '/documents/456'
-      },
-      {
-        id: 4,
-        type: 'alert',
-        title: 'System Maintenance',
-        message: 'Scheduled maintenance on Saturday 10 PM - 2 AM.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2 days ago
-        read: true,
-        actionUrl: null
-      }
-    ];
-  },
-  
-  async markAsRead(notificationId) {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return { success: true };
-  },
-  
-  async markAllAsRead() {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return { success: true };
-  },
-  
-  async deleteNotification(notificationId) {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return { success: true };
-  }
-};
+import { notificationAPI } from './api/notification_api';
 
 // Utility function to format timestamps
 const formatTimestamp = (timestamp) => {
@@ -105,7 +43,7 @@ const NotificationIcon = ({ type }) => {
 };
 
 // Individual Notification Item Component
-const NotificationItem = ({ notification, onMarkAsRead, onDelete, onClick }) => {
+const NotificationItem = ({ notification, onMarkAsRead, onDelete, onClick, isSelected, onToggleSelect }) => {
   const handleClick = () => {
     if (!notification.read) {
       onMarkAsRead(notification.id);
@@ -123,6 +61,15 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, onClick }) => 
       onClick={handleClick}
     >
       <div className="flex items-start gap-3">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={(e) => {
+            e.stopPropagation();
+            onToggleSelect(notification.id);
+          }}
+          className="mt-1 w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
+        />
         <NotificationIcon type={notification.type} />
         
         <div className="flex-1 min-w-0">
@@ -130,7 +77,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, onClick }) => 
             <h4 className={`text-sm font-semibold text-gray-900 ${
               !notification.read ? 'font-bold' : ''
             }`}>
-              {notification.title}
+              {notification.title || notification.message}
               {!notification.read && (
                 <span className="ml-2 inline-block w-2 h-2 bg-blue-500 rounded-full"></span>
               )}
@@ -151,6 +98,12 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, onClick }) => 
             {notification.message}
           </p>
           
+          {notification.sender && (
+            <div className="text-xs text-gray-500 mb-1">
+              From: {notification.sender.name} (Code: {notification.sender.code})
+            </div>
+          )}
+          
           <div className="flex items-center gap-2 text-xs text-gray-500">
             <Clock className="w-3 h-3" />
             <span>{formatTimestamp(notification.timestamp)}</span>
@@ -162,10 +115,11 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, onClick }) => 
 };
 
 // Main Notification Modal Component
-export const NotificationModal = ({ isOpen, onClose, buttonRef }) => {
+export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode = '7' }) => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [filter, setFilter] = useState('all');
+  const [connectionStatus, setConnectionStatus] = useState('disconnected');
+  const [selectedNotifications, setSelectedNotifications] = useState(new Set());
   const modalRef = useRef(null);
   
   // Draggable state
@@ -174,13 +128,43 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef }) => {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const dragHandleRef = useRef(null);
   
+  // Play notification sound
+  const playNotificationSound = () => {
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwF');
+    audio.play().catch(() => {});
+  };
+  
   useEffect(() => {
     if (isOpen) {
       loadNotifications();
-      // Reset position when modal opens
+      connectWebSocket();
       setPosition({ x: window.innerWidth - 420, y: 80 });
+    } else {
+      // Optionally disconnect when modal closes
+      // notificationAPI.disconnect();
     }
-  }, [isOpen]);
+    
+    return () => {
+      // Cleanup on unmount
+      notificationAPI.disconnect();
+    };
+  }, [isOpen, receiverCode]);
+  
+  // Subscribe to real-time notifications
+  useEffect(() => {
+    const unsubscribe = notificationAPI.subscribe((notification) => {
+      setNotifications(prev => {
+        // Check if notification already exists
+        if (prev.some(n => n.id === notification.id)) {
+          return prev;
+        }
+        playNotificationSound();
+        return [notification, ...prev];
+      });
+    });
+    
+    return unsubscribe;
+  }, []);
   
   // Close modal when clicking outside
   useEffect(() => {
@@ -207,8 +191,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef }) => {
         const newX = e.clientX - dragOffset.x;
         const newY = e.clientY - dragOffset.y;
         
-        // Constrain to viewport
-        const maxX = window.innerWidth - 384; // 384px = w-96
+        const maxX = window.innerWidth - 384;
         const maxY = window.innerHeight - 100;
         
         setPosition({
@@ -244,10 +227,21 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef }) => {
     }
   };
   
+  const connectWebSocket = async () => {
+    try {
+      setConnectionStatus('connecting');
+      await notificationAPI.connect(receiverCode);
+      setConnectionStatus('connected');
+    } catch (error) {
+      console.error('WebSocket connection failed:', error);
+      setConnectionStatus('disconnected');
+    }
+  };
+  
   const loadNotifications = async () => {
     setLoading(true);
     try {
-      const data = await notificationAPI.fetchNotifications();
+      const data = await notificationAPI.fetchNotifications(receiverCode);
       setNotifications(data);
     } catch (error) {
       console.error('Failed to load notifications:', error);
@@ -258,7 +252,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef }) => {
   
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await notificationAPI.markAsRead(notificationId);
+      await notificationAPI.markAsRead(receiverCode, notificationId);
       setNotifications(prev =>
         prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
       );
@@ -269,7 +263,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef }) => {
   
   const handleMarkAllAsRead = async () => {
     try {
-      await notificationAPI.markAllAsRead();
+      await notificationAPI.markAllAsRead(receiverCode);
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     } catch (error) {
       console.error('Failed to mark all as read:', error);
@@ -278,7 +272,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef }) => {
   
   const handleDelete = async (notificationId) => {
     try {
-      await notificationAPI.deleteNotification(notificationId);
+      await notificationAPI.deleteNotification(receiverCode, notificationId);
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
     } catch (error) {
       console.error('Failed to delete notification:', error);
@@ -287,15 +281,44 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef }) => {
   
   const handleNotificationClick = (notification) => {
     if (notification.actionUrl) {
-      // Navigate to the action URL
       console.log('Navigate to:', notification.actionUrl);
-      // window.location.href = notification.actionUrl; // or use your router
+      // window.location.href = notification.actionUrl;
     }
   };
   
-  const filteredNotifications = filter === 'unread'
-    ? notifications.filter(n => !n.read)
-    : notifications;
+  const handleToggleSelect = (id) => {
+    setSelectedNotifications(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+  
+  const handleSelectAll = () => {
+    if (selectedNotifications.size === notifications.length) {
+      setSelectedNotifications(new Set());
+    } else {
+      setSelectedNotifications(new Set(notifications.map(n => n.id)));
+    }
+  };
+  
+  const handleDeleteSelected = async () => {
+    if (selectedNotifications.size === 0) return;
+    const idsToDelete = Array.from(selectedNotifications);
+    try {
+      await Promise.all(idsToDelete.map(id => notificationAPI.deleteNotification(receiverCode, id)));
+      setNotifications(prev => prev.filter(n => !selectedNotifications.has(n.id)));
+      setSelectedNotifications(new Set());
+    } catch (error) {
+      console.error('Failed to delete selected notifications:', error);
+    }
+  };
+  
+  const filteredNotifications = notifications;
   
   const unreadCount = notifications.filter(n => !n.read).length;
   
@@ -322,10 +345,8 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef }) => {
           <div className="flex items-center gap-2">
             <Bell className="w-5 h-5" />
             <h3 className="font-bold text-lg">Notifications</h3>
-            {unreadCount > 0 && (
-              <span className="bg-white text-green-600 text-xs font-bold px-2 py-0.5 rounded-full">
-                {unreadCount}
-              </span>
+            {connectionStatus === 'connected' && (
+              <span className="w-2 h-2 bg-green-300 rounded-full animate-pulse" title="Live"></span>
             )}
           </div>
           <button
@@ -337,28 +358,19 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef }) => {
           </button>
         </div>
         
-        {/* Filter Tabs */}
-        <div className="flex gap-2">
+        {/* Select All Button */}
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setFilter('all')}
-            className={`flex-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              filter === 'all'
-                ? 'bg-white text-green-600'
-                : 'bg-white/20 text-white hover:bg-white/30'
-            }`}
+            onClick={handleSelectAll}
+            className="px-3 py-1.5 bg-white/20 text-white rounded-lg text-sm font-medium hover:bg-white/30 transition-colors"
           >
-            All ({notifications.length})
+            {selectedNotifications.size === notifications.length ? 'Deselect All' : 'Select All'}
           </button>
-          <button
-            onClick={() => setFilter('unread')}
-            className={`flex-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              filter === 'unread'
-                ? 'bg-white text-green-600'
-                : 'bg-white/20 text-white hover:bg-white/30'
-            }`}
-          >
-            Unread ({unreadCount})
-          </button>
+          {selectedNotifications.size > 0 && (
+            <span className="text-sm text-white/80">
+              {selectedNotifications.size} selected
+            </span>
+          )}
         </div>
       </div>
       
@@ -368,24 +380,22 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef }) => {
           <div className="flex items-center justify-center py-12">
             <div className="w-8 h-8 border-4 border-green-200 border-t-green-600 rounded-full animate-spin"></div>
           </div>
-        ) : filteredNotifications.length === 0 ? (
+        ) : notifications.length === 0 ? (
           <div className="text-center py-12 px-4">
             <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 font-medium">
-              {filter === 'unread' ? 'No unread notifications' : 'No notifications'}
-            </p>
-            <p className="text-sm text-gray-400 mt-1">
-              {filter === 'unread' ? "You're all caught up!" : 'Check back later for updates'}
-            </p>
+            <p className="text-gray-500 font-medium">No notifications</p>
+            <p className="text-sm text-gray-400 mt-1">Check back later for updates</p>
           </div>
         ) : (
-          filteredNotifications.map((notification) => (
+          notifications.map((notification) => (
             <NotificationItem
               key={notification.id}
               notification={notification}
               onMarkAsRead={handleMarkAsRead}
               onDelete={handleDelete}
               onClick={handleNotificationClick}
+              isSelected={selectedNotifications.has(notification.id)}
+              onToggleSelect={handleToggleSelect}
             />
           ))
         )}
@@ -393,15 +403,23 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef }) => {
       
       {/* Footer */}
       {notifications.length > 0 && (
-        <div className="border-t border-gray-200 p-3 bg-gray-50">
+        <div className="border-t border-gray-200 p-3 bg-gray-50 flex gap-2">
           <button
             onClick={handleMarkAllAsRead}
             disabled={unreadCount === 0}
-            className="w-full py-2 text-sm font-medium text-green-600 hover:text-green-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 py-2 text-sm font-medium text-green-600 hover:text-green-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
           >
             <Check className="w-4 h-4 inline mr-1" />
             Mark all as read
           </button>
+          {selectedNotifications.size > 0 && (
+            <button
+              onClick={handleDeleteSelected}
+              className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors border border-red-300 rounded-lg"
+            >
+              Delete Selected ({selectedNotifications.size})
+            </button>
+          )}
         </div>
       )}
       
@@ -414,15 +432,6 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef }) => {
           to {
             opacity: 1;
             transform: translateY(0);
-          }
-        }
-        
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
           }
         }
       `}</style>
