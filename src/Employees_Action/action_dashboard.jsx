@@ -2,16 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../component/ui/Sidebar';
 import { Search, Users, User, Calendar, AlertTriangle, X } from 'lucide-react';
+import { fetchBulkActionUsers } from './emp_actions_api'; // added import
+import BulkActionsModal from './bulk_Action_form'; // updated import name
 
 export default function ActionDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('Employees Action');
-  const [actions, setActions] = useState([
-    { id: 1, name: 'John Doe', department: 'Engineering', position: 'Software Engineer', manager: 'Alice Brown', employee: { name: 'John Doe', role: 'Software Engineer', department: 'Engineering', avatar: 'https://i.pravatar.cc/150?img=1', status: 'present', checkInTime: '09:00' } },
-    { id: 2, name: 'Jane Smith', department: 'Marketing', position: 'Marketing Lead', manager: 'Alice Brown', employee: { name: 'Jane Smith', role: 'Marketing Lead', department: 'Marketing', avatar: 'https://i.pravatar.cc/150?img=2', status: 'absent', checkInTime: 'N/A' } },
-    { id: 3, name: 'Bob Johnson', department: 'Sales', position: 'Sales Rep', manager: 'Charlie Davis', employee: { name: 'Bob Johnson', role: 'Sales Rep', department: 'Sales', avatar: 'https://i.pravatar.cc/150?img=3', status: 'on-leave', checkInTime: 'N/A' } }
-  ]);
+  const [actions, setActions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedActions, setSelectedActions] = useState([]);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
@@ -64,10 +62,10 @@ export default function ActionDashboard() {
     setIsBulkModalOpen(false);
   };
 
-  const handleDeleteSelected = () => {
-    setActions(actions.filter(action => !selectedActions.includes(action.id)));
-    setSelectedActions([]);
+  const handleBulkActionSuccess = () => {
     setIsBulkModalOpen(false);
+    setSelectedActions([]); // Clear selections after success
+    // Optionally refresh data
   };
 
   const filteredActions = actions.filter(action =>
@@ -80,6 +78,35 @@ export default function ActionDashboard() {
   const handleEmployeeClick = (employee) => {
     navigate('/employee-profile', { state: { employee } });
   };
+
+  useEffect(() => {
+    const loadActions = async () => {
+      try {
+        const data = await fetchBulkActionUsers();
+        // Map to expected structure
+        const mapped = data.map(user => ({
+          id: user.code,
+          name: user.name,
+          department: user.departmentName,
+          position: user.jobPositionName,
+          manager: user.managerName || '-',
+          employee: {
+            name: user.name,
+            role: user.jobPositionName,
+            department: user.departmentName,
+            avatar: 'https://i.pravatar.cc/150?img=12', // placeholder
+            status: 'present', // placeholder
+            checkInTime: '09:00' // placeholder
+          }
+        }));
+        setActions(mapped);
+      } catch (err) {
+        console.error('Failed to load actions:', err);
+        // Optionally set error state or show message
+      }
+    };
+    loadActions();
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -132,8 +159,7 @@ export default function ActionDashboard() {
               </div>
               <button
                 onClick={handleBulkActions}
-                disabled={selectedActions.length === 0}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl"
               >
                 <AlertTriangle className="w-5 h-5" />
                 Bulk Actions
@@ -193,36 +219,11 @@ export default function ActionDashboard() {
 
       {/* Modal for Bulk Actions */}
       {isBulkModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h1 className="text-xl font-semibold text-gray-800">Bulk Actions</h1>
-              <button
-                onClick={handleCloseBulkModal}
-                className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition"
-              >
-                <X className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <p className="text-gray-600">Apply actions to {selectedActions.length} selected employee(s).</p>
-              <div className="flex gap-4">
-                <button
-                  onClick={handleDeleteSelected}
-                  className="flex-1 px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-                >
-                  Delete Selected
-                </button>
-                <button
-                  onClick={handleCloseBulkModal}
-                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <BulkActionsModal
+          selectedActions={selectedActions}
+          onClose={handleCloseBulkModal}
+          onSuccess={handleBulkActionSuccess}
+        />
       )}
     </div>
   );
