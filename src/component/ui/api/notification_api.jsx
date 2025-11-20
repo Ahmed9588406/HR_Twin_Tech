@@ -116,8 +116,10 @@ class NotificationAPI {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      console.log(`[REST] Fetching notifications for receiver code: ${receiverCode}`);
+      
       const response = await fetch(
-        `${BASE_URL}/api/notifications/2`,
+        `${BASE_URL}/api/notifications/${receiverCode}`, // Use dynamic receiverCode instead of hardcoded '2'
         {
           method: 'GET',
           headers
@@ -136,6 +138,8 @@ class NotificationAPI {
       }
 
       const notifications = await response.json();
+      
+      console.log(`[REST] Loaded ${notifications.length} notifications for receiver code: ${receiverCode}`);
       
       // Track displayed notifications to prevent duplicates
       notifications.forEach(notification => {
