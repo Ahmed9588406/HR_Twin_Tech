@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Bell } from 'lucide-react';
 import { fetchEmployeeProfile } from './employee_role_api';
 import UserProfile from './userprofile';
 import EmployeeAttendanceHistory from './employee_role_history';
@@ -11,6 +11,7 @@ import EmployeeDiscounts from './discount';
 import EmployeeRequests from './emp_requests';
 import VacationRequest from './vacation_req';
 import AdvanceRequest from './advance_req';
+import { NotificationModal } from '../component/ui/notification';
 
 // Constants for hard-coded values
 const DEFAULT_USERNAME = 'Employee';
@@ -43,6 +44,8 @@ export default function UserProfileView() {
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showAdvanceModal, setShowAdvanceModal] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const notificationButtonRef = useRef(null);
 
   useEffect(() => {
     const role = localStorage.getItem(LOCAL_STORAGE_KEYS.ROLE) || DEFAULT_ROLE;
@@ -128,7 +131,17 @@ export default function UserProfileView() {
             <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-500 bg-clip-text text-transparent">
               {UI_TEXT.MY_PROFILE}
             </h1>
-            <div>
+            <div className="flex items-center gap-4">
+              <button
+                ref={notificationButtonRef}
+                onClick={() => setShowNotificationModal(true)}
+                className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
+                aria-label="Notifications"
+              >
+                <Bell className="w-6 h-6" />
+                {/* Optional: Add unread count badge if you have access to notifications state */}
+                {/* <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span> */}
+              </button>
               <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">{UI_TEXT.ACTIVE_STATUS}</span>
             </div>
           </div>
@@ -189,6 +202,13 @@ export default function UserProfileView() {
           onSuccess={() => { setShowAdvanceModal(false); /* optionally refresh profile */ }}
         />
       )}
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        buttonRef={notificationButtonRef}
+      />
     </div>
   );
 }

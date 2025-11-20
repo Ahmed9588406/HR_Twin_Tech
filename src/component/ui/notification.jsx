@@ -115,7 +115,10 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, onClick, isSel
 };
 
 // Main Notification Modal Component
-export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode = '7' }) => {
+export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) => {
+  // If receiverCode is not provided, get it from localStorage (empcode from login)
+  const empCode = receiverCode || localStorage.getItem('code') || '7';
+  
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
@@ -148,7 +151,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode = '
       // Cleanup on unmount
       notificationAPI.disconnect();
     };
-  }, [isOpen, receiverCode]);
+  }, [isOpen, empCode]); // Add empCode to dependency array for re-connection if code changes
   
   // Subscribe to real-time notifications
   useEffect(() => {
@@ -230,7 +233,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode = '
   const connectWebSocket = async () => {
     try {
       setConnectionStatus('connecting');
-      await notificationAPI.connect(receiverCode);
+      await notificationAPI.connect(empCode); // Use empCode instead of receiverCode
       setConnectionStatus('connected');
     } catch (error) {
       console.error('WebSocket connection failed:', error);
@@ -241,7 +244,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode = '
   const loadNotifications = async () => {
     setLoading(true);
     try {
-      const data = await notificationAPI.fetchNotifications(receiverCode);
+      const data = await notificationAPI.fetchNotifications(empCode); // Use empCode instead of receiverCode
       setNotifications(data);
     } catch (error) {
       console.error('Failed to load notifications:', error);
@@ -252,7 +255,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode = '
   
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await notificationAPI.markAsRead(receiverCode, notificationId);
+      await notificationAPI.markAsRead(empCode, notificationId); // Use empCode
       setNotifications(prev =>
         prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
       );
@@ -263,7 +266,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode = '
   
   const handleMarkAllAsRead = async () => {
     try {
-      await notificationAPI.markAllAsRead(receiverCode);
+      await notificationAPI.markAllAsRead(empCode); // Use empCode
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     } catch (error) {
       console.error('Failed to mark all as read:', error);
@@ -272,7 +275,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode = '
   
   const handleDelete = async (notificationId) => {
     try {
-      await notificationAPI.deleteNotification(receiverCode, notificationId);
+      await notificationAPI.deleteNotification(empCode, notificationId); // Use empCode
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
     } catch (error) {
       console.error('Failed to delete notification:', error);
@@ -310,7 +313,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode = '
     if (selectedNotifications.size === 0) return;
     const idsToDelete = Array.from(selectedNotifications);
     try {
-      await Promise.all(idsToDelete.map(id => notificationAPI.deleteNotification(receiverCode, id)));
+      await Promise.all(idsToDelete.map(id => notificationAPI.deleteNotification(empCode, id))); // Use empCode
       setNotifications(prev => prev.filter(n => !selectedNotifications.has(n.id)));
       setSelectedNotifications(new Set());
     } catch (error) {
