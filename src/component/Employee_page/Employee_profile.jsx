@@ -2,18 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Clock, Calendar, TrendingUp, QrCode, Edit, Trash2, LogOut, UserCheck, ArrowLeft, Info } from 'lucide-react';
 import { markAttendance, fetchEmployeeProfile, markLeave, fetchEmployeeSalary, fetchEmployeeAttendanceHistory } from '../Employee_page/api/emplyee_api';
-import { fetchEmployeeDetails } from './informations';
 import AttendanceModal from './Attendance_modal';
 import OnLeaveModal from './OnLeave_modal';
 import EmployeeSalaryCard from './employee_salary';
 import EmployeeAttendanceHistory from './employee_history';
+import EmployeeShiftDept from './employee_shift_dept_admin';
 
 export default function EmployeeProfile() {
   const location = useLocation();
   const navigate = useNavigate();
   const { employee } = location.state || {};
   const [profileData, setProfileData] = useState(null);
-  const [detailsData, setDetailsData] = useState(null);
   const [salaryData, setSalaryData] = useState(null);
   const [historyData, setHistoryData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -46,25 +45,18 @@ export default function EmployeeProfile() {
 
       try {
         setLoading(true);
-        const [profile, salary, history, details] = await Promise.all([
+        const [profile, salary, history] = await Promise.all([
           fetchEmployeeProfile(employee.code),
           fetchEmployeeSalary(employee.code),
           fetchEmployeeAttendanceHistory(employee.code, 0, 5),
-          fetchEmployeeDetails(employee.code)
         ]);
         console.log('[Employee_profile] Fetched employee profile data:', profile);
         console.log('[Employee_profile] Fetched employee salary data:', salary);
         console.log('[Employee_profile] Fetched employee attendance history:', history);
-        console.log('[Employee_profile] Fetched employee details:', details);
-        console.log('[Employee_profile] Details shift:', details?.shift);
-        console.log('[Employee_profile] Details branch:', details?.branch);
-        console.log('[Employee_profile] Details department:', details?.department);
-        console.log('[Employee_profile] Details jobPosition:', details?.jobPosition);
         
         setProfileData(profile);
         setSalaryData(salary);
         setHistoryData(history);
-        setDetailsData(details);
 
         // Calculate attendance rate from history
         if (history && history.content && history.content.length > 0) {
@@ -255,82 +247,31 @@ export default function EmployeeProfile() {
                     </button>
                   </div>
 
-                  {/* Employee Details */}
-                  <div className="mt-6 grid grid-cols-2 gap-4">
-                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100">
-                      <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
+                  {/* Stats */}
+                  <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-slate-200">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-slate-800">
+                        {profileData?.absencesCount || employee.absenceDays || 0}
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Department</p>
-                        <p className="font-semibold text-gray-800">{detailsData?.department || profileData?.department || employee.department || 'N/A'}</p>
-                      </div>
+                      <div className="text-xs text-slate-600 mt-1">Absence</div>
                     </div>
-                    
-                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-                      <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-indigo-600">
+                        {employee.leaveTime ? 'Yes' : 'No'}
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Shift</p>
-                        <p className="font-semibold text-gray-800">{detailsData?.shift || profileData?.shift || employee.shift || 'N/A'}</p>
+                      <div className="text-xs text-slate-600 mt-1">On Leave</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-slate-800">
+                        {profileData?.daysLeftInVacation || employee.remainingDays || 0}
                       </div>
+                      <div className="text-xs text-slate-600 mt-1">Days Left</div>
                     </div>
-                    
-                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-100">
-                      <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Position</p>
-                        <p className="font-semibold text-gray-800">{detailsData?.jobPosition || profileData?.jobPosition || employee.jobPositionName || 'N/A'}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-xl border border-orange-100">
-                      <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Branch</p>
-                        <p className="font-semibold text-gray-800">{detailsData?.branch || profileData?.branch || employee.branch || 'N/A'}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-slate-200">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-slate-800">
-                      {profileData?.absencesCount || employee.absenceDays || 0}
-                    </div>
-                    <div className="text-xs text-slate-600 mt-1">Absence</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-indigo-600">
-                      {employee.leaveTime ? 'Yes' : 'No'}
-                    </div>
-                    <div className="text-xs text-slate-600 mt-1">On Leave</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-slate-800">
-                      {profileData?.daysLeftInVacation || employee.remainingDays || 0}
-                    </div>
-                    <div className="text-xs text-slate-600 mt-1">Days Left</div>
                   </div>
                 </div>
               </div>
             </div>
+            <EmployeeShiftDept empCode={employee.code} />
           </div>
 
           {/* Main Content */}

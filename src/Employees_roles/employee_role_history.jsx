@@ -208,7 +208,7 @@ export default function EmployeeAttendanceHistory({ empCode }) {
               const isDayOff = normStatus === 'DAY_OFF';
               const isWeekend = normStatus === 'WEEKEND';
               const isOnLeave = normStatus === 'ON_LEAVE';
-              const isSpecialStatus = isAbsent || isDayOff || isWeekend;
+              const isSpecialStatus = isAbsent || isDayOff || isWeekend || isOnLeave;
 
               console.log('Record status:', record.status, 'isAbsent:', isAbsent, 'isSpecialStatus:', isSpecialStatus);
 
