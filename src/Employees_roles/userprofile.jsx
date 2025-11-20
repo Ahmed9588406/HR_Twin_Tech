@@ -1,6 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Clock, UserCheck, LogOut, Camera } from 'lucide-react';
 import { uploadEmployeePhoto, markAttendance, markLeave } from './employee_role_api';
+import { requestNotificationPermission } from '../firebase_config';
 
 // Constants for hard-coded values
 const DEFAULT_JOB_POSITION = 'Employee';
@@ -41,6 +42,30 @@ export default function UserProfile({
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
+
+  useEffect(() => {
+    const fetchAndLogToken = async () => {
+      try {
+        console.log('[UserProfile] 🔔 Requesting FCM token...');
+        console.log('[UserProfile] 🌐 Current URL:', window.location.href);
+        console.log('[UserProfile] 🔒 Secure Context:', window.isSecureContext);
+        
+        const token = await requestNotificationPermission();
+        if (token) {
+          console.log('[UserProfile] ✅ Employee FCM Token:', token);
+          console.log('[UserProfile] 📋 Token Length:', token.length);
+        } else {
+          console.log('[UserProfile] ⚠️ FCM Token not available');
+          console.log('[UserProfile] 💡 Check the detailed logs above for the reason');
+        }
+      } catch (error) {
+        console.warn('[UserProfile] ❌ Error fetching FCM token:', error);
+      }
+    };
+
+    // Don't await - run in background
+    fetchAndLogToken();
+  }, []);
 
   // Function to get current location
   const getCurrentLocation = () => {

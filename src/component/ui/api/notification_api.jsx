@@ -1,4 +1,3 @@
-import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 
 const BASE_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev';
@@ -9,98 +8,171 @@ class NotificationAPI {
     this.currentReceiverCode = null;
     this.subscribers = new Set();
     this.displayedNotificationIds = new Set();
+    this.isConnecting = false;
   }
 
   // Connect to WebSocket
   connect(receiverCode) {
     return new Promise((resolve, reject) => {
-      if (this.stompClient && this.stompClient.connected) {
-        this.disconnect();
+      // Prevent multiple simultaneous connection attempts
+      if (this.isConnecting) {
+        console.log('[WebSocket] Connection already in progress');
+        return resolve(false);
       }
 
-      this.currentReceiverCode = receiverCode;
-      console.log(`[WebSocket] Connecting with receiver code: ${receiverCode}`);
+      // If already connected to the same receiver, just resolve
+      if (this.stompClient && this.stompClient.connected && this.currentReceiverCode === receiverCode) {
+        console.log('[WebSocket] Already connected to receiver:', receiverCode);
+        return resolve(true);
+      }
 
-      // Use proper Client initialization instead of Stomp.over
+      // Disconnect if connected to different receiver
+      if (this.stompClient && this.stompClient.connected) {
+        console.log('[WebSocket] Disconnecting from previous receiver');
+        this.disconnect(true);
+      }
+
+      this.isConnecting = true;
+      this.currentReceiverCode = receiverCode;
+      console.log(`[WebSocket] 🔌 Connecting to receiver code: ${receiverCode}`);
+
       this.stompClient = new Client({
+        // Use native WebSocket instead of SockJS
         brokerURL: `${BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://')}/ws`,
-        connectHeaders: {},
+        connectHeaders: {
+          'ngrok-skip-browser-warning': 'true'
+        },
         debug: (str) => {
-          // Disable debug in production
-          // console.log(str);
+          if (str.includes('ERROR') || str.includes('CONNECTED') || str.includes('MESSAGE')) {
+            console.log('[WebSocket Debug]:', str);
+          }
         },
         reconnectDelay: 5000,
-        heartbeatIncoming: 4000,
-        heartbeatOutgoing: 4000,
-        // Use SockJS as fallback
-        webSocketFactory: () => {
-          return new SockJS(`${BASE_URL}/ws`);
-        }
+        heartbeatIncoming: 10000,
+        heartbeatOutgoing: 10000,
+        // Remove webSocketFactory to use native WebSocket
       });
 
-      this.stompClient.onConnect = () => {
-        console.log('[WebSocket] Connected successfully');
+      this.stompClient.onConnect = (frame) => {
+        console.log('[WebSocket] ✅ Connected successfully to receiver:', receiverCode);
+        console.log('[WebSocket] 📊 Current subscribers count:', this.subscribers.size);
+        this.isConnecting = false;
         
         // Subscribe to notifications topic
-        this.stompClient.subscribe(
+        const subscription = this.stompClient.subscribe(
           `/topic/notifications/${receiverCode}`,
           (message) => {
+            console.log('[WebSocket] 📩 Raw message received:', message.body);
+            console.log('[WebSocket] 📊 Will notify', this.subscribers.size, 'subscribers');
+            
             try {
               const notification = JSON.parse(message.body);
+              console.log('[WebSocket] 🔔 Parsed notification:', notification);
               
               // Prevent duplicates
               if (!this.displayedNotificationIds.has(notification.id)) {
                 this.displayedNotificationIds.add(notification.id);
+                console.log('[WebSocket] 🆕 New notification, notifying subscribers NOW');
+                
+                // Immediately notify all subscribers
                 this.notifySubscribers(notification);
+              } else {
+                console.log('[WebSocket] ⏭️ Duplicate notification ignored:', notification.id);
               }
             } catch (error) {
-              console.error('[WebSocket] Failed to parse notification:', error);
+              console.error('[WebSocket] ❌ Failed to parse notification:', error);
             }
           }
         );
 
+        console.log('[WebSocket] 📡 Subscribed to topic:', `/topic/notifications/${receiverCode}`);
+        console.log('[WebSocket] 📡 Subscription ID:', subscription.id);
         resolve(true);
       };
 
       this.stompClient.onStompError = (frame) => {
-        console.error('[WebSocket] STOMP error:', frame);
-        reject(new Error('WebSocket connection failed'));
+        console.error('[WebSocket] ❌ STOMP error:', frame);
+        this.isConnecting = false;
+        reject(new Error('WebSocket STOMP error'));
       };
 
       this.stompClient.onWebSocketError = (error) => {
-        console.error('[WebSocket] Connection error:', error);
+        console.error('[WebSocket] ❌ Connection error:', error);
+        this.isConnecting = false;
         reject(error);
       };
 
+      this.stompClient.onDisconnect = () => {
+        console.log('[WebSocket] 🔌 Disconnected');
+        this.isConnecting = false;
+      };
+
+      // Activate the client
       this.stompClient.activate();
     });
   }
 
   // Disconnect from WebSocket
-  disconnect() {
-    if (this.stompClient && this.stompClient.connected) {
-      this.stompClient.deactivate();
-      this.stompClient = null;
-      this.currentReceiverCode = null;
-      console.log('[WebSocket] Disconnected');
+  disconnect(force = false) {
+    if (!this.stompClient) {
+      return;
     }
+
+    // Only disconnect if forced or there are no active subscribers
+    if (!force && this.subscribers && this.subscribers.size > 0) {
+      console.log('[WebSocket] 🛑 Not disconnecting: active subscribers present =', this.subscribers.size);
+      return;
+    }
+
+    try {
+      this.stompClient.deactivate();
+      console.log('[WebSocket] 🔌 Disconnected');
+    } catch (error) {
+      console.error('[WebSocket] Error during disconnect:', error);
+    }
+    this.stompClient = null;
+    this.currentReceiverCode = null;
+    this.isConnecting = false;
   }
 
   // Subscribe to notifications
   subscribe(callback) {
+    console.log('[WebSocket] 📝 New subscriber added');
     this.subscribers.add(callback);
-    return () => this.subscribers.delete(callback);
+    return () => {
+      console.log('[WebSocket] 📝 Subscriber removed');
+      this.subscribers.delete(callback);
+    };
   }
 
   // Notify all subscribers
   notifySubscribers(notification) {
-    this.subscribers.forEach(callback => {
+    console.log(`[WebSocket] 📢 NOTIFYING ${this.subscribers.size} SUBSCRIBERS WITH:`, notification);
+    
+    if (this.subscribers.size === 0) {
+      console.warn('[WebSocket] ⚠️ No subscribers to notify!');
+      return;
+    }
+    
+    let successCount = 0;
+    const subscribersArray = Array.from(this.subscribers);
+    
+    subscribersArray.forEach((callback, index) => {
       try {
+        console.log(`[WebSocket] 📤 Calling subscriber #${index + 1} immediately`);
+        
+        // Call callback synchronously - DO NOT use setTimeout
         callback(notification);
+        
+        successCount++;
+        console.log(`[WebSocket] ✅ Subscriber #${index + 1} notified successfully`);
       } catch (error) {
-        console.error('[WebSocket] Subscriber callback error:', error);
+        console.error(`[WebSocket] ❌ Subscriber #${index + 1} callback error:`, error);
+        console.error('[WebSocket] Error stack:', error.stack);
       }
     });
+    
+    console.log(`[WebSocket] 📊 Successfully notified ${successCount}/${this.subscribers.size} subscribers`);
   }
 
   // Fetch notifications via REST API

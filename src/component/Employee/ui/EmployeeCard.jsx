@@ -145,13 +145,13 @@ export default function EmployeeCard({
           </div>
 
           {/* Action icons row (new) */}
-          <div className="mt-3 flex items-center justify-end gap-2">
+          <div className="mt-3 flex flex-col sm:flex-row items-center justify-end gap-1 sm:gap-2">
             <button
               onClick={(e) => callHandler(e, onPhone)}
-              className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="p-1.5 sm:p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               title="Call"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-phone-call w-4 h-4 text-gray-600" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-phone-call w-4 h-4 sm:w-5 sm:h-5 text-gray-600" aria-hidden="true">
                 <path d="M2.003 2.883a9.072 9.072 0 0 0 0 12.728l2.121-2.121a7.072 7.072 0 0 1 0-9.486L2.003 2.883z"></path>
                 <path d="M22.004 2.883a9.072 9.072 0 0 1 0 12.728l-2.121-2.121a7.072 7.072 0 0 0 0-9.486l2.121-2.121z"></path>
                 <path d="M12 22l-2-2m0 0l-2-2m4 4l2-2m0 0l2-2"></path>
@@ -160,10 +160,10 @@ export default function EmployeeCard({
 
             <button
               onClick={(e) => callHandler(e, onNotify)}
-              className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="p-1.5 sm:p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               title="Notify"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bell w-4 h-4 text-gray-600" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bell w-4 h-4 sm:w-5 sm:h-5 text-gray-600" aria-hidden="true">
                 <path d="M18 8a6 6 0 0 0-12 0v4a6 6 0 0 0 12 0V8z"></path>
                 <path d="M8 8V6a6 6 0 0 1 12 0v2"></path>
                 <path d="M12 18v2a2 2 0 0 0 4 0v-2"></path>
@@ -173,10 +173,10 @@ export default function EmployeeCard({
 
             <button
               onClick={(e) => callHandler(e, onEdit)}
-              className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="p-1.5 sm:p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               title="Edit"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-edit w-4 h-4 text-gray-600" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-edit w-4 h-4 sm:w-5 sm:h-5 text-gray-600" aria-hidden="true">
                 <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"></path>
               </svg>
@@ -184,20 +184,20 @@ export default function EmployeeCard({
 
             <button
               onClick={(e) => callHandler(e, onInfo)}
-              className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="p-1.5 sm:p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               title="Send"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-paper-plane w-4 h-4 text-gray-600" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-paper-plane w-4 h-4 sm:w-5 sm:h-5 text-gray-600" aria-hidden="true">
                 <path d="M2.003 12.293l18.364-9.192a1 1 0 0 1 1.415.447l2.121 4.243a1 1 0 0 1-.447 1.415L13.414 12l10.121 5.707a1 1 0 0 1 .447 1.415l-2.121 4.243a1 1 0 0 1-1.415.447L2.003 12.293z"></path>
               </svg>
             </button>
 
             <button
               onClick={(e) => callHandler(e, onDelete)}
-              className="p-2 bg-gray-100 hover:bg-red-50 rounded-lg transition-colors"
+              className="p-1.5 sm:p-2 bg-gray-100 hover:bg-red-50 rounded-lg transition-colors"
               title="Delete"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2 w-4 h-4 text-red-600" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2 w-4 h-4 sm:w-5 sm:h-5 text-red-600" aria-hidden="true">
                 <path d="M3 6h18"></path>
                 <path d="M9 6v12"></path>
                 <path d="M15 6v12"></path>
@@ -207,10 +207,10 @@ export default function EmployeeCard({
 
             <button
               onClick={(e) => callHandler(e, onLock)}
-              className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="p-1.5 sm:p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               title="Lock"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-lock w-4 h-4 text-gray-600" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-lock w-4 h-4 sm:w-5 sm:h-5 text-gray-600" aria-hidden="true">
                 <path d="M17 8v4a5 5 0 0 1-10 0V8"></path>
                 <path d="M7 8V6a5 5 0 0 1 10 0v2"></path>
                 <path d="M12 18v2a2 2 0 0 0 4 0v-2"></path>

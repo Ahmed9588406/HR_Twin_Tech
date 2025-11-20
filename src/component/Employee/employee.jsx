@@ -61,13 +61,13 @@ function Employee() {
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-6">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-4">
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900 mb-2">Employee Dashboard</h1>
                   <p className="text-gray-600">Manage and monitor employee information</p>
                 </div>
                 {activeTab === 'Employees' && (
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <button 
                       className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-md transition-all duration-200"
                       onClick={() => setIsAddModalOpen(true)}

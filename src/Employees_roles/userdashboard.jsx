@@ -11,6 +11,8 @@ import EmployeeRequests from './emp_requests';
 import VacationRequest from './vacation_req';
 import AdvanceRequest from './advance_req';
 import { NotificationModal } from '../component/ui/notification';
+import { onMessageListener, showBrowserNotification } from '../firebase_config';
+import EmployeeShiftDept from './employee_shift_dept';
 
 // Constants for hard-coded values
 const DEFAULT_USERNAME = 'Employee';
@@ -82,6 +84,23 @@ export default function UserProfileView() {
     };
 
     load();
+  }, []);
+
+  useEffect(() => {
+    // Listen for foreground notifications
+    onMessageListener()
+      .then((payload) => {
+        console.log('Foreground notification received:', payload);
+        showBrowserNotification(
+          payload.notification?.title || 'New Notification',
+          {
+            body: payload.notification?.body || 'You have a new notification',
+            tag: payload.data?.id || 'notification',
+            data: payload.data
+          }
+        );
+      })
+      .catch((err) => console.error('Failed to receive foreground message:', err));
   }, []);
 
   const handleBack = () => navigate('/user-dashboard');
@@ -158,6 +177,7 @@ export default function UserProfileView() {
               onMarkAttendance={() => {}} // Empty handler since marking is done in UserProfile
               onRequestLeave={() => setShowLeaveModal(true)}
             />
+            <EmployeeShiftDept />
             <EmployeeRequests 
               onVacationRequest={() => setShowLeaveModal(true)} 
               onAdvanceRequest={handleAdvanceRequest} 
@@ -197,6 +217,7 @@ export default function UserProfileView() {
         isOpen={showNotificationModal}
         onClose={() => setShowNotificationModal(false)}
         buttonRef={notificationButtonRef}
+        receiverCode={user.code}
       />
     </div>
   );

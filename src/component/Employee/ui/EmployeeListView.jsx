@@ -4,7 +4,7 @@ import EmployeeCard from "../../ui/EmployeeCard";
 import CreateNewEmployee from "../../Employee_page/Create_new_Employee"; // Import the modal
 import { fetchEmployeeById } from "../../Settings/api/employees_api"; // Import the API function
 import { useNavigate } from "react-router-dom";
-import { fetchEmployees, deleteEmployee } from '../../Employee_page/api/emplyee_api'; // Added deleteEmployee import
+import { fetchEmployees, deleteEmployee, lockEmployee } from '../../Employee_page/api/emplyee_api'; // Added lockEmployee import
 import { fetchBranches, fetchDepartments } from '../../Settings/api/settings_api' // fetch lists for filters
 
 export default function EmployeeListView() {
@@ -112,8 +112,11 @@ export default function EmployeeListView() {
   };
 
   const handleNotify = (employee) => {
-    console.log("Notify:", employee.name);
-    // Send notification
+    if (employee.email) {
+      window.location.href = `mailto:${employee.email}`;
+    } else {
+      alert('No email available for this employee.');
+    }
   };
 
   const handleDelete = async (employee) => {
@@ -131,19 +134,36 @@ export default function EmployeeListView() {
     }
   };
 
-  const handleLock = (employee) => {
-    console.log("Lock/Security:", employee.name);
-    // Toggle security settings
+  const handleLock = async (employee) => {
+    const confirmLock = window.confirm(`Are you sure you want to ${employee.locked ? 'unlock' : 'lock'} ${employee.name}?`);
+    if (!confirmLock) return;
+
+    try {
+      await lockEmployee(employee.code);
+      // Update the employee in the list
+      setEmployees(prev => prev.map(emp => emp.code === employee.code ? { ...emp, locked: !emp.locked } : emp));
+      alert(`${employee.name} has been ${employee.locked ? 'unlocked' : 'locked'} successfully!`);
+    } catch (error) {
+      console.error('Error locking/unlocking employee:', error);
+      alert(`Error: ${error.message}`);
+    }
   };
 
   const handlePhone = (employee) => {
-    console.log("Call:", employee.name);
-    // Initiate call
+    if (employee.phoneNumber) {
+      window.location.href = `tel:${employee.phoneNumber}`;
+    } else {
+      alert('No phone number available for this employee.');
+    }
   };
 
   const handleInfo = (employee) => {
-    console.log("Info:", employee.name);
-    // Show employee details
+    // Open email or show info
+    if (employee.email) {
+      window.location.href = `mailto:${employee.email}`;
+    } else {
+      alert(`Employee Info:\nName: ${employee.name}\nEmail: ${employee.email || 'N/A'}\nPhone: ${employee.phoneNumber || 'N/A'}\nDepartment: ${employee.departmentName || 'N/A'}`);
+    }
   };
 
   const clearFilters = () => {

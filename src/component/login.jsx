@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "./api/login_api";
 import logo from "../assets/images/logo.png";
 import { QrCode } from "lucide-react";
+import { testFirebaseConnection, requestNotificationPermission, registerServiceWorker } from "../firebase_config";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -12,6 +13,26 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    const initializeFirebase = async () => {
+      try {
+        console.log('[Login] 🚀 Starting Firebase initialization...');
+        
+        // Register service worker first
+        await registerServiceWorker();
+        console.log('[Login] ✅ Service worker registered');
+        
+        // Test Firebase connection
+        testFirebaseConnection();
+        console.log('[Login] ✅ Firebase connection tested');
+      } catch (error) {
+        console.error('[Login] ❌ Firebase initialization error:', error);
+      }
+    };
+
+    initializeFirebase();
+  }, []);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -19,25 +40,38 @@ function LoginPage() {
 
     try {
       const data = await loginUser({ username, password });
-      console.log('Login response data:', data);
+      console.log('[Login] ✅ Login response data:', data);
+      
       if (data && data.token) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('role', data.role ?? '');
         localStorage.setItem('code', String(data.code ?? ''));
-        // store full response for user dashboard UI
         localStorage.setItem('userData', JSON.stringify(data));
+
+        // Request notification permission after successful login
+        console.log('[Login] 🔔 Requesting notification permission...');
+        
+        // Wait a bit for storage to be ready
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const token = await requestNotificationPermission();
+        if (token) {
+          console.log('[Login] ✅ FCM Token obtained:', token);
+        } else {
+          console.warn('[Login] ⚠️ FCM Token not obtained (check console for details)');
+        }
 
         // Navigate based on role
         if ((data.role || '').toUpperCase() === 'ADMIN') {
-          navigate('/Dashboard'); // admin dashboard file
+          navigate('/Dashboard');
         } else {
-          navigate('/user-dashboard'); // user dashboard page for non-admin
+          navigate('/user-dashboard');
         }
       } else {
         setError('Login succeeded but token missing in response');
       }
     } catch (err) {
-      console.error('Login failed:', err);
+      console.error('[Login] ❌ Login failed:', err);
       setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
