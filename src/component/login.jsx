@@ -4,6 +4,7 @@ import { loginUser } from "./api/login_api";
 import logo from "../assets/images/logo.png";
 import { QrCode } from "lucide-react";
 import { testFirebaseConnection, requestNotificationPermission, registerServiceWorker } from "../firebase_config";
+import { t as _t } from "../i18n/i18n";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -68,11 +69,11 @@ function LoginPage() {
           navigate('/user-dashboard');
         }
       } else {
-        setError('Login succeeded but token missing in response');
+        setError(_t('LOGIN_TOKEN_MISSING'));
       }
     } catch (err) {
       console.error('[Login] ❌ Login failed:', err);
-      setError(err.message || 'Login failed. Please try again.');
+      setError(err.message || _t('LOGIN_FAILED'));
     } finally {
       setLoading(false);
     }
@@ -101,7 +102,7 @@ function LoginPage() {
 
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-gray-100">
             <h1 className="text-3xl md:text-4xl font-bold text-green-600 mb-8 text-center">
-              Login
+              {_t('LOGIN')}
             </h1>
 
             <form onSubmit={handleLogin} className="space-y-6">
@@ -124,7 +125,7 @@ function LoginPage() {
                   </svg>
                   <input
                     type="text"
-                    placeholder="Username"
+                    placeholder={_t('USERNAME')}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className="bg-transparent ml-4 w-full outline-none text-gray-700 placeholder-gray-400 font-medium"
@@ -145,7 +146,7 @@ function LoginPage() {
                   </svg>
                   <input
                     type="password"
-                    placeholder="Password"
+                    placeholder={_t('PASSWORD')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="bg-transparent ml-4 w-full outline-none text-gray-700 placeholder-gray-400 font-medium"
@@ -164,7 +165,7 @@ function LoginPage() {
                     className="w-5 h-5 rounded border-2 border-gray-300 cursor-pointer checked:bg-green-500 checked:border-green-500 focus:ring-green-200 focus:ring-2 transition-colors"
                   />
                   <span className="text-gray-600 text-sm font-medium group-hover:text-gray-800">
-                    Remember Me For 356 days
+                    {_t('REMEMBER_ME')}
                   </span>
                 </label>
                 <div className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer">
@@ -178,7 +179,7 @@ function LoginPage() {
                 disabled={loading}
                 className="w-full bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:hover:shadow-lg disabled:hover:translate-y-0"
               >
-                {loading ? "Logging in..." : "Login"}
+                {loading ? _t('LOGGING_IN') : _t('LOGIN')}
               </button>
             </form>
           </div>
@@ -187,9 +188,9 @@ function LoginPage() {
 
       {/* Right Side - Welcome Message */}
       <div className="hidden md:flex w-1/2 bg-gradient-to-b from-green-400 to-green-500 flex-col justify-center items-center px-8 py-12 text-white">
-        <h2 className="text-5xl font-bold mb-6 text-center">Welcome Back</h2>
+        <h2 className="text-5xl font-bold mb-6 text-center">{_t('WELCOME_BACK')}</h2>
         <p className="text-xl text-center leading-relaxed">
-          To Keep Connected With Us Please Login With Your Personal Info
+          {_t('WELCOME_SUB')}
         </p>
       </div>
     </div>

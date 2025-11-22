@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { fetchOvertimeRequests } from './requests_api';
+import { t as _t } from '../../i18n/i18n';
 
 export default function OvertimeRequestsTable() {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ export default function OvertimeRequestsTable() {
         setRequests(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Failed to load overtime requests:', err);
-        setError('Failed to load overtime requests.');
+        setError(_t('FAILED_LOAD_OVERTIME_REQUESTS'));
       } finally {
         setLoading(false);
       }
@@ -37,7 +38,7 @@ export default function OvertimeRequestsTable() {
       <div className="flex items-center justify-center min-h-48">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-500 mx-auto" />
-          <p className="mt-3 text-gray-600">Loading overtime requests...</p>
+          <p className="mt-3 text-gray-600">{_t('LOADING_OVERTIME_REQUESTS')}</p>
         </div>
       </div>
     );
@@ -60,7 +61,7 @@ export default function OvertimeRequestsTable() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             type="text"
-            placeholder="Search overtime requests..."
+            placeholder={_t('SEARCH_OVERTIME_REQUESTS')}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
@@ -71,11 +72,11 @@ export default function OvertimeRequestsTable() {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Employee</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Date</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Hours</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Status</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Comment</th>
+                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">{_t('EMPLOYEE_COL')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('DATE')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('HOURS')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('STATUS')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('COMMENT')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -119,7 +120,7 @@ export default function OvertimeRequestsTable() {
                           : 'bg-red-100 text-red-800'
                       }`}
                     >
-                      {req.requestStatus}
+                      {req.requestStatus === 'APPROVED' ? _t('APPROVED') : req.requestStatus === 'PENDING' ? _t('PENDING') : _t('REJECTED')}
                     </span>
                   </td>
                   <td className="py-4 px-4 text-gray-600">{req.comment || '-'}</td>
@@ -130,7 +131,7 @@ export default function OvertimeRequestsTable() {
 
           {filtered.length === 0 && (
             <div className="px-6 py-12 text-center text-gray-500">
-              No overtime requests found.
+              {_t('NO_OVERTIME_REQUESTS')}
             </div>
           )}
         </div>

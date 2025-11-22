@@ -7,6 +7,7 @@ import Department from './ui/Department.jsx'
 import EmployeeCard from './ui/EmployeeCard.jsx' // Changed to use EmployeeCard
 import AttendanceHistoryFilter from './ui/Attendance_history.jsx'
 import { fetchAttendanceStatistics, fetchDashboardData } from './api/dashboard_api'; // Import the new API function
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../i18n/i18n'
 
 function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
@@ -19,6 +20,9 @@ function Dashboard() {
     status: 'all',
     search: ''
   });
+
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => _subscribe(setLang), []);
 
   // Dummy employee data with more details
   const allEmployees = [
@@ -149,13 +153,13 @@ function Dashboard() {
 
   const departments = dashboardData?.deptNumOfEmp?.map(dept => dept.name) || [];
 
-  if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  if (loading) return <div className="flex items-center justify-center h-screen">{_t('LOADING')}</div>;
   if (error) return <div className="flex items-center justify-center h-screen text-red-600">{error}</div>;
 
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1 p-6 lg:p-8 overflow-auto ml-20 xl:ml-72 transition-all duration-300">
+      <div className={`flex-1 p-6 lg:p-8 overflow-auto ${lang === 'ar' ? 'mr-20 xl:mr-72' : 'ml-20 xl:ml-72'} transition-all duration-300`}>
         <div className="max-w-7xl mx-auto space-y-6">
           {dashboardData && (
             <>
@@ -182,13 +186,13 @@ function Dashboard() {
               <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">Employee Attendance</h2>
+                    <h2 className="text-xl font-bold text-gray-900">{_t('EMPLOYEE_ATTENDANCE')}</h2>
                     <p className="text-sm text-gray-500 mt-1">
-                      Showing {filteredEmployees.length} of {attendanceData.length} employees for {new Date(filters.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                      {_t('SHOWING_EMPLOYEES', { current: filteredEmployees.length, total: attendanceData.length, date: new Date(filters.date).toLocaleDateString(_getLang() === 'ar' ? 'ar' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' }) })}
                     </p>
                   </div>
                   <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                    View All
+                    {_t('VIEW_ALL')}
                   </button>
                 </div>
                 
@@ -224,8 +228,8 @@ function Dashboard() {
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
                       <Users className="w-8 h-8 text-gray-400" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No employees found for this date</h3>
-                    <p className="text-sm text-gray-500">Try selecting a different date or adjusting your filters</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">{_t('NO_EMPLOYEES_TITLE')}</h3>
+                    <p className="text-sm text-gray-500">{_t('NO_EMPLOYEES_SUB')}</p>
                   </div>
                 )}
               </div>

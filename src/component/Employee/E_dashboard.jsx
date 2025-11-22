@@ -2,16 +2,19 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import Sidebar from '../ui/Sidebar'
 import { Users, Calendar, User } from 'lucide-react'
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n'
 
 function E_dashboard() {
   const navigate = useNavigate()
   const location = useLocation()
   const [activeTab, setActiveTab] = useState('Work Teams')
+  const [lang, setLang] = useState(_getLang())
+  useEffect(() => _subscribe(setLang), [])
 
   const tabs = [
-    { id: 'Employees', label: 'Employees', icon: User, path: '/employees' },
-    { id: 'Work Teams', label: 'Work Teams', icon: Users, path: '/dashboard-teams' },
-    { id: 'Employees Action', label: 'Employees Action', icon: Calendar, path: '/employees-action' },
+    { id: 'Employees', label: _t('SIDEBAR_EMPLOYEES'), icon: User, path: '/employees' },
+    { id: 'Work Teams', label: _t('WORK_TEAMS'), icon: Users, path: '/dashboard-teams' },
+    { id: 'Employees Action', label: _t('EMPLOYEES_ACTION'), icon: Calendar, path: '/employees-action' },
   ]
 
   useEffect(() => {
@@ -35,12 +38,12 @@ function E_dashboard() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1 p-6 lg:p-8 overflow-auto ml-20 xl:ml-72 transition-all duration-300">
+      <div className={`flex-1 p-6 lg:p-8 overflow-auto ${lang === 'ar' ? 'mr-20 xl:mr-72' : 'ml-20 xl:ml-72'} transition-all duration-300`}>
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Employee Dashboard</h1>
-            <p className="text-gray-600">Manage and monitor employee information</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{_t('EMPLOYEE_DASHBOARD')}</h1>
+            <p className="text-gray-600">{_t('MANAGE_EMPLOYEE_INFO')}</p>
           </div>
 
           {/* Tab Navigation */}
@@ -73,15 +76,15 @@ function E_dashboard() {
             <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
               {activeTab === 'Work Teams' && (
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Work Teams</h2>
-                  <p className="text-gray-600">Work teams management content goes here...</p>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">{_t('WORK_TEAMS')}</h2>
+                  <p className="text-gray-600">{_t('WORK_TEAMS_PLACEHOLDER')}</p>
                 </div>
               )}
 
               {activeTab === 'Employees Action' && (
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Employees Action</h2>
-                  <p className="text-gray-600">Employee actions content goes here...</p>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">{_t('EMPLOYEES_ACTION')}</h2>
+                  <p className="text-gray-600">{_t('EMPLOYEES_ACTION_PLACEHOLDER')}</p>
                 </div>
               )}
             </div>

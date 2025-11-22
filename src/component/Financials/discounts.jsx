@@ -4,6 +4,7 @@ import { Search, TrendingDown, Calendar, DollarSign, X, AlertTriangle, Edit3, Tr
 import { getDiscounts } from './finantial_api';
 import EditModalTransaction from './editmodal_transaction';
 import DeleteModalTransaction from './DeleteModalTransaction';
+import { t as _t, getLang as _getLang } from '../../i18n/i18n';
 
 export default function DiscountsDashboard() {
   const navigate = useNavigate();
@@ -88,7 +89,7 @@ export default function DiscountsDashboard() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading discounts...</p>
+          <p className="mt-4 text-gray-600">{_t('LOADING_DISCOUNTS')}</p>
         </div>
       </div>
     );
@@ -98,7 +99,7 @@ export default function DiscountsDashboard() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Error loading discounts</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{_t('ERROR_LOADING_DATA')}</h2>
           <p className="text-gray-600">{error}</p>
         </div>
       </div>
@@ -114,9 +115,9 @@ export default function DiscountsDashboard() {
             <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
               <TrendingDown size={24} />
             </div>
-            <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">Total</span>
+            <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">{_t('TOTAL')}</span>
           </div>
-          <h3 className="text-sm font-medium opacity-90 mb-1">Total Discounts</h3>
+          <h3 className="text-sm font-medium opacity-90 mb-1">{_t('TOTAL_DISCOUNTS')}</h3>
           <p className="text-3xl font-bold">{discounts.length}</p>
         </div>
 
@@ -125,9 +126,9 @@ export default function DiscountsDashboard() {
             <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
               <DollarSign size={24} />
             </div>
-            <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">Amount</span>
+            <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">{_t('AMOUNT')}</span>
           </div>
-          <h3 className="text-sm font-medium opacity-90 mb-1">Total Discount Amount</h3>
+          <h3 className="text-sm font-medium opacity-90 mb-1">{_t('TOTAL_DISCOUNT_AMOUNT')}</h3>
           <p className="text-3xl font-bold">{totalDiscounts.toFixed(2)} EGP</p>
         </div>
       </div>
@@ -138,11 +139,11 @@ export default function DiscountsDashboard() {
           <table className="w-full">
             <thead>
               <tr className="bg-gradient-to-r from-red-50 to-orange-50 border-b border-red-100">
-                <th className="text-left py-4 px-6 text-sm font-semibold text-red-700">Employee Name</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-red-700">Reason for discount</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-red-700">Amount</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-red-700">Discount Date</th>
-                <th className="text-center py-4 px-6 text-sm font-semibold text-red-700">Actions</th>
+                <th className="text-left py-4 px-6 text-sm font-semibold text-red-700">{_t('EMPLOYEE_NAME')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-red-700">{_t('REASON_DISCOUNT')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-red-700">{_t('AMOUNT')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-red-700">{_t('DISCOUNT_DATE')}</th>
+                <th className="text-center py-4 px-6 text-sm font-semibold text-red-700">{_t('ACTIONS')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -165,7 +166,7 @@ export default function DiscountsDashboard() {
                     </td>
                     <td className="py-4 px-4 text-gray-700">{discount.description}</td>
                     <td className="py-4 px-4 text-red-600 font-semibold">{discount.amount.toFixed(2)} EGP</td>
-                    <td className="py-4 px-4 text-gray-600">{new Date(discount.date).toLocaleDateString()}</td>
+                    <td className="py-4 px-4 text-gray-600">{new Date(discount.date).toLocaleDateString(_getLang() === 'ar' ? 'ar' : 'en-US')}</td>
                     <td className="py-4 px-6 text-center">
                       <div className="flex justify-center gap-3">
                         <Edit3
@@ -174,7 +175,7 @@ export default function DiscountsDashboard() {
                             e.stopPropagation();
                             handleEditClick(discount);
                           }}
-                          title="Edit Amount"
+                          title={_t('EDIT_AMOUNT')}
                         />
                         <Trash2
                           className="h-4 w-4 text-red-600 hover:text-red-800 cursor-pointer"
@@ -182,7 +183,7 @@ export default function DiscountsDashboard() {
                             e.stopPropagation();
                             handleDeleteClick(discount);
                           }}
-                          title="Delete Discount"
+                          title={_t('DELETE_DISCOUNT')}
                         />
                       </div>
                     </td>
@@ -195,8 +196,8 @@ export default function DiscountsDashboard() {
                       <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                         <TrendingDown className="w-8 h-8 text-gray-400" />
                       </div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No discounts found</h3>
-                      <p className="text-sm text-gray-500">Try adjusting your search or filters</p>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">{_t('NO_DATA_FOUND')}</h3>
+                      <p className="text-sm text-gray-500">{_t('TRY_ADJUST_FILTERS')}</p>
                     </div>
                   </td>
                 </tr>

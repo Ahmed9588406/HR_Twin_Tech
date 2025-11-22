@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Bell, X, Check, Trash2, Clock, FileText, AlertCircle, CheckCircle, Wifi, WifiOff } from 'lucide-react';
 import { notificationAPI } from './api/notification_api';
 import { showBrowserNotification } from '../../firebase_config';
+import { t as _t, getLang as _getLang } from '../../i18n/i18n';
 
 // Utility function to format timestamps
 const formatTimestamp = (timestamp) => {
@@ -9,12 +10,13 @@ const formatTimestamp = (timestamp) => {
   const notificationDate = new Date(timestamp);
   const diffInSeconds = Math.floor((now - notificationDate) / 1000);
   
-  if (diffInSeconds < 60) return 'Just now';
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  if (diffInSeconds < 60) return _t('JUST_NOW');
+  if (diffInSeconds < 3600) return _t('AGO_MINUTES', { n: Math.floor(diffInSeconds / 60) });
+  if (diffInSeconds < 86400) return _t('AGO_HOURS', { n: Math.floor(diffInSeconds / 3600) });
+  if (diffInSeconds < 604800) return _t('AGO_DAYS', { n: Math.floor(diffInSeconds / 86400) });
   
-  return notificationDate.toLocaleDateString('en-US', { 
+  const locale = _getLang() === 'ar' ? 'ar' : 'en-US';
+  return notificationDate.toLocaleDateString(locale, { 
     month: 'short', 
     day: 'numeric' 
   });
@@ -90,7 +92,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, onClick, isSel
                 onDelete(notification.id);
               }}
               className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded transition-all duration-200"
-              aria-label="Delete notification"
+              aria-label={_t('DELETE_NOTIFICATION')}
             >
               <Trash2 className="w-4 h-4 text-gray-500" />
             </button>
@@ -102,7 +104,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, onClick, isSel
           
           {notification.sender && (
             <div className="text-xs text-gray-500 mb-1">
-              From: {notification.sender.name} (Code: {notification.sender.code})
+              {_t('FROM')}: {notification.sender.name} ({_t('CODE')}: {notification.sender.code})
             </div>
           )}
           
@@ -130,7 +132,7 @@ const ToastNotification = ({ notification, onClose }) => {
           <NotificationIcon type={notification.type} />
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-semibold text-gray-900 mb-1">
-              {notification.title || 'New Notification'}
+              {notification.title || _t('NEW_NOTIFICATION')}
             </h4>
             <p className="text-sm text-gray-600 line-clamp-2">
               {notification.message}
@@ -234,8 +236,8 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
     
     // Show browser notification
     if ('Notification' in window && Notification.permission === 'granted') {
-      showBrowserNotification(notification.title || 'New Notification', {
-        body: notification.message || 'You have a new notification',
+      showBrowserNotification(notification.title || _t('NEW_NOTIFICATION'), {
+        body: notification.message || _t('YOU_HAVE_NEW_NOTIFICATION'),
         icon: '/notification-icon.png',
         tag: notification.id?.toString(),
         requireInteraction: false
@@ -528,35 +530,35 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Bell className="w-5 h-5" />
-              <h3 className="font-bold text-lg">Notifications</h3>
+              <h3 className="font-bold text-lg">{_t('NOTIFICATIONS')}</h3>
               {unreadCount > 0 && (
                 <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs font-semibold">
                   {unreadCount}
                 </span>
               )}
               {connectionStatus === 'connected' && (
-                <Wifi className="w-4 h-4 animate-pulse" title="Live - Connected" />
+                <Wifi className="w-4 h-4 animate-pulse" title={_t('LIVE_CONNECTED')} />
               )}
               {connectionStatus === 'connecting' && (
-                <span className="text-xs bg-yellow-500 px-2 py-1 rounded" title="Connecting...">
-                  Connecting...
+                <span className="text-xs bg-yellow-500 px-2 py-1 rounded" title={_t('CONNECTING')}>
+                  {_t('CONNECTING')}
                 </span>
               )}
               {connectionStatus === 'disconnected' && (
                 <button
                   onClick={connectWebSocket}
                   className="text-xs bg-red-500 hover:bg-red-600 px-2 py-1 rounded flex items-center gap-1"
-                  title="Click to reconnect"
+                  title={_t('CLICK_TO_RECONNECT')}
                 >
                   <WifiOff className="w-3 h-3" />
-                  Reconnect
+                  {_t('RECONNECT')}
                 </button>
               )}
             </div>
             <button
               onClick={onClose}
               className="p-1 hover:bg-white/20 rounded-lg transition-colors"
-              aria-label="Close notifications"
+              aria-label={_t('CLOSE_NOTIFICATIONS')}
             >
               <X className="w-5 h-5" />
             </button>
@@ -568,11 +570,11 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
               onClick={handleSelectAll}
               className="px-3 py-1.5 bg-white/20 text-white rounded-lg text-sm font-medium hover:bg-white/30 transition-colors"
             >
-              {selectedNotifications.size === notifications.length ? 'Deselect All' : 'Select All'}
+              {selectedNotifications.size === notifications.length ? _t('DESELECT_ALL') : _t('SELECT_ALL')}
             </button>
             {selectedNotifications.size > 0 && (
               <span className="text-sm text-white/80">
-                {selectedNotifications.size} selected
+                {selectedNotifications.size} {_t('SELECTED_COUNT', { n: selectedNotifications.size })}
               </span>
             )}
           </div>
@@ -587,8 +589,8 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
           ) : notifications.length === 0 ? (
             <div className="text-center py-12 px-4">
               <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 font-medium">No notifications</p>
-              <p className="text-sm text-gray-400 mt-1">Check back later for updates</p>
+              <p className="text-gray-500 font-medium">{_t('NO_NOTIFICATIONS')}</p>
+              <p className="text-sm text-gray-400 mt-1">{_t('CHECK_BACK')}</p>
             </div>
           ) : (
             notifications.map((notification) => (
@@ -613,13 +615,15 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
               disabled={unreadCount === 0}
               className="flex-1 py-2 text-sm font-medium text-green-600 hover:text-green-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
             >
+              <Check className="w-4 h-4 inline mr-1" />
+              {_t('MARK_ALL_AS_READ')}
             </button>
             {selectedNotifications.size > 0 && (
               <button
                 onClick={handleDeleteSelected}
                 className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors border border-red-300 rounded-lg"
               >
-                Delete ({selectedNotifications.size})
+                {_t('DELETE_BTN')} ({selectedNotifications.size})
               </button>
             )}
           </div>

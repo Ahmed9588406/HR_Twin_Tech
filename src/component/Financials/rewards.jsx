@@ -4,6 +4,7 @@ import { Search, Gift, Calendar, DollarSign, Edit3, Trash2 } from 'lucide-react'
 import { getReward } from './finantial_api';
 import EditModalTransaction from './editmodal_transaction';
 import DeleteModalTransaction from './DeleteModalTransaction';
+import { t as _t, getLang as _getLang } from '../../i18n/i18n';
 
 export default function RewardsDashboard() {
   const navigate = useNavigate();
@@ -88,7 +89,7 @@ export default function RewardsDashboard() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading rewards...</p>
+          <p className="mt-4 text-gray-600">{_t('LOADING_REWARDS')}</p>
         </div>
       </div>
     );
@@ -98,7 +99,7 @@ export default function RewardsDashboard() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Error loading rewards</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{_t('ERROR_LOADING_DATA')}</h2>
           <p className="text-gray-600">{error}</p>
         </div>
       </div>
@@ -114,9 +115,9 @@ export default function RewardsDashboard() {
             <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
               <Gift size={24} />
             </div>
-            <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">Total</span>
+            <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">{_t('TOTAL')}</span>
           </div>
-          <h3 className="text-sm font-medium opacity-90 mb-1">Total Rewards</h3>
+          <h3 className="text-sm font-medium opacity-90 mb-1">{_t('TOTAL_REWARDS')}</h3>
           <p className="text-3xl font-bold">{rewards.length}</p>
         </div>
 
@@ -125,9 +126,9 @@ export default function RewardsDashboard() {
             <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
               <DollarSign size={24} />
             </div>
-            <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">Approved</span>
+            <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">{_t('APPROVED')}</span>
           </div>
-          <h3 className="text-sm font-medium opacity-90 mb-1">Total Approved</h3>
+          <h3 className="text-sm font-medium opacity-90 mb-1">{_t('TOTAL_APPROVED')}</h3>
           <p className="text-3xl font-bold">{totalApproved.toFixed(2)} EGP</p>
         </div>
       </div>
@@ -138,11 +139,11 @@ export default function RewardsDashboard() {
           <table className="w-full">
             <thead>
               <tr className="bg-green-50 border-b border-green-100">
-                <th className="text-left py-4 px-6 text-sm font-semibold text-green-700">Employee Name</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-green-700">Reason for reward</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-green-700">Amount</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-green-700">Reward Date</th>
-                <th className="text-center py-4 px-6 text-sm font-semibold text-green-700">Actions</th>
+                <th className="text-left py-4 px-6 text-sm font-semibold text-green-700">{_t('EMPLOYEE_NAME')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-green-700">{_t('REASON_REWARD')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-green-700">{_t('AMOUNT')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-green-700">{_t('REWARD_DATE')}</th>
+                <th className="text-center py-4 px-6 text-sm font-semibold text-green-700">{_t('ACTIONS')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -161,7 +162,7 @@ export default function RewardsDashboard() {
                     </td>
                     <td className="py-4 px-4 text-gray-700">{reward.description}</td>
                     <td className="py-4 px-4 text-green-600 font-semibold">{reward.amount.toFixed(2)} EGP</td>
-                    <td className="py-4 px-4 text-gray-600">{new Date(reward.date).toLocaleDateString()}</td>
+                    <td className="py-4 px-4 text-gray-600">{new Date(reward.date).toLocaleDateString(_getLang() === 'ar' ? 'ar' : 'en-US')}</td>
                     <td className="py-4 px-6 text-center">
                       <div className="flex justify-center gap-3">
                         <Edit3
@@ -170,7 +171,7 @@ export default function RewardsDashboard() {
                             e.stopPropagation();
                             handleEditClick(reward);
                           }}
-                          title="Edit Amount"
+                          title={_t('EDIT_AMOUNT')}
                         />
                         <Trash2
                           className="h-4 w-4 text-red-600 hover:text-red-800 cursor-pointer"
@@ -178,7 +179,7 @@ export default function RewardsDashboard() {
                             e.stopPropagation();
                             handleDeleteClick(reward);
                           }}
-                          title="Delete Reward"
+                          title={_t('DELETE_REWARD')}
                         />
                       </div>
                     </td>
@@ -191,8 +192,8 @@ export default function RewardsDashboard() {
                       <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                         <Gift className="w-8 h-8 text-gray-400" />
                       </div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No rewards found</h3>
-                      <p className="text-sm text-gray-500">Try adjusting your search or filters</p>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">{_t('NO_DATA_FOUND')}</h3>
+                      <p className="text-sm text-gray-500">{_t('TRY_ADJUST_FILTERS')}</p>
                     </div>
                   </td>
                 </tr>

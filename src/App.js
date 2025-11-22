@@ -1,4 +1,5 @@
 import './App.css';
+import { useEffect } from 'react';
 import Dashboard from './component/Dashboard';
 import LoginPage from './component/login';
 import Employee from './component/Employee/employee';
@@ -19,6 +20,25 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import UserDashboard from './Employees_roles/userdashboard'; // added user dashboard route
 
 function App() {
+  // Apply language and direction globally
+  useEffect(() => {
+    let unsub;
+    import('./i18n/i18n')
+      .then((i18n) => {
+        const apply = (lang) => {
+          if (typeof document !== 'undefined') {
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+          }
+        };
+        apply(i18n.getLang());
+        unsub = i18n.subscribe(apply);
+      })
+      .catch(() => {});
+    return () => {
+      if (typeof unsub === 'function') unsub();
+    };
+  }, []);
   return (
     <Router>
       <Routes>

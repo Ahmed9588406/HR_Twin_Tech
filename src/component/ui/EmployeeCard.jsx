@@ -211,7 +211,7 @@ export default function EmployeeCard({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
               <span className="text-xs font-semibold">
-                Arrival: {formatTime12Hour(emp.checkInTime)}
+                {_t('ARRIVAL')}: {formatTime12Hour(emp.checkInTime)}
               </span>
             </div>
           )}
@@ -223,7 +223,7 @@ export default function EmployeeCard({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
               <span className="text-xs font-semibold">
-                Leave: {formatTime12Hour(emp.leaveTime)}
+                {_t('LEAVE')}: {formatTime12Hour(emp.leaveTime)}
               </span>
             </div>
           )}
@@ -236,7 +236,7 @@ export default function EmployeeCard({
           <button
             onClick={(e) => callHandler(e, onPhone)}
             className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            title="Call"
+            title={_t('CALL')}
           >
             <Phone className="w-4 h-4 text-gray-600" />
           </button>
@@ -244,7 +244,7 @@ export default function EmployeeCard({
           <button
             onClick={(e) => callHandler(e, onNotify)}
             className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            title="Notify"
+            title={_t('NOTIFY')}
           >
             <AlertCircle className="w-4 h-4 text-gray-600" />
           </button>
@@ -252,7 +252,7 @@ export default function EmployeeCard({
           <button
             onClick={(e) => callHandler(e, onEdit)}
             className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            title="Edit"
+            title={_t('EDIT')}
           >
             <Edit className="w-4 h-4 text-gray-600" />
           </button>
@@ -260,7 +260,7 @@ export default function EmployeeCard({
           <button
             onClick={(e) => callHandler(e, onInfo)}
             className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            title="Send"
+            title={_t('SEND')}
           >
             <Send className="w-4 h-4 text-gray-600" />
           </button>
@@ -268,7 +268,7 @@ export default function EmployeeCard({
           <button
             onClick={(e) => callHandler(e, onDelete)}
             className="p-2 bg-gray-100 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete"
+            title={_t('DELETE')}
           >
             <Trash2 className="w-4 h-4 text-red-600" />
           </button>
@@ -276,7 +276,7 @@ export default function EmployeeCard({
           <button
             onClick={(e) => callHandler(e, onLock)}
             className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            title="Lock"
+            title={_t('LOCK')}
           >
             <Lock className="w-4 h-4 text-gray-600" />
           </button>

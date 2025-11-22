@@ -3,15 +3,16 @@ import { Edit2, X, Check, Plus } from 'lucide-react';
 import DepEditModal from './Dep_editmodal';
 import { fetchDepartments, deleteDepartment, createDepartment, updateDepartment as updateDepartmentApi } from './api/department_api';
 import { fetchDashboardData } from '../api/dashboard_api'; // Import the dashboard API
+import { t as _t, getLang as _getLang } from '../../i18n/i18n';
 
 // Helper function to format dates
 const formatDate = (dateString) => {
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-GB', {
+  return date.toLocaleDateString(_getLang() === 'ar' ? 'ar' : 'en-GB', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
-  }).format(date);
+  });
 };
 
 export default function Departments() {
@@ -132,10 +133,10 @@ export default function Departments() {
         <table className="min-w-full text-left">
           <thead>
             <tr className="bg-green-50">
-              <th className="px-6 py-4 text-green-600 font-semibold">Name</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">Manager</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">Date</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">Actions</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">{_t('NAME')}</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">{_t('MANAGER')}</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">{_t('DATE')}</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">{_t('ACTIONS')}</th>
             </tr>
           </thead>
           <tbody>
@@ -156,14 +157,14 @@ export default function Departments() {
                     <button
                       onClick={() => handleEdit(dept)}
                       className="text-green-400 hover:text-green-600 transition-colors"
-                      title="Edit"
+                      title={_t('EDIT')}
                     >
                       <Edit2 size={18} />
                     </button>
                     <button
                       onClick={() => handleDelete(dept.id)}
                       className="text-red-500 hover:text-red-700 transition-colors"
-                      title="Delete"
+                      title={_t('DELETE')}
                     >
                       <X size={22} />
                     </button>
@@ -182,7 +183,7 @@ export default function Departments() {
                       setNewDepartment({ ...newDepartment, name: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="Department name"
+                    placeholder={_t('NAME')}
                   />
                 </td>
                 <td className="px-6 py-4">
@@ -193,7 +194,7 @@ export default function Departments() {
                       setNewDepartment({ ...newDepartment, manager: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="Manager"
+                    placeholder={_t('MANAGER')}
                   />
                 </td>
                 <td className="px-6 py-4">
@@ -211,14 +212,14 @@ export default function Departments() {
                     <button
                       onClick={handleSaveNew}
                       className="text-green-600 hover:text-green-800 transition-colors"
-                      title="Save"
+                      title={_t('SAVE')}
                     >
                       <Check size={18} />
                     </button>
                     <button
                       onClick={handleCancelAdd}
                       className="text-red-500 hover:text-red-700 transition-colors"
-                      title="Cancel"
+                      title={_t('CANCEL')}
                     >
                       <X size={18} />
                     </button>
@@ -234,7 +235,7 @@ export default function Departments() {
                     <button
                       onClick={handleAdd}
                       className="bg-green-400 hover:bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg border-4 border-white transition-all duration-200"
-                      title="Add Department"
+                      title={_t('ADD') || 'Add'}
                     >
                       <Plus size={20} />
                     </button>

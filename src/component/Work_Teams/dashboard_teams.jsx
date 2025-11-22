@@ -5,11 +5,15 @@ import AddNewTeam from './add_new_team';
 import AddNewMembers from './add_new_members';
 import { Search, Eye, Edit2, X, Users, User, Calendar, Plus } from 'lucide-react';
 import { fetchTeams, deleteTeam } from './api/work_teams_api'; // Import the delete API function
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 export default function EmployeeManager() {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('Work Teams');
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => _subscribe(setLang), []);
+
   const [departments, setDepartments] = useState([]); // Start with empty array
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
@@ -19,9 +23,9 @@ export default function EmployeeManager() {
   const [attendanceStats, setAttendanceStats] = useState([]); // State for attendance statistics
 
   const tabs = [
-    { id: 'Employees', label: 'Employees', icon: User, path: '/employees' },
-    { id: 'Work Teams', label: 'Work Teams', icon: Users, path: '/dashboard-teams' },
-    { id: 'Employees Action', label: 'Employees Action', icon: Calendar, path: '/employees-action' },
+    { id: 'Employees', label: _t('EMPLOYEES'), icon: User, path: '/employees' },
+    { id: 'Work Teams', label: _t('WORK_TEAMS'), icon: Users, path: '/dashboard-teams' },
+    { id: 'Employees Action', label: _t('EMPLOYEES_ACTION'), icon: Calendar, path: '/employees-action' },
   ];
 
   // Update active tab based on current location
@@ -45,7 +49,7 @@ export default function EmployeeManager() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this team?')) {
+    if (window.confirm(_t('CONFIRM_DELETE_TEAM'))) {
       try {
         await deleteTeam(id);
         // Reload teams after deletion
@@ -67,7 +71,7 @@ export default function EmployeeManager() {
         await loadTeams();
       } catch (error) {
         console.error('Error deleting team:', error);
-        alert(`Failed to delete team: ${error.message}`);
+        alert(`${_t('FAILED_TO_DELETE_TEAM')}: ${error.message}`);
       }
     }
   };
@@ -203,12 +207,12 @@ export default function EmployeeManager() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1 p-6 lg:p-8 overflow-auto ml-20 xl:ml-72 transition-all duration-300">
+      <div className={`flex-1 p-6 lg:p-8 overflow-auto ${lang === 'ar' ? 'mr-20 xl:mr-72' : 'ml-20 xl:ml-72'} transition-all duration-300`}>
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Work Teams Dashboard</h1>
-            <p className="text-gray-600">Manage and monitor work teams information</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{_t('WORK_TEAMS_DASHBOARD')}</h1>
+            <p className="text-gray-600">{_t('WORK_TEAMS_SUBTITLE')}</p>
           </div>
 
           {/* Tab Navigation */}
@@ -245,7 +249,7 @@ export default function EmployeeManager() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
                       type="text"
-                      placeholder="Search"
+                      placeholder={_t('SEARCH')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -258,7 +262,7 @@ export default function EmployeeManager() {
                       <line x1="8" y1="2" x2="8" y2="6" strokeWidth="2"/>
                       <line x1="3" y1="10" x2="21" y2="10" strokeWidth="2"/>
                     </svg>
-                    <span className="text-gray-600">Select Work Timing</span>
+                    <span className="text-gray-600">{_t('SELECT_WORK_TIMING')}</span>
                   </div>
                 </div>
 
@@ -267,14 +271,14 @@ export default function EmployeeManager() {
                   {/* Table Header */}
                   <div className="bg-green-50 border-b border-green-100">
                     <div className="grid grid-cols-12 gap-4 px-6 py-4">
-                      <div className="col-span-3 text-green-600 font-semibold">Name</div>
-                      <div className="col-span-3 text-green-600 font-semibold">Managers</div>
-                      <div className="col-span-5 text-green-600 font-semibold">No. of Employees</div>
+                      <div className="col-span-3 text-green-600 font-semibold">{_t('NAME')}</div>
+                      <div className="col-span-3 text-green-600 font-semibold">{_t('MANAGERS')}</div>
+                      <div className="col-span-5 text-green-600 font-semibold">{_t('NUM_OF_EMPLOYEES')}</div>
                       <div className="col-span-1 flex justify-end">
                         <button
                           onClick={handleAdd} // Opens the modal to add a new team
                           className="w-8 h-8 bg-green-500 hover:bg-green-600 text-white rounded-md flex items-center justify-center transition-colors"
-                          aria-label="Add New Team"
+                          aria-label={_t('ADD_NEW_TEAM')}
                         >
                           <Plus className="w-5 h-5" />
                         </button>
@@ -315,7 +319,7 @@ export default function EmployeeManager() {
 
                   {filteredDepartments.length === 0 && (
                     <div className="px-6 py-12 text-center text-gray-500">
-                      No departments found
+                      {_t('NO_DEPARTMENTS_FOUND')}
                     </div>
                   )}
                 </div>
@@ -324,7 +328,8 @@ export default function EmployeeManager() {
 
             {activeTab === 'Employees Action' && (
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Employees Action</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">{_t('EMPLOYEES_ACTION')}</h2>
+                <p className="text-gray-600">{_t('EMPLOYEES_ACTION_SUBTITLE')}</p>
                 <p className="text-gray-600">Employee actions content goes here...</p>
               </div>
             )}

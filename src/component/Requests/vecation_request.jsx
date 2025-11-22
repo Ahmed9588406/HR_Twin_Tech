@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchVacationRequests } from './requests_api';
+import { t as _t } from '../../i18n/i18n';
 
 export default function VacationRequestsTable() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export default function VacationRequestsTable() {
         setRequests(data || []);
       } catch (err) {
         console.error('API fetch failed:', err);
-        setError('Failed to load vacation requests. Please try again.');
+        setError(_t('FAILED_LOAD_VACATION_REQUESTS'));
       } finally {
         setLoading(false);
       }
@@ -51,7 +52,7 @@ export default function VacationRequestsTable() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading vacation requests...</p>
+          <p className="mt-4 text-gray-600">{_t('LOADING_VACATION_REQUESTS')}</p>
         </div>
       </div>
     );
@@ -61,7 +62,7 @@ export default function VacationRequestsTable() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Error loading data</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{_t('ERROR_LOADING_DATA')}</h2>
           <p className="text-gray-600">{error}</p>
         </div>
       </div>
@@ -76,12 +77,12 @@ export default function VacationRequestsTable() {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Employee</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Request Date</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Start Date</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">End Date</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Status</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Comment</th>
+                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">{_t('EMPLOYEE_COL')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('REQUEST_DATE')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('START_DATE')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('END_DATE')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('STATUS')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('COMMENT')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -128,7 +129,7 @@ export default function VacationRequestsTable() {
                           : 'bg-red-100 text-red-800'
                       }`}
                     >
-                      {request.requestStatus}
+                      {request.requestStatus === 'APPROVED' ? _t('APPROVED') : request.requestStatus === 'PENDING' ? _t('PENDING') : _t('REJECTED')}
                     </span>
                   </td>
                   <td className="py-4 px-4 text-gray-600">{request.comment}</td>
