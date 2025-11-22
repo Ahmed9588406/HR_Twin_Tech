@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { User, Building2, DollarSign, ArrowLeft, Upload, X } from 'lucide-react'; // Added X for close button
-import { createEmployee, updateEmployee } from './api/emplyee_api'; // Import updateEmployee
+import { User, Building2, DollarSign, ArrowLeft, Upload, X } from 'lucide-react';
+import { createEmployee, updateEmployee } from './api/emplyee_api';
 import { fetchDepartments } from '../Settings/api/department_api';
 import { fetchPositions } from '../Settings/api/positions_api';
 import { fetchShifts } from '../Settings/api/settings_api';
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => _subscribe(setLang), []);
+
   const [currentStep, setCurrentStep] = useState(0);
   const [departments, setDepartments] = useState([]);
   const [shifts, setShifts] = useState([]);
@@ -31,9 +35,9 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
   });
 
   const steps = [
-    { icon: User, label: 'Personal Info' },
-    { icon: Building2, label: 'Work Details' },
-    { icon: DollarSign, label: 'Salary & Access' }
+    { icon: User, label: _t('PERSONAL_INFO') },
+    { icon: Building2, label: _t('WORK_DETAILS') },
+    { icon: DollarSign, label: _t('SALARY_ACCESS') }
   ];
 
   const isEditing = Boolean(employeeData && employeeData.id); // <-- added
@@ -179,7 +183,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
       <div className="max-w-7xl w-full bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-8 md:p-12 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading form data...</p>
+          <p className="mt-4 text-gray-600">{_t('LOADING_FORM')}</p>
         </div>
       </div>
     );
@@ -250,7 +254,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
               {/* Step 1: Personal Info */}
               {currentStep === 0 && (
                 <div className="space-y-6">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-8">Personal Information</h2>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-8">{_t('PERSONAL_INFO')}</h2>
                   
                   <div className="flex flex-col items-center mb-8">
                     <input
@@ -270,25 +274,25 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                         <Upload className="w-12 h-12 text-gray-400" />
                       )}
                     </label>
-                    <p className="text-sm text-gray-500 mt-2">Upload Photo</p>
+                    <p className="text-sm text-gray-500 mt-2">{_t('UPLOAD_PHOTO')}</p>
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-2">Name *</label>
+                      <label className="block text-sm font-medium text-gray-600 mb-2">{_t('NAME')} *</label>
                       <input
                         type="text"
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
-                        placeholder="Enter full name"
+                        placeholder={_t('ENTER_FULL_NAME')}
                         required
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-2">Date Of Birth *</label>
+                      <label className="block text-sm font-medium text-gray-600 mb-2">{_t('DATE_OF_BIRTH')} *</label>
                       <input
                         type="date"
                         name="dateOfBirth"
@@ -300,54 +304,40 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-2">Number *</label>
+                      <label className="block text-sm font-medium text-gray-600 mb-2">{_t('NUMBER')} *</label>
                       <input
                         type="text"
                         name="number"
                         value={formData.number}
                         onChange={handleInputChange}
-                        placeholder="Enter ID number"
+                        placeholder={_t('ENTER_ID')}
                         required
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-2">Gender *</label>
+                      <label className="block text-sm font-medium text-gray-600 mb-2">{_t('GENDER')} *</label>
                       <div className="flex gap-6 mt-3">
                         <label className="flex items-center cursor-pointer">
-                          <input
-                            type="radio"
-                            name="gender"
-                            value="Male"
-                            checked={formData.gender === 'Male'}
-                            onChange={handleInputChange}
-                            className="w-5 h-5 text-green-500 focus:ring-green-500"
-                          />
-                          <span className="ml-2 text-gray-700">Male</span>
+                          <input type="radio" name="gender" value="Male" checked={formData.gender === 'Male'} onChange={handleInputChange} className="w-5 h-5 text-green-500 focus:ring-green-500" />
+                          <span className="ml-2 text-gray-700">{_t('MALE')}</span>
                         </label>
                         <label className="flex items-center cursor-pointer">
-                          <input
-                            type="radio"
-                            name="gender"
-                            value="Female"
-                            checked={formData.gender === 'Female'}
-                            onChange={handleInputChange}
-                            className="w-5 h-5 text-green-500 focus:ring-green-500"
-                          />
-                          <span className="ml-2 text-gray-700">Female</span>
+                          <input type="radio" name="gender" value="Female" checked={formData.gender === 'Female'} onChange={handleInputChange} className="w-5 h-5 text-green-500 focus:ring-green-500" />
+                          <span className="ml-2 text-gray-700">{_t('FEMALE')}</span>
                         </label>
                       </div>
                     </div>
 
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-600 mb-2">Email *</label>
+                      <label className="block text-sm font-medium text-gray-600 mb-2">{_t('EMAIL')} *</label>
                       <input
                         type="email"
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        placeholder="Enter email address"
+                        placeholder={_t('ENTER_EMAIL')}
                         required
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
                       />
@@ -359,11 +349,11 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
               {/* Step 2: Work Details */}
               {currentStep === 1 && (
                 <div className="space-y-6">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-8">Work Details</h2>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-8">{_t('WORK_DETAILS')}</h2>
                   
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-2">Department *</label>
+                      <label className="block text-sm font-medium text-gray-600 mb-2">{_t('DEPARTMENT')} *</label>
                       <select
                         name="department"
                         value={formData.department}
@@ -371,17 +361,17 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                         required
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all bg-white text-gray-700 cursor-pointer"
                       >
-                        <option value="">Select Department</option>
+                        <option value="">{_t('SELECT_DEPT')}</option>
                         {departments.map((dept) => (
                           <option key={dept.id} value={dept.id}>
-                            {dept.name} - Manager: {dept.manager}
+                            {dept.name} - {_t('MANAGER')}: {dept.manager}
                           </option>
                         ))}
                       </select>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-2">Position *</label>
+                      <label className="block text-sm font-medium text-gray-600 mb-2">{_t('POSITION')} *</label>
                       <select
                         name="position"
                         value={formData.position}
@@ -390,7 +380,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                         disabled={!formData.department}
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all bg-white text-gray-700 cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed"
                       >
-                        <option value="">Select Position</option>
+                        <option value="">{_t('SELECT_POS')}</option>
                         {filteredPositions.map((pos) => (
                           <option key={pos.id} value={pos.id}>
                             {pos.name}
@@ -400,7 +390,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-2">Start Date *</label>
+                      <label className="block text-sm font-medium text-gray-600 mb-2">{_t('START_TIME')} *</label>
                       <input
                         type="date"
                         name="startDate"
@@ -412,7 +402,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-2">Shift *</label>
+                      <label className="block text-sm font-medium text-gray-600 mb-2">{_t('TAB_SHIFTS')} *</label>
                       <select
                         name="shift"
                         value={formData.shift}
@@ -420,7 +410,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                         required
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all bg-white text-gray-700 cursor-pointer"
                       >
-                        <option value="">Select Shift</option>
+                        <option value="">{_t('SELECT_SHIFT')}</option>
                         {shifts.map((shift) => (
                           <option key={shift.id} value={shift.id}>
                             {shift.name} ({shift.start} - {shift.end}) - {shift.branchName}
@@ -435,12 +425,12 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
               {/* Step 3: Salary & Access */}
               {currentStep === 2 && (
                 <div className="space-y-6">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-8">Salary & Access Information</h2>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-8">{_t('SALARY_ACCESS')}</h2>
                   
                   <div className="border border-gray-200 rounded-3xl p-8">
                     <div className="grid md:grid-cols-2 gap-8">
                       <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">Salary *</label>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">{_t('SALARY')} *</label>
                         <input
                           type="number"
                           name="salary"
@@ -453,27 +443,27 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">Username *</label>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">{_t('USERNAME')} *</label>
                         <input
                           type="text"
                           name="username"
                           value={formData.username}
                           onChange={handleInputChange}
-                          placeholder="Username"
+                          placeholder={_t('USERNAME')}
                           required
                           className="w-full px-4 py-3 border-b border-gray-300 focus:border-green-500 outline-none transition-all text-gray-800 bg-transparent"
                         />
                       </div>
 
                       <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-400 mb-2">Password *</label>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">{_t('PASSWORD')} *</label>
                         <input
                           type="password"
                           name="password"
                           value={formData.password}
                           onChange={handleInputChange}
-                          placeholder="Password"
-                          required={!isEditing} // <-- changed to require only when creating
+                          placeholder={_t('PASSWORD')}
+                          required={!isEditing}
                           className="w-full px-4 py-3 border-b border-gray-300 focus:border-green-500 outline-none transition-all text-gray-800 bg-transparent"
                         />
                       </div>
@@ -481,8 +471,8 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                   </div>
 
                   <div className="mt-8 p-6 bg-green-50 rounded-xl border border-green-200">
-                    <h3 className="font-semibold text-green-800 mb-3">Review Your Information</h3>
-                    <p className="text-sm text-green-700">Please review all the information you've entered before submitting the form.</p>
+                    <h3 className="font-semibold text-green-800 mb-3">{_t('REVIEW_INFO')}</h3>
+                    <p className="text-sm text-green-700">{_t('REVIEW_MSG')}</p>
                   </div>
                 </div>
               )}
@@ -496,7 +486,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                     className="flex items-center gap-2 px-6 py-3 rounded-xl text-green-600 font-medium hover:bg-green-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ArrowLeft className="w-5 h-5" />
-                    Back
+                    {_t('BACK')}
                   </button>
                 )}
                 {currentStep === 0 && <div></div>}
@@ -507,7 +497,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                     disabled={loading}
                     className="px-8 py-3 rounded-xl bg-green-500 text-white font-medium hover:bg-green-600 transition-colors shadow-lg shadow-green-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Next
+                    {_t('NEXT')}
                   </button>
                 ) : (
                   <button
@@ -518,10 +508,10 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                     {loading ? (
                       <>
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        {employeeData && employeeData.id ? 'Updating...' : 'Creating...'}
+                        {employeeData && employeeData.id ? _t('UPDATING') : _t('CREATING')}
                       </>
                     ) : (
-                      employeeData && employeeData.id ? 'Update' : 'Submit'
+                      employeeData && employeeData.id ? _t('UPDATE') : _t('SUBMIT')
                     )}
                   </button>
                 )}
@@ -585,7 +575,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
         {/* Step 1: Personal Info */}
         {currentStep === 0 && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-8">Personal Information</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-8">{_t('PERSONAL_INFO')}</h2>
             
             <div className="flex flex-col items-center mb-8">
               <input
@@ -605,25 +595,25 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                   <Upload className="w-12 h-12 text-gray-400" />
                 )}
               </label>
-              <p className="text-sm text-gray-500 mt-2">Upload Photo</p>
+              <p className="text-sm text-gray-500 mt-2">{_t('UPLOAD_PHOTO')}</p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">Name *</label>
+                <label className="block text-sm font-medium text-gray-600 mb-2">{_t('NAME')} *</label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  placeholder="Enter full name"
+                  placeholder={_t('ENTER_FULL_NAME')}
                   required
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">Date Of Birth *</label>
+                <label className="block text-sm font-medium text-gray-600 mb-2">{_t('DATE_OF_BIRTH')} *</label>
                 <input
                   type="date"
                   name="dateOfBirth"
@@ -635,20 +625,20 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">Number *</label>
+                <label className="block text-sm font-medium text-gray-600 mb-2">{_t('NUMBER')} *</label>
                 <input
                   type="text"
                   name="number"
                   value={formData.number}
                   onChange={handleInputChange}
-                  placeholder="Enter ID number"
+                  placeholder={_t('ENTER_ID')}
                   required
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">Gender *</label>
+                <label className="block text-sm font-medium text-gray-600 mb-2">{_t('GENDER')} *</label>
                 <div className="flex gap-6 mt-3">
                   <label className="flex items-center cursor-pointer">
                     <input
@@ -659,7 +649,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                       onChange={handleInputChange}
                       className="w-5 h-5 text-green-500 focus:ring-green-500"
                     />
-                    <span className="ml-2 text-gray-700">Male</span>
+                    <span className="ml-2 text-gray-700">{_t('MALE')}</span>
                   </label>
                   <label className="flex items-center cursor-pointer">
                     <input
@@ -670,19 +660,19 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                       onChange={handleInputChange}
                       className="w-5 h-5 text-green-500 focus:ring-green-500"
                     />
-                    <span className="ml-2 text-gray-700">Female</span>
+                    <span className="ml-2 text-gray-700">{_t('FEMALE')}</span>
                   </label>
                 </div>
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-600 mb-2">Email *</label>
+                <label className="block text-sm font-medium text-gray-600 mb-2">{_t('EMAIL')} *</label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  placeholder="Enter email address"
+                  placeholder={_t('ENTER_EMAIL')}
                   required
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
                 />
@@ -694,11 +684,11 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
         {/* Step 2: Work Details */}
         {currentStep === 1 && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-8">Work Details</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-8">{_t('WORK_DETAILS')}</h2>
             
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">Department *</label>
+                <label className="block text-sm font-medium text-gray-600 mb-2">{_t('DEPARTMENT')} *</label>
                 <select
                   name="department"
                   value={formData.department}
@@ -706,17 +696,17 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                   required
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all bg-white text-gray-700 cursor-pointer"
                 >
-                  <option value="">Select Department</option>
+                  <option value="">{_t('SELECT_DEPT')}</option>
                   {departments.map((dept) => (
                     <option key={dept.id} value={dept.id}>
-                      {dept.name} - Manager: {dept.manager}
+                      {dept.name} - {_t('MANAGER')}: {dept.manager}
                     </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">Position *</label>
+                <label className="block text-sm font-medium text-gray-600 mb-2">{_t('POSITION')} *</label>
                 <select
                   name="position"
                   value={formData.position}
@@ -725,7 +715,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                   disabled={!formData.department}
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all bg-white text-gray-700 cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed"
                 >
-                  <option value="">Select Position</option>
+                  <option value="">{_t('SELECT_POS')}</option>
                   {filteredPositions.map((pos) => (
                     <option key={pos.id} value={pos.id}>
                       {pos.name}
@@ -735,7 +725,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">Start Date *</label>
+                <label className="block text-sm font-medium text-gray-600 mb-2">{_t('START_TIME')} *</label>
                 <input
                   type="date"
                   name="startDate"
@@ -747,7 +737,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">Shift *</label>
+                <label className="block text-sm font-medium text-gray-600 mb-2">{_t('TAB_SHIFTS')} *</label>
                 <select
                   name="shift"
                   value={formData.shift}
@@ -755,7 +745,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                   required
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all bg-white text-gray-700 cursor-pointer"
                 >
-                  <option value="">Select Shift</option>
+                  <option value="">{_t('SELECT_SHIFT')}</option>
                   {shifts.map((shift) => (
                     <option key={shift.id} value={shift.id}>
                       {shift.name} ({shift.start} - {shift.end}) - {shift.branchName}
@@ -770,12 +760,12 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
         {/* Step 3: Salary & Access */}
         {currentStep === 2 && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-8">Salary & Access Information</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-8">{_t('SALARY_ACCESS')}</h2>
             
             <div className="border border-gray-200 rounded-3xl p-8">
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Salary *</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">{_t('SALARY')} *</label>
                   <input
                     type="number"
                     name="salary"
@@ -788,27 +778,27 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Username *</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">{_t('USERNAME')} *</label>
                   <input
                     type="text"
                     name="username"
                     value={formData.username}
                     onChange={handleInputChange}
-                    placeholder="Username"
+                    placeholder={_t('USERNAME')}
                     required
                     className="w-full px-4 py-3 border-b border-gray-300 focus:border-green-500 outline-none transition-all text-gray-800 bg-transparent"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Password *</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">{_t('PASSWORD')} *</label>
                   <input
                     type="password"
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    placeholder="Password"
-                    required={!isEditing} // <-- changed to require only when creating
+                    placeholder={_t('PASSWORD')}
+                    required={!isEditing}
                     className="w-full px-4 py-3 border-b border-gray-300 focus:border-green-500 outline-none transition-all text-gray-800 bg-transparent"
                   />
                 </div>
@@ -816,8 +806,8 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
             </div>
 
             <div className="mt-8 p-6 bg-green-50 rounded-xl border border-green-200">
-              <h3 className="font-semibold text-green-800 mb-3">Review Your Information</h3>
-              <p className="text-sm text-green-700">Please review all the information you've entered before submitting the form.</p>
+              <h3 className="font-semibold text-green-800 mb-3">{_t('REVIEW_INFO')}</h3>
+              <p className="text-sm text-green-700">{_t('REVIEW_MSG')}</p>
             </div>
           </div>
         )}
@@ -831,7 +821,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
               className="flex items-center gap-2 px-6 py-3 rounded-xl text-green-600 font-medium hover:bg-green-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ArrowLeft className="w-5 h-5" />
-              Back
+              {_t('BACK')}
             </button>
           )}
           {currentStep === 0 && <div></div>}
@@ -842,7 +832,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
               disabled={loading}
               className="px-8 py-3 rounded-xl bg-green-500 text-white font-medium hover:bg-green-600 transition-colors shadow-lg shadow-green-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next
+              {_t('NEXT')}
             </button>
           ) : (
             <button
@@ -853,10 +843,10 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
               {loading ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  {employeeData && employeeData.id ? 'Updating...' : 'Creating...'}
+                  {employeeData && employeeData.id ? _t('UPDATING') : _t('CREATING')}
                 </>
               ) : (
-                employeeData && employeeData.id ? 'Update' : 'Submit'
+                employeeData && employeeData.id ? _t('UPDATE') : _t('SUBMIT')
               )}
             </button>
           )}

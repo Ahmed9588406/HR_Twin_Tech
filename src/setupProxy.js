@@ -5,7 +5,7 @@ module.exports = function(app) {
 	app.use(
 		'/api',
 		createProxyMiddleware({
-			target: 'https://noneffusive-reminiscent-tanna.ngrok-free.dev',
+			target: 'https://api.shl-hr.com',
 			changeOrigin: true,
 			secure: false,
 			onProxyReq: (proxyReq, req, res) => {

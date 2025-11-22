@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FCM Token Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 800px; margin: 0 auto; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 10px 0; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Firebase Cloud Messaging Token Test</h1>
+    <button id="testBtn">Get FCM Token</button>
+    <div id="result"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-DenE_w3Ic2z8W0E73z5wkVpHv3oK0bY",
+            authDomain: "shl-hr.firebaseapp.com",
+            projectId: "shl-hr",
+            storageBucket: "shl-hr.firebasestorage.app",
+            messagingSenderId: "713300932661",
+            appId: "1:713300932661:web:154b17f22fef0b4f6a997c",
+            measurementId: "G-EHM6TZGWGR"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const messaging = getMessaging(app);
+
+        document.getElementById("testBtn").onclick = async () => {
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = '<p>Testing...</p>';
+
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission !== "granted") {
+                    resultDiv.innerHTML = '<p class="error">❌ Notification permission denied</p>';
+                    return;
+                }
+
+                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                await navigator.serviceWorker.ready;
+
+                const token = await getToken(messaging, {
+                    vapidKey: "BBvIF5YD3NjpBru-w0jZmcD4d_eVms04Q8eIFMGRPFWhH2ZazXzfS_nxRwdmoKc1Ziv-dpewPlYUCSYvLmsV6e4",
+                    serviceWorkerRegistration: registration
+                });
+
+                resultDiv.innerHTML = `
+                    <p class="success">✅ FCM Token obtained successfully!</p>
+                    <pre>${token}</pre>
+                    <p>Token length: ${token.length} characters</p>
+                `;
+                console.log("FCM Token:", token);
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ Error: ${error.message}</p>
+                    <pre>${JSON.stringify(error, null, 2)}</pre>
+                `;
+                console.error("Error:", error);
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Bell } from 'lucide-react';
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../i18n/i18n';
 import { fetchEmployeeProfile } from './employee_role_api';
 import UserProfile from './userprofile';
 import EmployeeAttendanceHistory from './employee_role_history';
@@ -11,6 +12,8 @@ import EmployeeRequests from './emp_requests';
 import VacationRequest from './vacation_req';
 import AdvanceRequest from './advance_req';
 import { NotificationModal } from '../component/ui/notification';
+import { onMessageListener, showBrowserNotification } from '../firebase_config';
+import EmployeeShiftDept from './employee_shift_dept';
 
 // Constants for hard-coded values
 const DEFAULT_USERNAME = 'Employee';
@@ -44,6 +47,13 @@ export default function UserProfileView() {
   const [showAdvanceModal, setShowAdvanceModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const notificationButtonRef = useRef(null);
+
+  // Language subscription
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => {
+    const unsub = _subscribe((l) => setLang(l));
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     const role = localStorage.getItem(LOCAL_STORAGE_KEYS.ROLE) || DEFAULT_ROLE;
@@ -84,17 +94,34 @@ export default function UserProfileView() {
     load();
   }, []);
 
+  useEffect(() => {
+    // Listen for foreground notifications
+    onMessageListener()
+      .then((payload) => {
+        console.log('Foreground notification received:', payload);
+        showBrowserNotification(
+          payload.notification?.title || 'New Notification',
+          {
+            body: payload.notification?.body || 'You have a new notification',
+            tag: payload.data?.id || 'notification',
+            data: payload.data
+          }
+        );
+      })
+      .catch((err) => console.error('Failed to receive foreground message:', err));
+  }, []);
+
   const handleBack = () => navigate('/user-dashboard');
   
   const handleAdvanceRequest = () => setShowAdvanceModal(true);
 
   const formatLastSignIn = (dateString) => {
-    if (!dateString) return { display: UI_TEXT.NA_VALUE, fullDate: UI_TEXT.NA_VALUE };
+    if (!dateString) return { display: _t('NA'), fullDate: _t('NA') };
     const date = new Date(dateString);
     const today = new Date();
     const isToday = date.toDateString() === today.toDateString();
     const timeStr = date.toLocaleString('en-US', DATE_FORMAT_OPTIONS.TIME);
-    const display = isToday ? `${UI_TEXT.TODAY_PREFIX}${timeStr}` : `${date.toLocaleString('en-US', DATE_FORMAT_OPTIONS.SHORT_DATE)}, ${timeStr}`;
+    const display = isToday ? `${_t('TODAY')}, ${timeStr}` : `${date.toLocaleString('en-US', DATE_FORMAT_OPTIONS.SHORT_DATE)}, ${timeStr}`;
     return { display, fullDate: date.toLocaleString('en-US', DATE_FORMAT_OPTIONS.FULL_DATE) };
   };
 
@@ -108,7 +135,7 @@ export default function UserProfileView() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto" />
-          <p className="mt-4 text-gray-600">{UI_TEXT.LOADING_MESSAGE}</p>
+          <p className="mt-4 text-gray-600">{_t('LOADING_PROFILE')}</p>
         </div>
       </div>
     );
@@ -123,11 +150,11 @@ export default function UserProfileView() {
             <div>
               <button onClick={handleBack} className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
                 <ArrowLeft className="w-5 h-5" />
-                <span className="font-medium">Back</span>
+                <span className="font-medium">{_t('BACK')}</span>
               </button>
             </div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-500 bg-clip-text text-transparent">
-              {UI_TEXT.MY_PROFILE}
+              {_t('MY_PROFILE')}
             </h1>
             <div className="flex items-center gap-4">
               <button
@@ -137,10 +164,8 @@ export default function UserProfileView() {
                 aria-label="Notifications"
               >
                 <Bell className="w-6 h-6" />
-                {/* Optional: Add unread count badge if you have access to notifications state */}
-                {/* <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span> */}
               </button>
-              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">{UI_TEXT.ACTIVE_STATUS}</span>
+              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">{_t('ACTIVE_STATUS')}</span>
             </div>
           </div>
         </div>
@@ -158,6 +183,7 @@ export default function UserProfileView() {
               onMarkAttendance={() => {}} // Empty handler since marking is done in UserProfile
               onRequestLeave={() => setShowLeaveModal(true)}
             />
+            <EmployeeShiftDept />
             <EmployeeRequests 
               onVacationRequest={() => setShowLeaveModal(true)} 
               onAdvanceRequest={handleAdvanceRequest} 
@@ -197,6 +223,7 @@ export default function UserProfileView() {
         isOpen={showNotificationModal}
         onClose={() => setShowNotificationModal(false)}
         buttonRef={notificationButtonRef}
+        receiverCode={user.code}
       />
     </div>
   );

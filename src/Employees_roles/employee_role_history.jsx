@@ -13,7 +13,7 @@ const fetchAttendanceRecords = async (empCode, options = {}) => {
     const month = options.month !== undefined ? options.month : now.getMonth() + 1;
     const year = options.year !== undefined ? options.year : now.getFullYear();
 
-    const url = `https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/emp-dashboard/attendance-history?month=${month}&year=${year}`;
+    const url = `https://api.shl-hr.com/api/v1/emp-dashboard/attendance-history?month=${month}&year=${year}`;
 
     const res = await fetch(url, {
       method: 'GET',
@@ -208,7 +208,7 @@ export default function EmployeeAttendanceHistory({ empCode }) {
               const isDayOff = normStatus === 'DAY_OFF';
               const isWeekend = normStatus === 'WEEKEND';
               const isOnLeave = normStatus === 'ON_LEAVE';
-              const isSpecialStatus = isAbsent || isDayOff || isWeekend;
+              const isSpecialStatus = isAbsent || isDayOff || isWeekend || isOnLeave;
 
               console.log('Record status:', record.status, 'isAbsent:', isAbsent, 'isSpecialStatus:', isSpecialStatus);
 

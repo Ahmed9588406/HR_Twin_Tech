@@ -5,14 +5,17 @@ import {
   Users, 
   Settings, 
   FileText, 
-  Bell, 
   X,
   ChevronDown,
   Globe,
-  DollarSign
+  DollarSign,
+  LogOut,
+  Bell
 } from 'lucide-react';
 import logo from '../../assets/images/logo.png';
+import adminLogo from '../../assets/images/admin_logo.jpg';
 import { NotificationModal } from './notification';
+
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -20,16 +23,16 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
   const [activeItem, setActiveItem] = useState('Dashboard');
   const [expandedItems, setExpandedItems] = useState({});
+  const [adminData, setAdminData] = useState({ name: 'Loading...', email: '', image: adminLogo });
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(3);
-  const bellButtonRef = useRef(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const notificationButtonRef = useRef(null);
   
   const menuItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard' },
     { icon: Users, label: 'Employees', path: '/employees' },
     { icon: FileText, label: 'Requests', path: '/requests' },
     { icon: DollarSign, label: 'Financials', path: '/financials' },
-    // Make sure this path matches the route for settingsDashboard.jsx
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
@@ -72,23 +75,62 @@ export default function Sidebar() {
     }
   };
 
-  // Simulate unread count updates
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('code');
+    localStorage.removeItem('userData');
+    navigate('/');
+  };
+
+  // Fetch admin data on mount
   useEffect(() => {
-    const loadUnreadCount = async () => {
+    const fetchAdminData = async () => {
       try {
-        // Replace with actual API call to fetch unread count
-        const count = 3; // Mock count
-        setUnreadCount(count);
+        const response = await fetch('https://api.shl-hr.com/api/v1/setting/admin');
+        if (!response.ok) throw new Error('Failed to fetch admin data');
+        const data = await response.json();
+        setAdminData({
+          name: data.name || 'Admin',
+          email: data.email || '',
+          image: data.data ? data.data : adminLogo
+        });
       } catch (error) {
-        console.error('Failed to load unread count:', error);
+        console.error('Error fetching admin data:', error);
+        // Fallback to defaults
+        setAdminData({ name: 'Admin', email: '', image: adminLogo });
       }
     };
-    
-    loadUnreadCount();
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(loadUnreadCount, 30000);
-    return () => clearInterval(interval);
+    fetchAdminData();
   }, []);
+
+  // Add language state (import small i18n runtime)
+  const [language, setLanguage] = useState(() => {
+    try {
+      return localStorage.getItem('app_lang') || 'en';
+    } catch {
+      return 'en';
+    }
+  });
+
+  useEffect(() => {
+    // Lazy import to avoid cyclic or server issues
+    let unsub;
+    import('../../i18n/i18n').then(i18n => {
+      setLanguage(i18n.getLang());
+      unsub = i18n.subscribe((lang) => setLanguage(lang));
+    }).catch(() => {});
+    return () => {
+      if (typeof unsub === 'function') unsub();
+    };
+  }, []);
+
+  const toggleLanguage = async () => {
+    const i18n = await import('../../i18n/i18n');
+    const current = i18n.getLang();
+    i18n.setLang(current === 'en' ? 'ar' : 'en');
+    // local state will be updated by subscriber
+  };
 
   return (
     <div 
@@ -235,8 +277,8 @@ export default function Sidebar() {
           <div className="relative">
             <div className="absolute inset-0 bg-white rounded-full blur-sm opacity-30"></div>
             <img
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
-              alt="User"
+              src={adminData.image}
+              alt="Admin"
               className="relative w-11 h-11 rounded-full ring-2 ring-white/50 shadow-lg"
             />
             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></div>
@@ -245,39 +287,54 @@ export default function Sidebar() {
           {isOpen && (
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
-                <p className="font-semibold text-sm truncate">John Doe</p>
+                <p className="font-semibold text-sm truncate">{adminData.name}</p>
                 <div className="flex items-center gap-1">
                   <button 
-                    ref={bellButtonRef}
+                    ref={notificationButtonRef}
                     onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                    className="p-1.5 hover:bg-white/10 rounded-lg transition-all duration-200 hover:scale-110 relative"
+                    className="relative p-1.5 hover:bg-white/10 rounded-lg transition-all duration-200 hover:scale-110"
                     aria-label="Notifications"
                   >
-                    <Bell size={15} className="text-white" />
+                    <Bell size={15} />
                     {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
-                        {unreadCount > 9 ? '9+' : unreadCount}
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center animate-pulse">
+                        {unreadCount > 9 ? '9' : unreadCount}
                       </span>
                     )}
                   </button>
+
+                  {/* Language toggle: show word label (EN / ع) */}
                   <button 
-                    className="p-1.5 hover:bg-white/10 rounded-lg transition-all duration-200 hover:scale-110"
+                    onClick={toggleLanguage}
+                    className="px-2 py-1 text-xs font-semibold bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-200"
                     aria-label="Language"
+                    title={language === 'en' ? 'Switch to Arabic' : 'التبديل إلى الإنجليزية'}
                   >
-                    <Globe size={15} />
+                    {/* show Arabic short char when ar selected */}
+                    {language === 'en' ? 'EN' : 'ع'}
+                  </button>
+
+                  <button 
+                    onClick={handleLogout}
+                    className="p-1.5 hover:bg-white/10 rounded-lg transition-all duration-200 hover:scale-110"
+                    aria-label="Logout"
+                  >
+                    <LogOut size={15} />
                   </button>
                 </div>
               </div>
-              <p className="text-xs text-green-100 truncate">john@example.com</p>
+              <p className="text-xs text-green-100 truncate">{adminData.email}</p>
             </div>
           )}
         </div>
       </div>
-      
+
+      {/* Notification Modal */}
       <NotificationModal
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}
-        buttonRef={bellButtonRef}
+        buttonRef={notificationButtonRef}
+        receiverCode={localStorage.getItem('code')}
       />
     </div>
   );

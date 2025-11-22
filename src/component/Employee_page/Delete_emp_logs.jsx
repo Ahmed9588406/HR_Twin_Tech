@@ -92,7 +92,7 @@ const DeleteEmployeeModal = ({ isOpen, onClose }) => {
         throw new Error('Auth token not found; please log in again.');
       }
 
-      const response = await fetch('https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/employees/logs', {
+      const response = await fetch('https://api.shl-hr.com/api/v1/employees/logs', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

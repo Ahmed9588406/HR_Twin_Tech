@@ -1,24 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Clock, UserCheck, LogOut, Camera } from 'lucide-react';
 import { uploadEmployeePhoto, markAttendance, markLeave } from './employee_role_api';
-
-// Constants for hard-coded values
-const DEFAULT_JOB_POSITION = 'Employee';
-const LAST_SIGN_IN_PREFIX = 'Last signed in: ';
-const NA_VALUE = 'N/A';
-const BUTTON_LABELS = {
-  MARK_ATTENDANCE: 'Mark Attendance',
-  REQUEST_LEAVE: 'Request Leave'
-};
-const STAT_LABELS = {
-  ABSENCE: 'Absence',
-  ON_LEAVE: 'On Leave',
-  DAYS_LEFT: 'Days Left'
-};
-const ON_LEAVE_VALUES = {
-  YES: 'Yes',
-  NO: 'No'
-};
+import { requestNotificationPermission } from '../firebase_config';
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../i18n/i18n';
 
 // add helper to normalize the word "Avesnt" (any case) to "Avesnt"
 const formatAvesntWord = (text) => {
@@ -41,6 +25,56 @@ export default function UserProfile({
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
+
+  // language subscription to force re-render when language changes
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => {
+    const unsub = _subscribe((l) => setLang(l));
+    return () => unsub();
+  }, []);
+
+  // replace constants with t() lookup
+  const DEFAULT_JOB_POSITION = _t('DEFAULT_JOB_POSITION');
+  const LAST_SIGN_IN_PREFIX = _t('LAST_SIGN_IN_PREFIX');
+  const NA_VALUE = _t('NA_VALUE');
+
+  const BUTTON_LABELS = {
+    MARK_ATTENDANCE: _t('BUTTON_MARK_ATTENDANCE'),
+    REQUEST_LEAVE: _t('BUTTON_REQUEST_LEAVE')
+  };
+  const STAT_LABELS = {
+    ABSENCE: _t('STAT_ABSENCE'),
+    ON_LEAVE: _t('STAT_ON_LEAVE'),
+    DAYS_LEFT: _t('STAT_DAYS_LEFT')
+  };
+  const ON_LEAVE_VALUES = {
+    YES: _t('ON_LEAVE_YES'),
+    NO: _t('ON_LEAVE_NO')
+  };
+
+  useEffect(() => {
+    const fetchAndLogToken = async () => {
+      try {
+        console.log('[UserProfile] 🔔 Requesting FCM token...');
+        console.log('[UserProfile] 🌐 Current URL:', window.location.href);
+        console.log('[UserProfile] 🔒 Secure Context:', window.isSecureContext);
+        
+        const token = await requestNotificationPermission();
+        if (token) {
+          console.log('[UserProfile] ✅ Employee FCM Token:', token);
+          console.log('[UserProfile] 📋 Token Length:', token.length);
+        } else {
+          console.log('[UserProfile] ⚠️ FCM Token not available');
+          console.log('[UserProfile] 💡 Check the detailed logs above for the reason');
+        }
+      } catch (error) {
+        console.warn('[UserProfile] ❌ Error fetching FCM token:', error);
+      }
+    };
+
+    // Don't await - run in background
+    fetchAndLogToken();
+  }, []);
 
   // Function to get current location
   const getCurrentLocation = () => {
@@ -159,7 +193,7 @@ export default function UserProfile({
             <button
               onClick={handleIconClick}
               className="absolute bottom-2 right-2 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600 transition-colors"
-              aria-label="Change photo"
+              aria-label={_t('CHANGE_PHOTO_ARIA')}
               disabled={uploading}
             >
               {uploading ? (
@@ -207,7 +241,7 @@ export default function UserProfile({
               onClick={handleMarkLeave}
               className="flex-1 px-4 py-2.5 bg-orange-600 text-white rounded-xl font-medium hover:bg-orange-700 transition-colors flex items-center justify-center gap-2"
             >
-              <LogOut className="w-4 h-4" /> Mark Leave
+              <LogOut className="w-4 h-4" /> {BUTTON_LABELS.REQUEST_LEAVE}
             </button>
           </div>
 

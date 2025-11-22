@@ -16,6 +16,7 @@ export default function EmployeeManager() {
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false); // State for members modal visibility
   const [editingTeam, setEditingTeam] = useState(null); // State for the team being edited
   const [selectedTeam, setSelectedTeam] = useState(null); // State for the selected team in members modal
+  const [attendanceStats, setAttendanceStats] = useState([]); // State for attendance statistics
 
   const tabs = [
     { id: 'Employees', label: 'Employees', icon: User, path: '/employees' },
@@ -176,6 +177,27 @@ export default function EmployeeManager() {
     };
 
     loadTeams();
+  }, []);
+
+  // Fetch attendance statistics
+  useEffect(() => {
+    const fetchAttendanceStats = async () => {
+      try {
+        const response = await fetch('https://api.shl-hr.com/api/v1/attendance/statistics');
+        const text = await response.text();
+        try {
+          const data = JSON.parse(text);
+          setAttendanceStats(data);
+        } catch (parseError) {
+          console.error('Error parsing JSON for attendance statistics:', parseError);
+          console.error('Response text (first 500 chars):', text.substring(0, 500));
+          console.error('Response text (around error position):', text.substring(105900, 105950));
+        }
+      } catch (error) {
+        console.error('Error fetching attendance statistics:', error);
+      }
+    };
+    fetchAttendanceStats();
   }, []);
 
   return (

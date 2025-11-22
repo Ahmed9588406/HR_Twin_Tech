@@ -1,4 +1,4 @@
-const EMPLOYEES_API_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/employees';
+const EMPLOYEES_API_URL = 'https://api.shl-hr.com/api/v1/employees';
 
 export const fetchEmployees = async (page = 0, size = 10) => {
   try {

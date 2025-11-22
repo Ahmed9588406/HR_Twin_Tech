@@ -1,18 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Home, Users, FileText, DollarSign, Settings } from 'lucide-react';
 import Sidebar from '../ui/Sidebar';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-
-// Tab labels and icons should match Sidebar menu items for consistency
-const TABS = [
-  { label: 'Work Place', icon: Home, path: '/settings/workplace' },
-  { label: 'Departments', icon: Users, path: '/settings/departments' },
-  { label: 'Positions', icon: FileText, path: '/settings/positions' },
-  { label: 'Shifts', icon: DollarSign, path: '/settings/worktimings' },
-  { label: 'Attendance Profile', icon: Settings, path: '/settings/attendance' },
-];
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 export default function SettingsDashboard() {
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => _subscribe(setLang), []);
+
+  const TABS = [
+    { label: _t('TAB_WORKPLACE'), icon: Home, path: '/settings/workplace' },
+    { label: _t('TAB_DEPARTMENTS'), icon: Users, path: '/settings/departments' },
+    { label: _t('TAB_POSITIONS'), icon: FileText, path: '/settings/positions' },
+    { label: _t('TAB_SHIFTS'), icon: DollarSign, path: '/settings/worktimings' },
+    { label: _t('TAB_ATTENDANCE'), icon: Settings, path: '/settings/attendance' },
+  ];
+
   const [activeTab, setActiveTab] = useState(TABS[0].label);
   const navigate = useNavigate();
   const location = useLocation();
@@ -36,20 +39,14 @@ export default function SettingsDashboard() {
     }
   }, [location.pathname, navigate]);
 
-  // Sync tab with route for Work Place, Departments, Positions, Work Timings, and Attendance Profile
-  React.useEffect(() => {
-    if (location.pathname === '/settings/workplace') {
-      setActiveTab('Work Place');
-    } else if (location.pathname === '/settings/departments') {
-      setActiveTab('Departments');
-    } else if (location.pathname === '/settings/positions') {
-      setActiveTab('Positions');
-    } else if (location.pathname === '/settings/worktimings') {
-      setActiveTab('Shifts');
-    } else if (location.pathname === '/settings/attendance') {
-      setActiveTab('Attendance Profile');
-    }
-  }, [location.pathname]);
+  // Sync tab with route
+  useEffect(() => {
+    if (location.pathname === '/settings/workplace') setActiveTab(_t('TAB_WORKPLACE'));
+    else if (location.pathname === '/settings/departments') setActiveTab(_t('TAB_DEPARTMENTS'));
+    else if (location.pathname === '/settings/positions') setActiveTab(_t('TAB_POSITIONS'));
+    else if (location.pathname === '/settings/worktimings') setActiveTab(_t('TAB_SHIFTS'));
+    else if (location.pathname === '/settings/attendance') setActiveTab(_t('TAB_ATTENDANCE'));
+  }, [location.pathname, lang]); // Add lang dependency
 
   const handleTabClick = (tab) => {
     setActiveTab(tab.label);
@@ -65,11 +62,11 @@ export default function SettingsDashboard() {
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
-            <p className="text-gray-600">Manage system settings and preferences</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{_t('SETTINGS_TITLE')}</h1>
+            <p className="text-gray-600">{_t('SETTINGS_SUBTITLE')}</p>
           </div>
 
-          {/* Tab Navigation - styled like req_dashboard.jsx */}
+          {/* Tab Navigation */}
           <div className="bg-white border border-gray-200 rounded-2xl shadow-sm mb-6">
             <div className="flex items-center gap-1 p-2 overflow-x-auto">
               {TABS.map((tab) => {
@@ -94,36 +91,17 @@ export default function SettingsDashboard() {
             </div>
           </div>
 
-          {/* Tab Content or Nested Route */}
+          {/* Tab Content */}
           <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-            {(location.pathname === '/settings/workplace' || location.pathname === '/settings/departments' || location.pathname === '/settings/positions' || location.pathname === '/settings/worktimings' || location.pathname === '/settings/attendance') ? (
+            {(location.pathname.startsWith('/settings/')) ? (
               <Outlet context={{ workplaces, updateWorkplaces, attendanceProfiles, updateAttendanceProfiles }} />
             ) : (
               <>
-                {activeTab === 'Departments' && (
-                  <div>
-                    <h2 className="text-lg font-semibold mb-2">Departments</h2>
-                    <p>Department management goes here.</p>
-                  </div>
-                )}
-                {activeTab === 'Positions' && (
-                  <div>
-                    <h2 className="text-lg font-semibold mb-2">Positions</h2>
-                    <p>Position management goes here.</p>
-                  </div>
-                )}
-                {activeTab === 'Shifts' && (
-                  <div>
-                    <h2 className="text-lg font-semibold mb-2">Shifts</h2>
-                    <p>Work timings configuration goes here.</p>
-                  </div>
-                )}
-                {activeTab === 'Attendance Profile' && (
-                  <div>
-                    <h2 className="text-lg font-semibold mb-2">Attendance Profile</h2>
-                    <p>Attendance profile settings go here.</p>
-                  </div>
-                )}
+                {/* Placeholders using translated titles */}
+                {activeTab === _t('TAB_DEPARTMENTS') && <div>{_t('TAB_DEPARTMENTS')}</div>}
+                {activeTab === _t('TAB_POSITIONS') && <div>{_t('TAB_POSITIONS')}</div>}
+                {activeTab === _t('TAB_SHIFTS') && <div>{_t('TAB_SHIFTS')}</div>}
+                {activeTab === _t('TAB_ATTENDANCE') && <div>{_t('TAB_ATTENDANCE')}</div>}
               </>
             )}
           </div>

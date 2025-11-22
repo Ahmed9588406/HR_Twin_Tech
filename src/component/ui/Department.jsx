@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 /**
  * Department Distribution Donut Chart Component
@@ -12,6 +13,9 @@ export default function Department({
   title = "Department",
   data: apiData 
 }) {
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => _subscribe(setLang), []);
+
   // Dummy data for demonstration
   const dummyData = [
     { name: "Information Technology", numberOfEmp: 45 },
@@ -100,11 +104,11 @@ export default function Department({
               style={{ backgroundColor: payload[0].payload.color }}
             />
             <p className="text-sm text-gray-600">
-              <span className="font-semibold">{payload[0].value}</span> employees
+              <span className="font-semibold">{payload[0].value}</span> {_t('EMPLOYEES')}
             </p>
           </div>
           <p className="text-xs text-gray-500 mt-1 font-medium">
-            {payload[0].payload.percentage}% of total
+            {payload[0].payload.percentage}% {_t('OF_TOTAL')}
           </p>
         </div>
       );

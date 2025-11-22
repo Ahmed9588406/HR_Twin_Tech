@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Edit2, Plus } from 'lucide-react';
 import WorkTEditModal from './WorkT_editmodal';
 import { fetchShifts } from './api/settings_api';
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 export default function WorkTiming() {
   const [shifts, setShifts] = useState([]);
   const [shiftsLoading, setShiftsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTiming, setSelectedTiming] = useState(null);
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => _subscribe(setLang), []);
 
   useEffect(() => {
     let mounted = true;
@@ -89,33 +92,30 @@ export default function WorkTiming() {
         <table className="min-w-full text-left">
           <thead>
             <tr className="bg-green-50">
-              <th className="px-6 py-4 text-green-600 font-semibold">Name</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">Start Time</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">End Time</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">Branch</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">Free Days</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">Actions</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">{_t('NAME')}</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">{_t('START_TIME')}</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">{_t('END_TIME')}</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">{_t('BRANCH')}</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">{_t('FREE_DAYS')}</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">{_t('ACTIONS')}</th>
             </tr>
           </thead>
           <tbody>
             {shiftsLoading ? (
               <tr>
                 <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
-                  Loading shifts...
+                  {_t('LOADING_SHIFTS')}
                 </td>
               </tr>
             ) : shifts.length === 0 ? (
               <tr>
                 <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
-                  No shifts found
+                  {_t('NO_SHIFTS')}
                 </td>
               </tr>
             ) : (
               shifts.map((shift) => (
-                <tr
-                  key={shift.id}
-                  className="border-t border-green-200 hover:bg-green-50 transition-colors"
-                >
+                <tr key={shift.id} className="border-t border-green-200 hover:bg-green-50 transition-colors">
                   <td className="px-6 py-4 font-medium text-green-600">
                     {shift.name}
                   </td>
@@ -138,7 +138,7 @@ export default function WorkTiming() {
                       <button
                         onClick={() => handleEdit(shift)}
                         className="text-green-400 hover:text-green-600 transition-colors"
-                        title="Edit shift"
+                        title={_t('EDIT')}
                       >
                         <Edit2 size={18} />
                       </button>
@@ -154,7 +154,7 @@ export default function WorkTiming() {
                   <button
                     onClick={handleAdd}
                     className="bg-green-400 hover:bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg border-4 border-white transition-all duration-200"
-                    title="Add Shift"
+                    title={_t('ADD_SHIFT')}
                   >
                     <Plus size={20} />
                   </button>

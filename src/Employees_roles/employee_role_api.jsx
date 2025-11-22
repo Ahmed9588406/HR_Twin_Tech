@@ -11,7 +11,7 @@ export const fetchEmpAttendanceHistory = async (empCode, options = {}) => {
     const month = options.month !== undefined ? options.month : now.getMonth() + 1; // getMonth() returns 0-11
     const year = options.year !== undefined ? options.year : now.getFullYear();
 
-    const url = `https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/emp-dashboard/attendance-history?month=${month}&year=${year}`;
+    const url = `https://api.shl-hr.com/api/v1/emp-dashboard/attendance-history?month=${month}&year=${year}`;
 
     console.log(`Fetching attendance history for month: ${month}, year: ${year}`);
 
@@ -54,7 +54,7 @@ export const fetchEmpAttendanceHistory = async (empCode, options = {}) => {
   }
 };
 
-const BASE_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/';
+const BASE_URL = 'https://api.shl-hr.com/api/v1/';
 
 export const fetchEmployeeProfile = async (empCode) => {
   try {

@@ -17,7 +17,7 @@ export default function EditModalTransaction({ transaction, type = 'reward', onC
       }
 
       const response = await fetch(
-        `https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/financial/${transaction.transactionId}?newAmount=${newAmount}`,
+        `https://api.shl-hr.com/api/v1/financial/${transaction.transactionId}?newAmount=${newAmount}`,
         {
           method: 'PUT',
           headers: {

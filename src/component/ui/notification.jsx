@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Bell, X, Check, Trash2, Clock, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Bell, X, Check, Trash2, Clock, FileText, AlertCircle, CheckCircle, Wifi, WifiOff } from 'lucide-react';
 import { notificationAPI } from './api/notification_api';
+import { showBrowserNotification } from '../../firebase_config';
 
 // Utility function to format timestamps
 const formatTimestamp = (timestamp) => {
@@ -69,6 +70,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, onClick, isSel
             onToggleSelect(notification.id);
           }}
           className="mt-1 w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
+          onClick={(e) => e.stopPropagation()}
         />
         <NotificationIcon type={notification.type} />
         
@@ -114,16 +116,91 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, onClick, isSel
   );
 };
 
+// Toast Notification Component
+const ToastNotification = ({ notification, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 5000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="fixed top-4 right-4 w-80 bg-white rounded-lg shadow-2xl border border-gray-200 z-[100] animate-slideInRight">
+      <div className="p-4">
+        <div className="flex items-start gap-3">
+          <NotificationIcon type={notification.type} />
+          <div className="flex-1 min-w-0">
+            <h4 className="text-sm font-semibold text-gray-900 mb-1">
+              {notification.title || 'New Notification'}
+            </h4>
+            <p className="text-sm text-gray-600 line-clamp-2">
+              {notification.message}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
+          >
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Play notification sound
+const playNotificationSound = () => {
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 800;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.5);
+    
+    // Second beep
+    setTimeout(() => {
+      const oscillator2 = audioContext.createOscillator();
+      const gainNode2 = audioContext.createGain();
+      
+      oscillator2.connect(gainNode2);
+      gainNode2.connect(audioContext.destination);
+      
+      oscillator2.frequency.value = 1000;
+      oscillator2.type = 'sine';
+      
+      gainNode2.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      
+      oscillator2.start(audioContext.currentTime);
+      oscillator2.stop(audioContext.currentTime + 0.3);
+    }, 150);
+  } catch (error) {
+    console.error('Failed to play notification sound:', error);
+  }
+};
+
 // Main Notification Modal Component
 export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) => {
-  // If receiverCode is not provided, get it from localStorage (empcode from login)
   const empCode = receiverCode || localStorage.getItem('code') || '7';
   
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
   const [selectedNotifications, setSelectedNotifications] = useState(new Set());
+  const [toastNotification, setToastNotification] = useState(null);
   const modalRef = useRef(null);
+  const subscriptionRef = useRef(null);
+  const isModalOpenRef = useRef(isOpen);
   
   // Draggable state
   const [isDragging, setIsDragging] = useState(false);
@@ -131,43 +208,134 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const dragHandleRef = useRef(null);
   
-  // Play notification sound
-  const playNotificationSound = () => {
-    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwF');
-    audio.play().catch(() => {});
-  };
-  
+  // Update ref when modal state changes
   useEffect(() => {
-    if (isOpen) {
-      loadNotifications();
-      connectWebSocket();
-      setPosition({ x: window.innerWidth - 420, y: 80 });
-    } else {
-      // Optionally disconnect when modal closes
-      // notificationAPI.disconnect();
+    isModalOpenRef.current = isOpen;
+  }, [isOpen]);
+  
+  // Handle new notification callback
+  const handleNewNotification = useCallback((notification) => {
+    console.log('🔔 NotificationModal received new notification:', notification);
+    
+    setNotifications(prev => {
+      // Check if notification already exists
+      const exists = prev.some(n => n.id === notification.id);
+      if (exists) {
+        console.log('⏭️ Notification already in list, skipping:', notification.id);
+        return prev;
+      }
+      
+      console.log('✨ Adding new notification to list');
+      return [notification, ...prev];
+    });
+    
+    // Play notification sound
+    playNotificationSound();
+    
+    // Show browser notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+      showBrowserNotification(notification.title || 'New Notification', {
+        body: notification.message || 'You have a new notification',
+        icon: '/notification-icon.png',
+        tag: notification.id?.toString(),
+        requireInteraction: false
+      });
     }
     
-    return () => {
-      // Cleanup on unmount
-      notificationAPI.disconnect();
+    // Show toast notification only if modal is closed
+    if (!isModalOpenRef.current) {
+      setToastNotification(notification);
+    }
+  }, []);
+  
+  // Initialize WebSocket connection on mount
+  useEffect(() => {
+    console.log('🚀 Component mounted, initializing WebSocket for empCode:', empCode);
+    
+    const initializeConnection = async () => {
+      try {
+        setConnectionStatus('connecting');
+        
+        // Connect to WebSocket
+        const connected = await notificationAPI.connect(empCode);
+        
+        if (connected) {
+          setConnectionStatus('connected');
+          console.log('✅ WebSocket connected successfully');
+        } else {
+          setConnectionStatus('disconnected');
+          console.error('❌ WebSocket connection failed');
+        }
+        
+        // Load initial notifications
+        setLoading(true);
+        const data = await notificationAPI.fetchNotifications(empCode);
+        setNotifications(data);
+        console.log('📥 Initial load:', data.length, 'notifications');
+        setLoading(false);
+      } catch (error) {
+        console.error('❌ Initialization failed:', error);
+        setConnectionStatus('disconnected');
+        setLoading(false);
+        
+        // Retry connection after 5 seconds
+        setTimeout(initializeConnection, 5000);
+      }
     };
-  }, [isOpen, empCode]); // Add empCode to dependency array for re-connection if code changes
+
+    initializeConnection();
+    
+    return () => {
+      console.log('🔌 Component unmounting');
+      if (subscriptionRef.current) {
+        subscriptionRef.current();
+        subscriptionRef.current = null;
+      }
+      // Don't disconnect on unmount to keep connection alive
+    };
+  }, [empCode]);
   
   // Subscribe to real-time notifications
   useEffect(() => {
-    const unsubscribe = notificationAPI.subscribe((notification) => {
-      setNotifications(prev => {
-        // Check if notification already exists
-        if (prev.some(n => n.id === notification.id)) {
-          return prev;
-        }
-        playNotificationSound();
-        return [notification, ...prev];
-      });
-    });
+    console.log('📡 Setting up notification subscription');
     
-    return unsubscribe;
+    const unsubscribe = notificationAPI.subscribe(handleNewNotification);
+    subscriptionRef.current = unsubscribe;
+    
+    console.log('✅ Subscription active, waiting for notifications...');
+    
+    return () => {
+      if (subscriptionRef.current) {
+        console.log('🔌 Cleaning up subscription');
+        subscriptionRef.current();
+        subscriptionRef.current = null;
+      }
+    };
+  }, [handleNewNotification]);
+  
+  // Monitor connection status
+  useEffect(() => {
+    const checkConnection = setInterval(() => {
+      const state = notificationAPI.getConnectionState();
+      setConnectionStatus(state);
+    }, 2000);
+    
+    return () => clearInterval(checkConnection);
   }, []);
+  
+  // Load notifications when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      console.log('📂 Modal opened, refreshing notifications');
+      const refreshNotifications = async () => {
+        const data = await notificationAPI.fetchNotifications(empCode);
+        setNotifications(data);
+        console.log('📥 Refreshed:', data.length, 'notifications');
+      };
+      refreshNotifications();
+      setPosition({ x: window.innerWidth - 420, y: 80 });
+    }
+  }, [isOpen, empCode]);
   
   // Close modal when clicking outside
   useEffect(() => {
@@ -176,7 +344,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
         isOpen &&
         modalRef.current &&
         !modalRef.current.contains(event.target) &&
-        buttonRef.current &&
+        buttonRef?.current &&
         !buttonRef.current.contains(event.target)
       ) {
         onClose();
@@ -233,29 +401,18 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
   const connectWebSocket = async () => {
     try {
       setConnectionStatus('connecting');
-      await notificationAPI.connect(empCode); // Use empCode instead of receiverCode
+      await notificationAPI.forceReconnect();
       setConnectionStatus('connected');
+      console.log('✅ WebSocket reconnected');
     } catch (error) {
-      console.error('WebSocket connection failed:', error);
+      console.error('❌ WebSocket reconnection failed:', error);
       setConnectionStatus('disconnected');
-    }
-  };
-  
-  const loadNotifications = async () => {
-    setLoading(true);
-    try {
-      const data = await notificationAPI.fetchNotifications(empCode); // Use empCode instead of receiverCode
-      setNotifications(data);
-    } catch (error) {
-      console.error('Failed to load notifications:', error);
-    } finally {
-      setLoading(false);
     }
   };
   
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await notificationAPI.markAsRead(empCode, notificationId); // Use empCode
+      await notificationAPI.markAsRead(empCode, notificationId);
       setNotifications(prev =>
         prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
       );
@@ -266,7 +423,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
   
   const handleMarkAllAsRead = async () => {
     try {
-      await notificationAPI.markAllAsRead(empCode); // Use empCode
+      await notificationAPI.markAllAsRead(empCode);
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     } catch (error) {
       console.error('Failed to mark all as read:', error);
@@ -275,8 +432,13 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
   
   const handleDelete = async (notificationId) => {
     try {
-      await notificationAPI.deleteNotification(empCode, notificationId); // Use empCode
+      await notificationAPI.deleteNotification(empCode, notificationId);
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      setSelectedNotifications(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(notificationId);
+        return newSet;
+      });
     } catch (error) {
       console.error('Failed to delete notification:', error);
     }
@@ -311,9 +473,11 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
   
   const handleDeleteSelected = async () => {
     if (selectedNotifications.size === 0) return;
+    
     const idsToDelete = Array.from(selectedNotifications);
+    
     try {
-      await Promise.all(idsToDelete.map(id => notificationAPI.deleteNotification(empCode, id))); // Use empCode
+      await Promise.all(idsToDelete.map(id => notificationAPI.deleteNotification(empCode, id)));
       setNotifications(prev => prev.filter(n => !selectedNotifications.has(n.id)));
       setSelectedNotifications(new Set());
     } catch (error) {
@@ -321,123 +485,170 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
     }
   };
   
-  const filteredNotifications = notifications;
-  
   const unreadCount = notifications.filter(n => !n.read).length;
   
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return (
+      <>
+        {toastNotification && (
+          <ToastNotification
+            notification={toastNotification}
+            onClose={() => setToastNotification(null)}
+          />
+        )}
+      </>
+    );
+  }
   
   return (
-    <div
-      ref={modalRef}
-      className="fixed w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-[90] overflow-hidden transition-shadow duration-200"
-      style={{
-        left: `${position.x}px`,
-        top: `${position.y}px`,
-        cursor: isDragging ? 'grabbing' : 'default',
-        animation: 'slideDown 0.2s ease-out'
-      }}
-      onMouseDown={handleMouseDown}
-    >
-      {/* Header */}
-      <div 
-        ref={dragHandleRef}
-        className="bg-gradient-to-r from-emerald-600 to-green-600 text-white p-4 cursor-grab active:cursor-grabbing select-none"
-      >
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Bell className="w-5 h-5" />
-            <h3 className="font-bold text-lg">Notifications</h3>
-            {connectionStatus === 'connected' && (
-              <span className="w-2 h-2 bg-green-300 rounded-full animate-pulse" title="Live"></span>
-            )}
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-white/20 rounded-lg transition-colors"
-            aria-label="Close notifications"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        
-        {/* Select All Button */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleSelectAll}
-            className="px-3 py-1.5 bg-white/20 text-white rounded-lg text-sm font-medium hover:bg-white/30 transition-colors"
-          >
-            {selectedNotifications.size === notifications.length ? 'Deselect All' : 'Select All'}
-          </button>
-          {selectedNotifications.size > 0 && (
-            <span className="text-sm text-white/80">
-              {selectedNotifications.size} selected
-            </span>
-          )}
-        </div>
-      </div>
-      
-      {/* Notifications List */}
-      <div className="max-h-96 overflow-y-auto">
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="w-8 h-8 border-4 border-green-200 border-t-green-600 rounded-full animate-spin"></div>
-          </div>
-        ) : notifications.length === 0 ? (
-          <div className="text-center py-12 px-4">
-            <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 font-medium">No notifications</p>
-            <p className="text-sm text-gray-400 mt-1">Check back later for updates</p>
-          </div>
-        ) : (
-          notifications.map((notification) => (
-            <NotificationItem
-              key={notification.id}
-              notification={notification}
-              onMarkAsRead={handleMarkAsRead}
-              onDelete={handleDelete}
-              onClick={handleNotificationClick}
-              isSelected={selectedNotifications.has(notification.id)}
-              onToggleSelect={handleToggleSelect}
-            />
-          ))
-        )}
-      </div>
-      
-      {/* Footer */}
-      {notifications.length > 0 && (
-        <div className="border-t border-gray-200 p-3 bg-gray-50 flex gap-2">
-          <button
-            onClick={handleMarkAllAsRead}
-            disabled={unreadCount === 0}
-            className="flex-1 py-2 text-sm font-medium text-green-600 hover:text-green-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
-          >
-            <Check className="w-4 h-4 inline mr-1" />
-            Mark all as read
-          </button>
-          {selectedNotifications.size > 0 && (
-            <button
-              onClick={handleDeleteSelected}
-              className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors border border-red-300 rounded-lg"
-            >
-              Delete Selected ({selectedNotifications.size})
-            </button>
-          )}
-        </div>
+    <>
+      {toastNotification && (
+        <ToastNotification
+          notification={toastNotification}
+          onClose={() => setToastNotification(null)}
+        />
       )}
       
-      <style jsx>{`
-        @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
+      <div
+        ref={modalRef}
+        className="fixed w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-[90] overflow-hidden transition-shadow duration-200"
+        style={{
+          left: `${position.x}px`,
+          top: `${position.y}px`,
+          cursor: isDragging ? 'grabbing' : 'default',
+          animation: 'slideDown 0.2s ease-out'
+        }}
+        onMouseDown={handleMouseDown}
+      >
+        {/* Header */}
+        <div 
+          ref={dragHandleRef}
+          className="bg-gradient-to-r from-emerald-600 to-green-600 text-white p-4 cursor-grab active:cursor-grabbing select-none"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Bell className="w-5 h-5" />
+              <h3 className="font-bold text-lg">Notifications</h3>
+              {unreadCount > 0 && (
+                <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs font-semibold">
+                  {unreadCount}
+                </span>
+              )}
+              {connectionStatus === 'connected' && (
+                <Wifi className="w-4 h-4 animate-pulse" title="Live - Connected" />
+              )}
+              {connectionStatus === 'connecting' && (
+                <span className="text-xs bg-yellow-500 px-2 py-1 rounded" title="Connecting...">
+                  Connecting...
+                </span>
+              )}
+              {connectionStatus === 'disconnected' && (
+                <button
+                  onClick={connectWebSocket}
+                  className="text-xs bg-red-500 hover:bg-red-600 px-2 py-1 rounded flex items-center gap-1"
+                  title="Click to reconnect"
+                >
+                  <WifiOff className="w-3 h-3" />
+                  Reconnect
+                </button>
+              )}
+            </div>
+            <button
+              onClick={onClose}
+              className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+              aria-label="Close notifications"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          {/* Select All Button */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleSelectAll}
+              className="px-3 py-1.5 bg-white/20 text-white rounded-lg text-sm font-medium hover:bg-white/30 transition-colors"
+            >
+              {selectedNotifications.size === notifications.length ? 'Deselect All' : 'Select All'}
+            </button>
+            {selectedNotifications.size > 0 && (
+              <span className="text-sm text-white/80">
+                {selectedNotifications.size} selected
+              </span>
+            )}
+          </div>
+        </div>
+        
+        {/* Notifications List */}
+        <div className="max-h-96 overflow-y-auto">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-8 h-8 border-4 border-green-200 border-t-green-600 rounded-full animate-spin"></div>
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="text-center py-12 px-4">
+              <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 font-medium">No notifications</p>
+              <p className="text-sm text-gray-400 mt-1">Check back later for updates</p>
+            </div>
+          ) : (
+            notifications.map((notification) => (
+              <NotificationItem
+                key={notification.id}
+                notification={notification}
+                onMarkAsRead={handleMarkAsRead}
+                onDelete={handleDelete}
+                onClick={handleNotificationClick}
+                isSelected={selectedNotifications.has(notification.id)}
+                onToggleSelect={handleToggleSelect}
+              />
+            ))
+          )}
+        </div>
+        
+        {/* Footer */}
+        {notifications.length > 0 && (
+          <div className="border-t border-gray-200 p-3 bg-gray-50 flex gap-2">
+            <button
+              onClick={handleMarkAllAsRead}
+              disabled={unreadCount === 0}
+              className="flex-1 py-2 text-sm font-medium text-green-600 hover:text-green-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+            </button>
+            {selectedNotifications.size > 0 && (
+              <button
+                onClick={handleDeleteSelected}
+                className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors border border-red-300 rounded-lg"
+              >
+                Delete ({selectedNotifications.size})
+              </button>
+            )}
+          </div>
+        )}
+        
+        <style jsx>{`
+          @keyframes slideDown {
+            from {
+              opacity: 0;
+              transform: translateY(-10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
           }
-          to {
-            opacity: 1;
-            transform: translateY(0);
+          
+          @keyframes slideInRight {
+            from {
+              opacity: 0;
+              transform: translateX(100px);
+            }
+            to {
+              opacity: 1;
+              transform: translateX(0);
+            }
           }
-        }
-      `}</style>
-    </div>
+        `}</style>
+      </div>
+    </>
   );
 };

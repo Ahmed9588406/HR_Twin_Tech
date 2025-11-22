@@ -1,4 +1,4 @@
-const BASE_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1';
+const BASE_URL = 'https://api.shl-hr.com/api/v1';
 
 // Common headers for ngrok
 const getHeaders = () => ({
@@ -458,6 +458,41 @@ export const fetchEmployeeAttendanceHistory = async (empCode, page = 0, size = 5
     return data;
   } catch (error) {
     console.error('Error fetching employee attendance history:', error);
+    throw error;
+  }
+};
+
+// Lock/unlock existing employee
+export const lockEmployee = async (employeeId) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const response = await fetch(`${BASE_URL}/employees/lock/${employeeId}`, {
+      method: 'PUT', // Assuming PUT based on typical REST API for toggle actions
+      headers: {
+        'ngrok-skip-browser-warning': 'true',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to lock/unlock employee';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+        errorMessage = `${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error locking/unlocking employee:', error);
     throw error;
   }
 };

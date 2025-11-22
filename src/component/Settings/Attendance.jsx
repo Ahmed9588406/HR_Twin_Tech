@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
-import { Edit2, Check, Clock, Timer, TrendingUp, Activity, Save, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Edit2, Clock, Timer, Activity, Save, X } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import { fetchCompanySettings, updateCompanySettings } from './api/settings_api';
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 export default function Attendance() {
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => _subscribe(setLang), []);
+
   const { attendanceProfiles } = useOutletContext();
   const [companySettings, setCompanySettings] = useState(null);
   const [loadingCompany, setLoadingCompany] = useState(true);
@@ -93,8 +97,8 @@ export default function Attendance() {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Attendance Management</h1>
-          <p className="text-gray-600">Monitor and configure company delay settings and attendance profiles</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{_t('ATTENDANCE_MGMT')}</h1>
+          <p className="text-gray-600">{_t('ATTENDANCE_MGMT_SUB')}</p>
         </div>
 
         {/* Company Delay Settings Card */}
@@ -106,8 +110,8 @@ export default function Attendance() {
                   <Activity className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-white">Company Delay Settings</h2>
-                  <p className="text-green-50 text-sm">Configure delay time and hour parameters</p>
+                  <h2 className="text-2xl font-bold text-white">{_t('COMPANY_DELAY_SETTINGS')}</h2>
+                  <p className="text-green-50 text-sm">{_t('CONFIG_DELAY')}</p>
                 </div>
               </div>
               {!isEditingCompany ? (
@@ -116,7 +120,7 @@ export default function Attendance() {
                   className="flex items-center gap-2 px-5 py-2.5 bg-white text-green-600 rounded-xl font-semibold hover:shadow-lg transition-all duration-200 hover:scale-105"
                 >
                   <Edit2 className="w-4 h-4" />
-                  Edit
+                  {_t('EDIT')}
                 </button>
               ) : (
                 <button
@@ -130,7 +134,7 @@ export default function Attendance() {
                   className="flex items-center gap-2 px-5 py-2.5 bg-white/20 backdrop-blur-sm text-white rounded-xl font-semibold hover:bg-white/30 transition-all duration-200"
                 >
                   <X className="w-4 h-4" />
-                  Cancel
+                  {_t('CANCEL')}
                 </button>
               )}
             </div>
@@ -146,14 +150,14 @@ export default function Attendance() {
                     <div className="bg-green-500 p-2 rounded-xl">
                       <Clock className="w-5 h-5 text-white" />
                     </div>
-                    <span className="text-sm font-medium text-gray-600">Delay Time</span>
+                    <span className="text-sm font-medium text-gray-600">{_t('DELAY_TIME')}</span>
                   </div>
                   {!isEditingCompany ? (
                     <div>
                       <div className="text-4xl font-bold text-green-700 mb-1">
                         {loadingCompany ? '—' : (companySettings?.delayTime ?? 0)}
                       </div>
-                      <div className="text-sm text-gray-500">minutes</div>
+                      <div className="text-sm text-gray-500">{_t('MINUTES')}</div>
                     </div>
                   ) : (
                     <div>
@@ -165,7 +169,7 @@ export default function Attendance() {
                         min="0"
                         placeholder="0"
                       />
-                      <div className="text-sm text-gray-500 mt-2">minutes</div>
+                      <div className="text-sm text-gray-500 mt-2">{_t('MINUTES')}</div>
                     </div>
                   )}
                 </div>
@@ -179,14 +183,14 @@ export default function Attendance() {
                     <div className="bg-blue-500 p-2 rounded-xl">
                       <Timer className="w-5 h-5 text-white" />
                     </div>
-                    <span className="text-sm font-medium text-gray-600">Delay Hours</span>
+                    <span className="text-sm font-medium text-gray-600">{_t('DELAY_HOURS')}</span>
                   </div>
                   {!isEditingCompany ? (
                     <div>
                       <div className="text-4xl font-bold text-blue-700 mb-1">
                         {loadingCompany ? '—' : (companySettings?.delayHour ?? 0)}
                       </div>
-                      <div className="text-sm text-gray-500">hours</div>
+                      <div className="text-sm text-gray-500">{_t('HOURS')}</div>
                     </div>
                   ) : (
                     <div>
@@ -199,7 +203,7 @@ export default function Attendance() {
                         step="0.1"
                         placeholder="0"
                       />
-                      <div className="text-sm text-gray-500 mt-2">hours</div>
+                      <div className="text-sm text-gray-500 mt-2">{_t('HOURS')}</div>
                     </div>
                   )}
                 </div>
@@ -210,7 +214,7 @@ export default function Attendance() {
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Overtime Minutes */}
               <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                <div className="text-sm text-gray-600 mb-2">Overtime Minutes</div>
+                <div className="text-sm text-gray-600 mb-2">{_t('OVERTIME_MINS')}</div>
                 {!isEditingCompany ? (
                   <div className="text-2xl font-bold text-gray-900">{loadingCompany ? '—' : (companySettings?.overTimeMins ?? 0)} min</div>
                 ) : (
@@ -226,7 +230,7 @@ export default function Attendance() {
 
               {/* Discount Percent */}
               <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                <div className="text-sm text-gray-600 mb-2">Discount %</div>
+                <div className="text-sm text-gray-600 mb-2">{_t('DISCOUNT_PERCENT')}</div>
                 {!isEditingCompany ? (
                   <div className="text-2xl font-bold text-gray-900">{loadingCompany ? '—' : `${companySettings?.discountPercent ?? 0}%`}</div>
                 ) : (
@@ -242,7 +246,7 @@ export default function Attendance() {
 
               {/* Overtime Percent */}
               <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                <div className="text-sm text-gray-600 mb-2">Overtime %</div>
+                <div className="text-sm text-gray-600 mb-2">{_t('OVERTIME_PERCENT')}</div>
                 {!isEditingCompany ? (
                   <div className="text-2xl font-bold text-gray-900">{loadingCompany ? '—' : `${companySettings?.overTimePercent ?? 0}%`}</div>
                 ) : (
@@ -268,12 +272,12 @@ export default function Attendance() {
                   {savingCompany ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Saving...
+                      {_t('SAVING')}
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4" />
-                      Save Changes
+                      {_t('SAVE_CHANGES')}
                     </>
                   )}
                 </button>
@@ -287,7 +291,7 @@ export default function Attendance() {
                   }}
                   className="px-6 py-3 bg-white text-gray-700 rounded-xl font-semibold border-2 border-gray-200 hover:border-gray-300 transition-all duration-200"
                 >
-                  Cancel
+                  {_t('CANCEL')}
                 </button>
                 {companyError && <div className="text-sm text-red-600">{companyError}</div>}
               </div>
@@ -295,57 +299,57 @@ export default function Attendance() {
           </div>
         </div>
 
-        {/* Company Overview Cards (updated: show all fields) */}
+        {/* Company Overview Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Company Name & ID */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="p-4 bg-gradient-to-r from-gray-900 to-gray-700">
-              <h3 className="text-white text-sm font-semibold">Company</h3>
+              <h3 className="text-white text-sm font-semibold">{_t('COMPANY')}</h3>
             </div>
             <div className="p-6">
-              <div className="text-xs text-gray-500">Name</div>
+              <div className="text-xs text-gray-500">{_t('NAME')}</div>
               <div className="mt-2 text-lg font-bold text-gray-900">{loadingCompany ? '—' : (companySettings?.name ?? '—')}</div>
-              <div className="mt-3 text-sm text-gray-500">ID: {loadingCompany ? '—' : (companySettings?.id ?? '—')}</div>
+              <div className="mt-3 text-sm text-gray-500">{_t('ID')}: {loadingCompany ? '—' : (companySettings?.id ?? '—')}</div>
             </div>
           </div>
 
           {/* Branches metrics */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="p-4 bg-gradient-to-r from-green-500 to-emerald-500">
-              <h3 className="text-white text-sm font-semibold">Branches</h3>
+              <h3 className="text-white text-sm font-semibold">{_t('BRANCHES')}</h3>
             </div>
             <div className="p-6">
-              <div className="text-xs text-gray-500">Current / Limit</div>
+              <div className="text-xs text-gray-500">{_t('CURRENT_LIMIT')}</div>
               <div className="mt-2 flex items-baseline gap-2">
                 <div className="text-2xl font-bold text-green-700">{loadingCompany ? '—' : (companySettings?.currantBranchNum ?? 0)}</div>
                 <div className="text-sm text-gray-500">/ {loadingCompany ? '—' : (companySettings?.branchNumLimit ?? '—')}</div>
               </div>
-              <div className="mt-3 text-sm text-gray-500">Remaining: {loadingCompany ? '—' : Math.max(0, (companySettings?.branchNumLimit ?? 0) - (companySettings?.currantBranchNum ?? 0))}</div>
+              <div className="mt-3 text-sm text-gray-500">{_t('REMAINING')}: {loadingCompany ? '—' : Math.max(0, (companySettings?.branchNumLimit ?? 0) - (companySettings?.currantBranchNum ?? 0))}</div>
             </div>
           </div>
 
           {/* Employees metrics */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="p-4 bg-gradient-to-r from-blue-500 to-cyan-500">
-              <h3 className="text-white text-sm font-semibold">Employees</h3>
+              <h3 className="text-white text-sm font-semibold">{_t('EMPLOYEES')}</h3>
             </div>
             <div className="p-6">
-              <div className="text-xs text-gray-500">Current / Limit</div>
+              <div className="text-xs text-gray-500">{_t('CURRENT_LIMIT')}</div>
               <div className="mt-2 flex items-baseline gap-2">
                 <div className="text-2xl font-bold text-blue-700">{loadingCompany ? '—' : (companySettings?.currantEmpNum ?? 0)}</div>
                 <div className="text-sm text-gray-500">/ {loadingCompany ? '—' : (companySettings?.empNumLimit ?? '—')}</div>
               </div>
-              <div className="mt-3 text-sm text-gray-500">Remaining: {loadingCompany ? '—' : Math.max(0, (companySettings?.empNumLimit ?? 0) - (companySettings?.currantEmpNum ?? 0))}</div>
+              <div className="mt-3 text-sm text-gray-500">{_t('REMAINING')}: {loadingCompany ? '—' : Math.max(0, (companySettings?.empNumLimit ?? 0) - (companySettings?.currantEmpNum ?? 0))}</div>
             </div>
           </div>
 
           {/* Delay Time */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="p-4 bg-gradient-to-r from-green-400 to-emerald-400">
-              <h3 className="text-white text-sm font-semibold">Delay Time</h3>
+              <h3 className="text-white text-sm font-semibold">{_t('DELAY_TIME')}</h3>
             </div>
             <div className="p-6">
-              <div className="text-xs text-gray-500">Minutes</div>
+              <div className="text-xs text-gray-500">{_t('MINUTES')}</div>
               <div className="mt-2 text-2xl font-bold text-green-700">{loadingCompany ? '—' : (companySettings?.delayTime ?? 0)}</div>
             </div>
           </div>
@@ -353,10 +357,10 @@ export default function Attendance() {
           {/* Delay Hour */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="p-4 bg-gradient-to-r from-blue-400 to-cyan-400">
-              <h3 className="text-white text-sm font-semibold">Delay Hour</h3>
+              <h3 className="text-white text-sm font-semibold">{_t('DELAY_HOUR')}</h3>
             </div>
             <div className="p-6">
-              <div className="text-xs text-gray-500">Hours</div>
+              <div className="text-xs text-gray-500">{_t('HOURS')}</div>
               <div className="mt-2 text-2xl font-bold text-blue-700">{loadingCompany ? '—' : (companySettings?.delayHour ?? 0)}</div>
             </div>
           </div>
@@ -364,10 +368,10 @@ export default function Attendance() {
           {/* Overtime Minutes */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="p-4 bg-gradient-to-r from-purple-400 to-pink-400">
-              <h3 className="text-white text-sm font-semibold">Overtime Minutes</h3>
+              <h3 className="text-white text-sm font-semibold">{_t('OVERTIME_MINS')}</h3>
             </div>
             <div className="p-6">
-              <div className="text-xs text-gray-500">Minutes</div>
+              <div className="text-xs text-gray-500">{_t('MINUTES')}</div>
               <div className="mt-2 text-2xl font-bold text-purple-700">{loadingCompany ? '—' : (companySettings?.overTimeMins ?? 0)}</div>
             </div>
           </div>
@@ -375,10 +379,10 @@ export default function Attendance() {
           {/* Discount Percent */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="p-4 bg-gradient-to-r from-indigo-500 to-violet-500">
-              <h3 className="text-white text-sm font-semibold">Discount %</h3>
+              <h3 className="text-white text-sm font-semibold">{_t('DISCOUNT_PERCENT')}</h3>
             </div>
             <div className="p-6">
-              <div className="text-xs text-gray-500">Discount Percent</div>
+              <div className="text-xs text-gray-500">{_t('DISCOUNT_PERCENT')}</div>
               <div className="mt-2 text-2xl font-bold text-indigo-700">{loadingCompany ? '—' : `${companySettings?.discountPercent ?? 0}%`}</div>
             </div>
           </div>
@@ -386,17 +390,14 @@ export default function Attendance() {
           {/* Overtime Percent */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="p-4 bg-gradient-to-r from-pink-500 to-red-400">
-              <h3 className="text-white text-sm font-semibold">Overtime %</h3>
+              <h3 className="text-white text-sm font-semibold">{_t('OVERTIME_PERCENT')}</h3>
             </div>
             <div className="p-6">
-              <div className="text-xs text-gray-500">Overtime Percent</div>
+              <div className="text-xs text-gray-500">{_t('OVERTIME_PERCENT')}</div>
               <div className="mt-2 text-2xl font-bold text-pink-700">{loadingCompany ? '—' : `${companySettings?.overTimePercent ?? 0}%`}</div>
             </div>
           </div>
         </div>
-        {/* End Company Overview Cards (updated) */}
-
-        {/* End remaining content: Company settings kept; chart and cards removed */}
       </div>
     </div>
   );
