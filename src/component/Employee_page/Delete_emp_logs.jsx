@@ -1,5 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UserMinus, X, Calendar, Clock } from 'lucide-react';
+import { getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
+
+const TEXT = {
+  en: {
+    employeeLogs: 'Employee Logs',
+    close: 'Close modal',
+    noLogs: 'No logs available.',
+    delete: 'Delete',
+    discount: 'Discount:',
+    reward: 'Reward:',
+    attendanceSalary: 'Attendance Salary:',
+    totalSalary: 'Total Salary:'
+  },
+  ar: {
+    employeeLogs: 'سجلات الموظفين',
+    close: 'إغلاق النافذة',
+    noLogs: 'لا توجد سجلات متاحة.',
+    delete: 'حذف',
+    discount: 'الخصم:',
+    reward: 'المكافأة:',
+    attendanceSalary: 'راتب الحضور:',
+    totalSalary: 'إجمالي الراتب:'
+  }
+};
 
 const DeleteEmployeeModal = ({ isOpen, onClose }) => {
   const [logs, setLogs] = useState([]);
@@ -11,6 +35,15 @@ const DeleteEmployeeModal = ({ isOpen, onClose }) => {
   const [position, setPosition] = useState({ x: window.innerWidth / 2 - 200, y: 100 });
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const dragHandleRef = useRef(null);
+
+  // language subscription
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => {
+    const unsub = _subscribe((l) => setLang(l));
+    return () => unsub();
+  }, []);
+  const copy = TEXT[lang] || TEXT.en;
+  const dir = lang === 'ar' ? 'rtl' : 'ltr';
   
   useEffect(() => {
     if (isOpen) {
@@ -128,6 +161,8 @@ const DeleteEmployeeModal = ({ isOpen, onClose }) => {
         cursor: isDragging ? 'grabbing' : 'default'
       }}
       onMouseDown={handleMouseDown}
+      dir={dir}
+      lang={lang}
     >
       {/* Header */}
       <div 
@@ -137,12 +172,12 @@ const DeleteEmployeeModal = ({ isOpen, onClose }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <UserMinus className="w-5 h-5" />
-            <h3 className="font-bold text-lg">Employee Logs</h3>
+            <h3 className="font-bold text-lg">{copy.employeeLogs}</h3>
           </div>
           <button
             onClick={onClose}
             className="p-1 hover:bg-white/20 rounded-lg transition-colors"
-            aria-label="Close modal"
+            aria-label={copy.close}
           >
             <X className="w-5 h-5" />
           </button>
@@ -156,7 +191,7 @@ const DeleteEmployeeModal = ({ isOpen, onClose }) => {
             <div className="w-8 h-8 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
           </div>
         ) : logs.length === 0 ? (
-          <p className="text-gray-500 text-center">No logs available.</p>
+          <p className="text-gray-500 text-center">{copy.noLogs}</p>
         ) : (
           <div className="space-y-4">
             {logs.map((log) => (
@@ -166,7 +201,7 @@ const DeleteEmployeeModal = ({ isOpen, onClose }) => {
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                     log.action === 'Delete' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
                   }`}>
-                    {log.action}
+                    {log.action === 'Delete' ? copy.delete : log.action}
                   </span>
                 </div>
                 <p className="text-gray-700 text-sm mb-2">{log.details}</p>
@@ -181,10 +216,10 @@ const DeleteEmployeeModal = ({ isOpen, onClose }) => {
                   </div>
                 </div>
                 <div className="mt-2 text-xs text-gray-600">
-                  <p>Discount: {log.discount.toFixed(2)}</p>
-                  <p>Reward: {log.reward.toFixed(2)}</p>
-                  <p>Attendance Salary: {log.attendanceSalary.toFixed(2)}</p>
-                  <p>Total Salary: {log.totalSalary.toFixed(2)}</p>
+                  <p>{copy.discount} {log.discount.toFixed(2)}</p>
+                  <p>{copy.reward} {log.reward.toFixed(2)}</p>
+                  <p>{copy.attendanceSalary} {log.attendanceSalary.toFixed(2)}</p>
+                  <p>{copy.totalSalary} {log.totalSalary.toFixed(2)}</p>
                 </div>
               </div>
             ))}

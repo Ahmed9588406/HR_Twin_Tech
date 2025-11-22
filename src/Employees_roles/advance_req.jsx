@@ -1,6 +1,46 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Calendar, DollarSign, X } from 'lucide-react';
 import { postAdvanceRequest } from './employee_role_api';
+import { getLang as _getLang, subscribe as _subscribe } from '../i18n/i18n';
+
+const TEXT = {
+  en: {
+    modalTitle: 'Advance Request',
+    modalSubtitle: 'Submit salary advance details',
+    closeLabel: 'Close',
+    submissionDateLabel: 'Submission Date',
+    amountLabel: 'Amount',
+    installmentStartLabel: 'Installment Start Date',
+    commentsLabel: 'Comments',
+    commentsPlaceholder: 'Write here...',
+    paymentFromSalary: 'Payment from salary slip',
+    submit: 'Advance Request',
+    submitting: 'Submitting...',
+    validationMissingDate: 'Please select submission date',
+    validationInvalidAmount: 'Please enter a valid amount',
+    submitSuccess: 'Advance request submitted.',
+    submitFailureFallback: 'Failed to submit advance request. Try again.',
+    failurePrefix: 'Advance request failed:'
+  },
+  ar: {
+    modalTitle: 'طلب سلفة',
+    modalSubtitle: 'إرسال تفاصيل السلفة الراتبية',
+    closeLabel: 'إغلاق',
+    submissionDateLabel: 'تاريخ التقديم',
+    amountLabel: 'المبلغ',
+    installmentStartLabel: 'تاريخ بدء القسط',
+    commentsLabel: 'ملاحظات',
+    commentsPlaceholder: 'اكتب هنا...',
+    paymentFromSalary: 'الدفع من راتب الشريحة',
+    submit: 'طلب سلفة',
+    submitting: 'جارٍ الإرسال...',
+    validationMissingDate: 'يرجى اختيار تاريخ التقديم',
+    validationInvalidAmount: 'يرجى إدخال مبلغ صحيح',
+    submitSuccess: 'تم إرسال طلب السلفة.',
+    submitFailureFallback: 'فشل في إرسال طلب السلفة. حاول مرة أخرى.',
+    failurePrefix: 'فشل طلب السلفة:'
+  }
+};
 
 /**
  * AdvanceRequest - centered draggable modal
@@ -23,6 +63,15 @@ export default function AdvanceRequest({ employee = {}, onClose = () => {}, onSu
   const [pos, setPos] = useState({ left: 0, top: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+
+  // language subscription
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => {
+    const unsub = _subscribe((l) => setLang(l));
+    return () => unsub();
+  }, []);
+  const copy = TEXT[lang] || TEXT.en;
+  const dir = lang === 'ar' ? 'rtl' : 'ltr';
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -84,8 +133,8 @@ export default function AdvanceRequest({ employee = {}, onClose = () => {}, onSu
   };
 
   const validate = () => {
-    if (!submissionDate) { alert('Please select submission date'); return false; }
-    if (!amount || Number(amount) <= 0) { alert('Please enter a valid amount'); return false; }
+    if (!submissionDate) { alert(copy.validationMissingDate); return false; }
+    if (!amount || Number(amount) <= 0) { alert(copy.validationInvalidAmount); return false; }
     return true;
   };
 
@@ -106,20 +155,20 @@ export default function AdvanceRequest({ employee = {}, onClose = () => {}, onSu
       const result = await postAdvanceRequest(payload);
       console.log('Advance request result:', result);
 
-      alert('Advance request submitted.');
+      alert(copy.submitSuccess);
       reset();
       onSuccess();
     } catch (err) {
       console.error('Advance request failed:', err);
       // show user-friendly message if available
-      let msg = 'Failed to submit advance request. Try again.';
+      let msg = copy.submitFailureFallback;
       try {
         const m = String(err.message || err);
         const possibleJson = m.trim().startsWith('{') ? JSON.parse(m) : null;
         if (possibleJson && possibleJson.message) msg = possibleJson.message;
         else if (m) msg = m;
       } catch {}
-      alert(`Advance request failed: ${msg}`);
+      alert(`${copy.failurePrefix} ${msg}`);
     } finally {
       setSubmitting(false);
     }
@@ -128,7 +177,7 @@ export default function AdvanceRequest({ employee = {}, onClose = () => {}, onSu
   const handleClose = () => { reset(); onClose(); };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" dir={dir} lang={lang}>
       <div
         ref={containerRef}
         style={
@@ -146,11 +195,11 @@ export default function AdvanceRequest({ employee = {}, onClose = () => {}, onSu
           onTouchStart={startDrag}
         >
           <div>
-            <h3 className="text-lg font-semibold">Advance Request</h3>
-            <p className="text-emerald-100 text-sm mt-1">Submit salary advance details</p>
+            <h3 className="text-lg font-semibold">{copy.modalTitle}</h3>
+            <p className="text-emerald-100 text-sm mt-1">{copy.modalSubtitle}</p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={handleClose} aria-label="Close" className="p-2 rounded-md bg-white/10 hover:bg-white/20">
+            <button onClick={handleClose} aria-label={copy.closeLabel} className="p-2 rounded-md bg-white/10 hover:bg-white/20">
               <X className="w-4 h-4 text-white" />
             </button>
           </div>
@@ -159,7 +208,7 @@ export default function AdvanceRequest({ employee = {}, onClose = () => {}, onSu
         <form onSubmit={handleSubmit} className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <label className="space-y-1">
-              <div className="text-sm font-medium text-slate-600">Submission Date</div>
+              <div className="text-sm font-medium text-slate-600">{copy.submissionDateLabel}</div>
               <div className="relative">
                 <input
                   type="date"
@@ -172,14 +221,14 @@ export default function AdvanceRequest({ employee = {}, onClose = () => {}, onSu
             </label>
 
             <label className="space-y-1">
-              <div className="text-sm font-medium text-slate-600">Amount</div>
+              <div className="text-sm font-medium text-slate-600">{copy.amountLabel}</div>
               <div className="relative">
                 <input
                   type="number"
                   step="0.01"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  placeholder="Amount"
+                  placeholder={copy.amountLabel}
                   className="w-full border border-slate-200 rounded-md px-4 py-2 bg-white text-slate-700"
                 />
                 <span className="absolute right-3 top-2.5 text-slate-400"><DollarSign className="w-5 h-5" /></span>
@@ -187,7 +236,7 @@ export default function AdvanceRequest({ employee = {}, onClose = () => {}, onSu
             </label>
 
             <label className="space-y-1">
-              <div className="text-sm font-medium text-slate-600">Installment Start Date</div>
+              <div className="text-sm font-medium text-slate-600">{copy.installmentStartLabel}</div>
               <div className="relative">
                 <input
                   type="date"
@@ -201,11 +250,11 @@ export default function AdvanceRequest({ employee = {}, onClose = () => {}, onSu
           </div>
 
           <div className="mt-6">
-            <div className="text-sm font-medium text-slate-600 mb-2">Comments</div>
+            <div className="text-sm font-medium text-slate-600 mb-2">{copy.commentsLabel}</div>
             <textarea
               value={comments}
               onChange={(e) => setComments(e.target.value)}
-              placeholder="Write here..."
+              placeholder={copy.commentsPlaceholder}
               className="w-full min-h-[120px] border border-slate-200 rounded-md p-4 text-slate-700 resize-vertical"
             />
           </div>
@@ -218,7 +267,7 @@ export default function AdvanceRequest({ employee = {}, onClose = () => {}, onSu
                 onChange={(e) => setFromSalary(e.target.checked)}
                 className="form-checkbox text-emerald-600"
               />
-              <span>Payment from salary slip</span>
+              <span>{copy.paymentFromSalary}</span>
             </label>
 
             <div>
@@ -227,7 +276,7 @@ export default function AdvanceRequest({ employee = {}, onClose = () => {}, onSu
                 disabled={submitting}
                 className="px-5 py-2 rounded-md bg-gradient-to-r from-emerald-600 to-green-500 text-white font-medium hover:from-emerald-700 hover:to-green-600 transition-shadow"
               >
-                {submitting ? 'Submitting...' : 'Advance Request'}
+                {submitting ? copy.submitting : copy.submit}
               </button>
             </div>
           </div>

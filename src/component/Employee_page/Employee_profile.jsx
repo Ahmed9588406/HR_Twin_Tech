@@ -1,17 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Clock, Calendar, TrendingUp, QrCode, Edit, Trash2, LogOut, UserCheck, ArrowLeft, Info } from 'lucide-react';
+import { Clock, Calendar, TrendingUp, QrCode, Edit, Trash2, LogOut, UserCheck, ArrowLeft, Info, AlertTriangle } from 'lucide-react';
 import { markAttendance, fetchEmployeeProfile, markLeave, fetchEmployeeSalary, fetchEmployeeAttendanceHistory } from '../Employee_page/api/emplyee_api';
 import AttendanceModal from './Attendance_modal';
 import OnLeaveModal from './OnLeave_modal';
 import EmployeeSalaryCard from './employee_salary';
 import EmployeeAttendanceHistory from './employee_history';
 import EmployeeShiftDept from './employee_shift_dept_admin';
-import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
+import { t as _t, getLang as _getLang, subscribe as _subscribe, setLang as _setLang } from '../../i18n/i18n';
+
+const TEXT = {
+  en: {
+    sendWarning: 'Termination Warning',
+    warningSent: 'Termination notice sent successfully!',
+    warningError: 'Failed to send termination notice.',
+    confirmSendWarning: 'Are you sure you want to send a termination notice to this employee? This action cannot be undone.'
+  },
+  ar: {
+    sendWarning: 'انذار فصل ',
+    warningSent: 'تم إرسال إشعار الفصل بنجاح!',
+    warningError: 'فشل في إرسال إشعار الفصل.',
+    confirmSendWarning: 'هل أنت متأكد من أنك تريد إرسال إشعار الفصل لهذا الموظف؟ هذا الإجراء لا يمكن التراجع عنه.'
+  }
+};
 
 export default function EmployeeProfile() {
   const [lang, setLang] = useState(_getLang());
   useEffect(() => _subscribe(setLang), []);
+
+  const toggleLanguage = () => {
+    const next = lang === 'en' ? 'ar' : 'en';
+    _setLang(next);
+  };
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -98,6 +118,41 @@ export default function EmployeeProfile() {
     // Optionally refresh profile data
   };
 
+  const handleSendWarning = async () => {
+    const confirmed = window.confirm(TEXT[lang].confirmSendWarning);
+    if (!confirmed) return;
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Auth token not found; please log in again.');
+      }
+
+      const response = await fetch(`https://api.shl-hr.com/api/v1/employees/termination-notice/${employee.code}`, {
+        method: 'PUT',
+        headers: {
+          'ngrok-skip-browser-warning': 'true',
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to send termination notice: ${response.status}`);
+      }
+
+      const result = await response.json(); // Assuming it returns a boolean
+      if (result) {
+        alert(TEXT[lang].warningSent);
+      } else {
+        alert(TEXT[lang].warningError);
+      }
+    } catch (error) {
+      console.error('Error sending termination notice:', error);
+      alert(TEXT[lang].warningError);
+    }
+  };
+
   // Helper function to format last sign-in date
   const formatLastSignIn = (dateString) => {
     if (!dateString) return { display: _t('NA'), fullDate: _t('NA') };
@@ -175,6 +230,13 @@ export default function EmployeeProfile() {
               {_t('EMPLOYEE_PORTAL')}
             </h1>
             <div className="flex items-center gap-3">
+              <button
+                onClick={toggleLanguage}
+                className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-colors"
+                aria-label={lang === 'en' ? _t('SWITCH_TO_ARABIC') : _t('SWITCH_TO_ENGLISH')}
+              >
+                {lang === 'en' ? 'EN' : 'ع'}
+              </button>
               <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
                 {_t('ACTIVE_NOW')}
               </span>
@@ -220,6 +282,14 @@ export default function EmployeeProfile() {
                     <button onClick={handleMarkLeave} className="flex-1 px-4 py-2.5 bg-green-50 text-green-700 rounded-xl font-medium hover:bg-green-100 transition-colors flex items-center justify-center gap-2">
                       <LogOut className="w-4 h-4" />
                       {_t('LEAVE')}
+                    </button>
+                  </div>
+
+                  {/* Send Warning Button */}
+                  <div className="mt-4 w-full">
+                    <button onClick={handleSendWarning} className="w-full px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2">
+                      <AlertTriangle className="w-4 h-4" />
+                      {TEXT[lang].sendWarning}
                     </button>
                   </div>
 

@@ -6,6 +6,82 @@ import { fetchEmployeeById } from "../../Settings/api/employees_api"; // Import 
 import { useNavigate } from "react-router-dom";
 import { fetchEmployees, deleteEmployee, lockEmployee } from '../../Employee_page/api/emplyee_api'; // Added lockEmployee import
 import { fetchBranches, fetchDepartments } from '../../Settings/api/settings_api' // fetch lists for filters
+import { getLang as _getLang, subscribe as _subscribe } from '../../../i18n/i18n';
+
+const TEXT = {
+  en: {
+    filterEmployees: 'Filter Employees',
+    searchByName: 'Search by Name',
+    enterEmployeeName: 'Enter employee name...',
+    department: 'Department',
+    allDepartments: 'All Departments',
+    officeLocation: 'Office Location',
+    allLocations: 'All Locations',
+    activeFilters: 'Active filters:',
+    search: 'Search:',
+    clearAll: 'Clear All',
+    total: 'Total',
+    present: 'Present',
+    onLeave: 'On Leave',
+    absent: 'Absent',
+    loadingEmployees: 'Loading employees...',
+    error: 'Error:',
+    retry: 'Retry',
+    noEmployeesFound: 'No employees found',
+    tryAdjusting: 'Try adjusting your search or filters',
+    confirmDelete: 'Are you sure you want to delete',
+    deleteAction: 'This action cannot be undone.',
+    deleteSuccess: 'Employee deleted successfully!',
+    deleteError: 'Error deleting employee:',
+    confirmLock: 'Are you sure you want to',
+    unlock: 'unlock',
+    lock: 'lock',
+    lockSuccess: 'has been',
+    lockError: 'Error:',
+    noEmail: 'No email available for this employee.',
+    noPhone: 'No phone number available for this employee.',
+    employeeInfo: 'Employee Info:\nName:',
+    email: 'Email:',
+    phone: 'Phone:',
+    na: 'N/A'
+  },
+  ar: {
+    filterEmployees: 'تصفية الموظفين',
+    searchByName: 'البحث بالاسم',
+    enterEmployeeName: 'أدخل اسم الموظف...',
+    department: 'القسم',
+    allDepartments: 'جميع الأقسام',
+    officeLocation: 'موقع المكتب',
+    allLocations: 'جميع المواقع',
+    activeFilters: 'الفلاتر النشطة:',
+    search: 'البحث:',
+    clearAll: 'مسح الكل',
+    total: 'المجموع',
+    present: 'حاضر',
+    onLeave: 'في إجازة',
+    absent: 'غائب',
+    loadingEmployees: 'جارٍ تحميل الموظفين...',
+    error: 'خطأ:',
+    retry: 'إعادة المحاولة',
+    noEmployeesFound: 'لم يتم العثور على موظفين',
+    tryAdjusting: 'جرب تعديل البحث أو الفلاتر',
+    confirmDelete: 'هل أنت متأكد من أنك تريد حذف',
+    deleteAction: 'لا يمكن التراجع عن هذا الإجراء.',
+    deleteSuccess: 'تم حذف الموظف بنجاح!',
+    deleteError: 'خطأ في حذف الموظف:',
+    confirmLock: 'هل أنت متأكد من أنك تريد',
+    unlock: 'إلغاء القفل',
+    lock: 'القفل',
+    lockSuccess: 'تم',
+    lockError: 'خطأ:',
+    noEmail: 'لا يوجد بريد إلكتروني متاح لهذا الموظف.',
+    noPhone: 'لا يوجد رقم هاتف متاح لهذا الموظف.',
+    employeeInfo: 'معلومات الموظف:\nالاسم:',
+    email: 'البريد الإلكتروني:',
+    phone: 'الهاتف:',
+    na: 'غير متوفر'
+  }
+};
 
 export default function EmployeeListView() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -18,6 +94,7 @@ export default function EmployeeListView() {
   const [error, setError] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // State for edit modal
   const [editEmployeeData, setEditEmployeeData] = useState(null); // State for edit employee data
+  const [lang, setLang] = useState(_getLang());
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -115,37 +192,37 @@ export default function EmployeeListView() {
     if (employee.email) {
       window.location.href = `mailto:${employee.email}`;
     } else {
-      alert('No email available for this employee.');
+      alert(copy.noEmail);
     }
   };
 
   const handleDelete = async (employee) => {
-    const confirmDelete = window.confirm(`Are you sure you want to delete ${employee.name}? This action cannot be undone.`);
+    const confirmDelete = window.confirm(`${copy.confirmDelete} ${employee.name}? ${copy.deleteAction}`);
     if (!confirmDelete) return;
 
     try {
       await deleteEmployee(employee.code); // Use employee.code as the ID
       // Remove the employee from the list
       setEmployees(prev => prev.filter(emp => emp.code !== employee.code));
-      alert('Employee deleted successfully!');
+      alert(copy.deleteSuccess);
     } catch (error) {
       console.error('Error deleting employee:', error);
-      alert(`Error deleting employee: ${error.message}`);
+      alert(`${copy.deleteError} ${error.message}`);
     }
   };
 
   const handleLock = async (employee) => {
-    const confirmLock = window.confirm(`Are you sure you want to ${employee.locked ? 'unlock' : 'lock'} ${employee.name}?`);
+    const confirmLock = window.confirm(`${copy.confirmLock} ${employee.locked ? copy.unlock : copy.lock} ${employee.name}?`);
     if (!confirmLock) return;
 
     try {
       await lockEmployee(employee.code);
       // Update the employee in the list
       setEmployees(prev => prev.map(emp => emp.code === employee.code ? { ...emp, locked: !emp.locked } : emp));
-      alert(`${employee.name} has been ${employee.locked ? 'unlocked' : 'locked'} successfully!`);
+      alert(`${employee.name} ${copy.lockSuccess} ${employee.locked ? copy.unlock : copy.lock}ed successfully!`);
     } catch (error) {
       console.error('Error locking/unlocking employee:', error);
-      alert(`Error: ${error.message}`);
+      alert(`${copy.lockError} ${error.message}`);
     }
   };
 
@@ -153,7 +230,7 @@ export default function EmployeeListView() {
     if (employee.phoneNumber) {
       window.location.href = `tel:${employee.phoneNumber}`;
     } else {
-      alert('No phone number available for this employee.');
+      alert(copy.noPhone);
     }
   };
 
@@ -162,7 +239,7 @@ export default function EmployeeListView() {
     if (employee.email) {
       window.location.href = `mailto:${employee.email}`;
     } else {
-      alert(`Employee Info:\nName: ${employee.name}\nEmail: ${employee.email || 'N/A'}\nPhone: ${employee.phoneNumber || 'N/A'}\nDepartment: ${employee.departmentName || 'N/A'}`);
+      alert(`${copy.employeeInfo} ${employee.name}\n${copy.email} ${employee.email || copy.na}\n${copy.phone} ${employee.phoneNumber || copy.na}\n${copy.department} ${employee.departmentName || copy.na}`);
     }
   };
 
@@ -179,13 +256,20 @@ export default function EmployeeListView() {
     navigate('/employee-portal', { state: { employee } }); // Pass the full employee object
   };
 
+  useEffect(() => {
+    const unsub = _subscribe((l) => setLang(l));
+    return () => unsub();
+  }, []);
+  const copy = TEXT[lang] || TEXT.en;
+  const dir = lang === 'ar' ? 'rtl' : 'ltr';
+
   if (loading) {
     return (
-      <div className="p-6 lg:p-8">
+      <div className="p-6 lg:p-8" dir={dir} lang={lang}>
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-            <span className="ml-4 text-gray-600">Loading employees...</span>
+            <span className="ml-4 text-gray-600">{copy.loadingEmployees}</span>
           </div>
         </div>
       </div>
@@ -194,15 +278,15 @@ export default function EmployeeListView() {
 
   if (error) {
     return (
-      <div className="p-6 lg:p-8">
+      <div className="p-6 lg:p-8" dir={dir} lang={lang}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-12">
-            <div className="text-red-600 mb-4">Error: {error}</div>
+            <div className="text-red-600 mb-4">{copy.error} {error}</div>
             <button 
               onClick={() => window.location.reload()} 
               className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
             >
-              Retry
+              {copy.retry}
             </button>
           </div>
         </div>
@@ -211,7 +295,7 @@ export default function EmployeeListView() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+    <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6" dir={dir} lang={lang}>
       <div className="max-w-7xl mx-auto">
         {/* Filters Section */}
         <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm mb-6">
@@ -219,20 +303,20 @@ export default function EmployeeListView() {
             <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-sm">
               <Filter className="w-5 h-5 text-white" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Filter Employees</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{copy.filterEmployees}</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Search by Name */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Search by Name
+                {copy.searchByName}
               </label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Enter employee name..."
+                  placeholder={copy.enterEmployeeName}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 hover:border-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg text-sm outline-none transition-all"
@@ -252,14 +336,14 @@ export default function EmployeeListView() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <Building className="w-4 h-4 inline mr-1" />
-                Department
+                {copy.department}
               </label>
               <select
                 value={selectedDepartment}
                 onChange={(e) => setSelectedDepartment(e.target.value)}
                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 hover:border-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg text-sm outline-none transition-all appearance-none cursor-pointer"
               >
-                <option value="all">All Departments</option>
+                <option value="all">{copy.allDepartments}</option>
                 {departments.map((dept) => (
                   <option key={dept.id ?? dept.name} value={dept.id ?? dept.name}>{dept.name}</option>
                 ))}
@@ -270,14 +354,14 @@ export default function EmployeeListView() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <MapPin className="w-4 h-4 inline mr-1" />
-                Office Location
+                {copy.officeLocation}
               </label>
               <select
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 hover:border-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg text-sm outline-none transition-all appearance-none cursor-pointer"
               >
-                <option value="all">All Locations</option>
+                <option value="all">{copy.allLocations}</option>
                 {branches.map((br) => (
                   <option key={br.id ?? br.name} value={br.id ?? br.name}>{br.name}</option>
                 ))}
@@ -289,10 +373,10 @@ export default function EmployeeListView() {
           {hasActiveFilters && (
             <div className="mt-4 flex items-center justify-between">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-medium text-gray-600">Active filters:</span>
+                <span className="text-sm font-medium text-gray-600">{copy.activeFilters}</span>
                 {searchQuery && (
                   <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-green-50 text-green-700 rounded-full border border-green-200">
-                    Search: "{searchQuery}"
+                    {copy.search} "{searchQuery}"
                     <button
                       onClick={() => setSearchQuery('')}
                       className="hover:bg-green-100 rounded-full p-0.5"
@@ -328,7 +412,7 @@ export default function EmployeeListView() {
                 onClick={clearFilters}
                 className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-all"
               >
-                Clear All
+                {copy.clearAll}
               </button>
             </div>
           )}
@@ -339,7 +423,7 @@ export default function EmployeeListView() {
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 font-medium">Total</p>
+                <p className="text-sm text-gray-500 font-medium">{copy.total}</p>
                 <p className="text-2xl font-bold text-gray-900">{filteredEmployees.length}</p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
@@ -353,7 +437,7 @@ export default function EmployeeListView() {
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 font-medium">Present</p>
+                <p className="text-sm text-gray-500 font-medium">{copy.present}</p>
                 <p className="text-2xl font-bold text-emerald-600">
                   {filteredEmployees.filter(e => e.status === "Present").length}
                 </p>
@@ -369,7 +453,7 @@ export default function EmployeeListView() {
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 font-medium">On Leave</p>
+                <p className="text-sm text-gray-500 font-medium">{copy.onLeave}</p>
                 <p className="text-2xl font-bold text-amber-600">
                   {filteredEmployees.filter(e => e.status === "On Leave").length}
                 </p>
@@ -385,7 +469,7 @@ export default function EmployeeListView() {
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 font-medium">Absent</p>
+                <p className="text-sm text-gray-500 font-medium">{copy.absent}</p>
                 <p className="text-2xl font-bold text-red-600">
                   {filteredEmployees.filter(e => e.status === "Absent").length}
                 </p>
@@ -439,8 +523,8 @@ export default function EmployeeListView() {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
                 <Search className="w-8 h-8 text-gray-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No employees found</h3>
-              <p className="text-sm text-gray-500">Try adjusting your search or filters</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">{copy.noEmployeesFound}</h3>
+              <p className="text-sm text-gray-500">{copy.tryAdjusting}</p>
             </div>
           )}
         </div>

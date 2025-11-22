@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { getLang as _getLang, subscribe as _subscribe } from '../i18n/i18n';
 
 // API function
 const fetchAttendanceRecords = async (empCode, options = {}) => {
@@ -44,24 +45,52 @@ const fetchAttendanceRecords = async (empCode, options = {}) => {
 };
 
 // Constants for hard-coded values
-const NO_HISTORY_MESSAGE = "No attendance history available.";
-const ATTENDANCE_HISTORY_TITLE = "Attendance History";
-const RECENT_RECORDS_SUBTITLE = "Recent attendance records";
-const TABLE_HEADERS = {
-  DATE: "Date",
-  CHECK_IN: "Check In",
-  CHECK_OUT: "Check Out",
-  WORKING_HOURS: "Working Hours",
-  STATUS: "Status"
+const TEXT = {
+  en: {
+    noHistoryMessage: "No attendance history available.",
+    attendanceHistoryTitle: "Attendance History",
+    recentRecordsSubtitle: "Recent attendance records",
+    tableHeaders: {
+      DATE: "Date",
+      CHECK_IN: "Check In",
+      CHECK_OUT: "Check Out",
+      WORKING_HOURS: "Working Hours",
+      STATUS: "Status"
+    },
+    naValue: "N/A",
+    statusValues: {
+      PRESENT: 'PRESENT',
+      ABSENT: 'Absent',
+      DAY_OFF: 'DAY_OFF',
+      HOLIDAY: 'HOLIDAY'
+    },
+    showingRecordsMessage: "Showing {numberOfElements} of {totalElements} records",
+    loadingAttendance: "Loading attendance...",
+    unableToLoad: "Unable to load attendance history."
+  },
+  ar: {
+    noHistoryMessage: "لا توجد سجلات حضور متاحة.",
+    attendanceHistoryTitle: "سجل الحضور",
+    recentRecordsSubtitle: "السجلات الحديثة للحضور",
+    tableHeaders: {
+      DATE: "التاريخ",
+      CHECK_IN: "وقت الدخول",
+      CHECK_OUT: "وقت الخروج",
+      WORKING_HOURS: "ساعات العمل",
+      STATUS: "الحالة"
+    },
+    naValue: "غير متوفر",
+    statusValues: {
+      PRESENT: 'حاضر',
+      ABSENT: 'غائب',
+      DAY_OFF: 'عطلة',
+      HOLIDAY: 'عطلة رسمية'
+    },
+    showingRecordsMessage: "عرض {numberOfElements} من {totalElements} سجل",
+    loadingAttendance: "جارٍ تحميل الحضور...",
+    unableToLoad: "تعذر تحميل سجل الحضور."
+  }
 };
-const NA_VALUE = "N/A";
-const STATUS_VALUES = {
-  PRESENT: 'PRESENT',
-  ABSENT: 'Apsent',
-  DAY_OFF: 'DAY_OFF',
-  HOLIDAY: 'HOLIDAY'
-};
-const SHOWING_RECORDS_MESSAGE = "Showing {numberOfElements} of {totalElements} records";
 
 // Replace / improve status handling: normalize incoming values and provide display strings
 const normalizeStatus = (raw) => {
@@ -93,6 +122,15 @@ export default function EmployeeAttendanceHistory({ empCode }) {
   const [historyData, setHistoryData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // language subscription
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => {
+    const unsub = _subscribe((l) => setLang(l));
+    return () => unsub();
+  }, []);
+  const copy = TEXT[lang] || TEXT.en;
+  const dir = lang === 'ar' ? 'rtl' : 'ltr';
 
   useEffect(() => {
     let mounted = true;
@@ -156,7 +194,7 @@ export default function EmployeeAttendanceHistory({ empCode }) {
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
         <div className="text-center text-slate-600">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto" />
-          <div className="mt-3">Loading attendance...</div>
+          <div className="mt-3">{copy.loadingAttendance}</div>
         </div>
       </div>
     );
@@ -165,7 +203,7 @@ export default function EmployeeAttendanceHistory({ empCode }) {
   if (error) {
     return (
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
-        <div className="text-center text-red-600">{error}</div>
+        <div className="text-center text-red-600">{copy.unableToLoad}</div>
       </div>
     );
   }
@@ -173,20 +211,20 @@ export default function EmployeeAttendanceHistory({ empCode }) {
   if (!historyData || !historyData.content || historyData.content.length === 0) {
     return (
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
-        <div className="text-center text-gray-500">{NO_HISTORY_MESSAGE}</div>
+        <div className="text-center text-gray-500">{copy.noHistoryMessage}</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
+    <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200" dir={dir} lang={lang}>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-blue-600" />
-            {ATTENDANCE_HISTORY_TITLE}
+            {copy.attendanceHistoryTitle}
           </h3>
-          <p className="text-sm text-slate-600 mt-1">{RECENT_RECORDS_SUBTITLE}</p>
+          <p className="text-sm text-slate-600 mt-1">{copy.recentRecordsSubtitle}</p>
         </div>
       </div>
 
@@ -194,11 +232,11 @@ export default function EmployeeAttendanceHistory({ empCode }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200">
-              <th className="text-left py-3 px-4 font-semibold text-slate-700">{TABLE_HEADERS.DATE}</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700">{TABLE_HEADERS.CHECK_IN}</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700">{TABLE_HEADERS.CHECK_OUT}</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700">{TABLE_HEADERS.WORKING_HOURS}</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700">{TABLE_HEADERS.STATUS}</th>
+              <th className="text-left py-3 px-4 font-semibold text-slate-700">{copy.tableHeaders.DATE}</th>
+              <th className="text-left py-3 px-4 font-semibold text-slate-700">{copy.tableHeaders.CHECK_IN}</th>
+              <th className="text-left py-3 px-4 font-semibold text-slate-700">{copy.tableHeaders.CHECK_OUT}</th>
+              <th className="text-left py-3 px-4 font-semibold text-slate-700">{copy.tableHeaders.WORKING_HOURS}</th>
+              <th className="text-left py-3 px-4 font-semibold text-slate-700">{copy.tableHeaders.STATUS}</th>
             </tr>
           </thead>
           <tbody>
@@ -220,7 +258,7 @@ export default function EmployeeAttendanceHistory({ empCode }) {
                     {(() => {
                       const dayStr = record.day || '';
                       const d = new Date(dayStr.includes('T') ? dayStr : `${dayStr}T00:00:00`);
-                      return d.toLocaleDateString('en-US', {
+                      return d.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', {
                         weekday: 'short',
                         year: 'numeric',
                         month: 'short',
@@ -240,17 +278,17 @@ export default function EmployeeAttendanceHistory({ empCode }) {
                       <td className="py-4 px-4 text-slate-600">
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-blue-500" />
-                          {record.checkIn || NA_VALUE}
+                          {record.checkIn || copy.naValue}
                         </div>
                       </td>
                       <td className="py-4 px-4 text-slate-600">
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-purple-500" />
-                          {record.checkOut || NA_VALUE}
+                          {record.checkOut || copy.naValue}
                         </div>
                       </td>
                       <td className="py-4 px-4 text-slate-600 font-medium">
-                        {record.workingHours || NA_VALUE}
+                        {record.workingHours || copy.naValue}
                       </td>
                       <td className="py-4 px-4">
                         <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(record.status)}`}>
@@ -269,7 +307,7 @@ export default function EmployeeAttendanceHistory({ empCode }) {
 
       {historyData.totalPages > 1 && (
         <div className="mt-4 text-center text-sm text-slate-500">
-          {SHOWING_RECORDS_MESSAGE.replace('{numberOfElements}', historyData.numberOfElements).replace('{totalElements}', historyData.totalElements)}
+          {copy.showingRecordsMessage.replace('{numberOfElements}', historyData.numberOfElements).replace('{totalElements}', historyData.totalElements)}
         </div>
       )}
     </div>

@@ -103,6 +103,9 @@ export default {
     DELAY_TIME: 'Delay Time',
     MINUTES: 'minutes',
     DELAY_HOURS: 'Delay Hours',
+    // added keys:
+    DELAY_HOUR: 'Delay Hour',
+    TERMINATION_NOTICE_LIMIT: 'Termination Notice Limit',
     HOURS: 'hours',
     OVERTIME_MINS: 'Overtime Minutes',
     DISCOUNT_PERCENT: 'Discount %',
@@ -509,6 +512,9 @@ export default {
     DELAY_TIME: 'وقت التأخير',
     MINUTES: 'دقيقة',
     DELAY_HOURS: 'ساعات التأخير',
+    // added keys (Arabic):
+    DELAY_HOUR: 'ساعة التأخير',
+    TERMINATION_NOTICE_LIMIT: 'حد إشعارات الفصل',
     HOURS: 'ساعة',
     OVERTIME_MINS: 'دقائق العمل الإضافي',
     DISCOUNT_PERCENT: 'نسبة الخصم',

@@ -4,7 +4,7 @@ import { loginUser } from "./api/login_api";
 import logo from "../assets/images/logo.png";
 import { QrCode } from "lucide-react";
 import { testFirebaseConnection, requestNotificationPermission, registerServiceWorker } from "../firebase_config";
-import { t as _t } from "../i18n/i18n";
+import { t as _t, getLang as _getLang, subscribe as _subscribe, setLang as _setLang } from "../i18n/i18n";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -13,6 +13,18 @@ function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Language subscription
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => {
+    const unsub = _subscribe((l) => setLang(l));
+    return () => unsub();
+  }, []);
+
+  const toggleLanguage = () => {
+    const next = lang === 'en' ? 'ar' : 'en';
+    _setLang(next);
+  };
 
   useEffect(() => {
     const initializeFirebase = async () => {
@@ -90,14 +102,21 @@ function LoginPage() {
 
         {/* Content */}
         <div className="relative z-10 w-full max-w-md">
-          {/* Logo */}
-          <div className="mb-12 w-full flex justify-center">
+          {/* Logo and Language Toggle */}
+          <div className="mb-12 w-full flex justify-between items-center">
             <img
               src={logo}
               alt="HR Logo"
               className="h-20 drop-shadow-lg"
               draggable="false"
             />
+            <button
+              onClick={toggleLanguage}
+              className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-colors"
+              aria-label={lang === 'en' ? 'Switch to Arabic' : 'Switch to English'}
+            >
+              {lang === 'en' ? 'EN' : 'ع'}
+            </button>
           </div>
 
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-gray-100">
@@ -158,18 +177,12 @@ function LoginPage() {
               {/* Remember Me & QR Code */}
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-5 h-5 rounded border-2 border-gray-300 cursor-pointer checked:bg-green-500 checked:border-green-500 focus:ring-green-200 focus:ring-2 transition-colors"
-                  />
-                  <span className="text-gray-600 text-sm font-medium group-hover:text-gray-800">
-                    {_t('REMEMBER_ME')}
-                  </span>
+                  
+                  
+                  
                 </label>
                 <div className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer">
-                  <QrCode className="w-5 h-5 text-gray-500" />
+                  {/*<QrCode className="w-5 h-5 text-gray-500" />*/}
                 </div>
               </div>
 

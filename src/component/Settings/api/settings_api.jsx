@@ -296,7 +296,7 @@ export const fetchCompanySettings = async () => {
 
 export const updateCompanySettings = async (settings) => {
   // settings expected shape:
-  // { delayTime, delayHour, overTimeMins, discountPercent, overTimePercent }
+  // { delayTime, delayHour, overTimeMins, discountPercent, overTimePercent, terminationNoticeLimit }
   try {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('Auth token not found; please log in again.');
@@ -306,7 +306,8 @@ export const updateCompanySettings = async (settings) => {
       delayHour: Number(settings.delayHour) || 0,
       overTimeMins: Number(settings.overTimeMins) || 0,
       discountPercent: Number(settings.discountPercent) || 0,
-      overTimePercent: Number(settings.overTimePercent) || 0
+      overTimePercent: Number(settings.overTimePercent) || 0,
+      terminationNoticeLimit: Number(settings.terminationNoticeLimit) || 0 // <-- added
     };
 
     console.log('Updating company settings with payload:', payload);
