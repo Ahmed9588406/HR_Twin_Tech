@@ -5,6 +5,7 @@ import EmployeeListView from './ui/EmployeeListView'
 import CreateNewEmployee from '../Employee_page/Create_new_Employee'
 import DeleteEmployeeModal from '../Employee_page/Delete_emp_logs'
 import { Users, Calendar, User, UserMinus, UserRoundPlus } from 'lucide-react'
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n'
 
 function Employee() {
   const location = useLocation()
@@ -12,11 +13,13 @@ function Employee() {
   const [activeTab, setActiveTab] = useState('Employees')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [lang, setLang] = useState(_getLang())
+  useEffect(() => _subscribe(setLang), [])
 
   const tabs = [
-    { id: 'Employees', label: 'Employees', icon: User, path: '/employees' },
-    { id: 'Work Teams', label: 'Work Teams', icon: Users, path: '/dashboard-teams' },
-    { id: 'Employees Action', label: 'Employees Action', icon: Calendar, path: '/employees-action' },
+    { id: 'Employees', label: _t('SIDEBAR_EMPLOYEES'), icon: User, path: '/employees' },
+    { id: 'Work Teams', label: _t('WORK_TEAMS'), icon: Users, path: '/dashboard-teams' },
+    { id: 'Employees Action', label: _t('EMPLOYEES_ACTION'), icon: Calendar, path: '/employees-action' },
   ]
 
   // Update active tab based on current location
@@ -56,15 +59,15 @@ function Employee() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1 overflow-auto ml-20 xl:ml-72 transition-all duration-300">
+      <div className={`flex-1 overflow-auto ${lang === 'ar' ? 'mr-20 xl:mr-72' : 'ml-20 xl:ml-72'} transition-all duration-300`}>
         <div className="p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-6">
               <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-4">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Employee Dashboard</h1>
-                  <p className="text-gray-600">Manage and monitor employee information</p>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{_t('EMPLOYEE_DASHBOARD')}</h1>
+                  <p className="text-gray-600">{_t('MANAGE_EMPLOYEE_INFO')}</p>
                 </div>
                 {activeTab === 'Employees' && (
                   <div className="flex flex-col sm:flex-row gap-2">
@@ -73,14 +76,14 @@ function Employee() {
                       onClick={() => setIsAddModalOpen(true)}
                     >
                       <UserRoundPlus className="w-5 h-5" />
-                      Add Employee
+                      {_t('ADD_EMPLOYEE_BTN')}
                     </button>
                     <button 
                       className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-md transition-all duration-200"
                       onClick={() => setIsDeleteModalOpen(true)}
                     >
                       <UserMinus className="w-5 h-5" />
-                      Employee Logs
+                      {_t('EMPLOYEE_LOGS')}
                     </button>
                   </div>
                 )}
@@ -114,7 +117,6 @@ function Employee() {
           </div>
         </div>
 
-        
 
         {/* Employee Content */}
         {activeTab === 'Employees' ? (
@@ -124,8 +126,8 @@ function Employee() {
             <div className="max-w-7xl mx-auto bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
               <p className="text-gray-600">
                 {activeTab === 'Work Teams'
-                  ? 'Work teams management content goes here...'
-                  : 'Employee actions content goes here...'}
+                  ? _t('WORK_TEAMS_PLACEHOLDER')
+                  : _t('EMPLOYEES_ACTION_PLACEHOLDER')}
               </p>
             </div>
           </div>

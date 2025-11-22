@@ -5,15 +5,19 @@ import { useNavigate } from 'react-router-dom';
 import VacationRequestsTable from './vecation_request'; // Add this import
 import AdvanceRequestsTable from './advance_vecation'; // NEW: use advance requests component
 import OvertimeRequestsTable from './overtime'; // NEW: use overtime component
+import { t as _t } from '../../i18n/i18n';
+import { getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 export default function ReqDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Vacation Request');
+  const [lang, setLang] = useState(_getLang());
+  React.useEffect(() => _subscribe(setLang), []);
 
   const tabs = [
-    { id: 'Vacation Request', label: 'Vacation Request', icon: Calendar },
-    { id: 'Advance Request', label: 'Advance Request', icon: DollarSign },
-    { id: 'Over Time', label: 'Over Time', icon: Clock }
+    { id: 'Vacation Request', label: _t('REQUESTS_VACATION') || 'Vacation Request', icon: Calendar },
+    { id: 'Advance Request', label: _t('REQUESTS_ADVANCE') || 'Advance Request', icon: DollarSign },
+    { id: 'Over Time', label: _t('REQUESTS_OVERTIME') || 'Over Time', icon: Clock }
   ];
 
   // Sample data for each tab with employee details
@@ -67,12 +71,12 @@ export default function ReqDashboard() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1 p-6 lg:p-8 overflow-auto ml-20 xl:ml-72 transition-all duration-300">
+      <div className={`flex-1 p-6 lg:p-8 overflow-auto ${lang === 'ar' ? 'mr-20 xl:mr-72' : 'ml-20 xl:ml-72'} transition-all duration-300`}>
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Requests Dashboard</h1>
-            <p className="text-gray-600">Manage employee requests for vacations, advances, and overtime</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{_t('REQUESTS_DASHBOARD') || 'Requests Dashboard'}</h1>
+            <p className="text-gray-600">{_t('REQUESTS_SUBTITLE') || 'Manage employee requests for vacations, advances, and overtime'}</p>
           </div>
 
           {/* Tab Navigation */}
@@ -106,7 +110,7 @@ export default function ReqDashboard() {
 
             {getFilteredData().length === 0 && (
               <div className="px-6 py-12 text-center text-gray-500">
-                No requests found
+                {_t('NO_DATA_FOUND')}
               </div>
             )}
           </div>

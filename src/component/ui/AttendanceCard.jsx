@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { t as _t } from '../../i18n/i18n';
 
 const formatCount = (value) => new Intl.NumberFormat().format(value);
 
@@ -41,18 +42,18 @@ export default function AttendanceCards({ data }) {
   };
 
   if (loading) {
-    return <div className="p-4 text-center">Loading...</div>;
+    return <div className="p-4 text-center">{_t('LOADING')}</div>;
   }
 
   if (error) {
-    return <div className="p-4 text-center text-red-600">Error: {error}</div>;
+    return <div className="p-4 text-center text-red-600">{_t('ERROR')}: {error}</div>;
   }
 
   const cards = [
-    { count: dashboardData?.totalEmployees || 0, label: 'Employee', color: 'bg-blue-600' },
-    { count: dashboardData?.totalAttendaceToday || 0, label: 'Attendance', color: 'bg-green-500' },
-    { count: dashboardData?.totalAbsentToday || 0, label: 'Absent', color: 'bg-red-600' },
-    { count: dashboardData?.totalFreeToday || 0, label: 'Day Off - Holiday', color: 'bg-yellow-500' }
+    { count: dashboardData?.totalEmployees || 0, label: _t('EMPLOYEE_SINGULAR'), color: 'bg-blue-600' },
+    { count: dashboardData?.totalAttendaceToday || 0, label: _t('ATTENDANCE'), color: 'bg-green-500' },
+    { count: dashboardData?.totalAbsentToday || 0, label: _t('ABSENT'), color: 'bg-red-600' },
+    { count: dashboardData?.totalFreeToday || 0, label: _t('DAY_OFF_HOLIDAY'), color: 'bg-yellow-500' }
   ];
 
   return (

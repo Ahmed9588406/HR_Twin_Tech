@@ -15,7 +15,7 @@ import {
 import logo from '../../assets/images/logo.png';
 import adminLogo from '../../assets/images/admin_logo.jpg';
 import { NotificationModal } from './notification';
-
+import { t as _t } from '../../i18n/i18n';
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -136,7 +136,7 @@ export default function Sidebar() {
     <div 
       className={`${
         isOpen ? 'w-72' : 'w-20'
-      } bg-gradient-to-br from-emerald-600 via-green-600 to-green-700 text-white transition-all duration-300 ease-in-out flex flex-col shadow-2xl h-screen fixed left-0 top-0 z-40`}
+      } bg-gradient-to-br from-emerald-600 via-green-600 to-green-700 text-white transition-all duration-300 ease-in-out flex flex-col shadow-2xl h-screen fixed ${language === 'ar' ? 'right-0' : 'left-0'} top-0 z-40`}
     >
       {/* Header */}
       <div className={`${isOpen ? 'px-6 py-5' : 'px-4 py-5'} flex items-center ${isOpen ? 'justify-between' : 'justify-center'} border-b border-white/10 backdrop-blur-sm`}>
@@ -154,14 +154,14 @@ export default function Sidebar() {
                 </div>
               </div>
               <div>
-                <h1 className="text-lg font-bold tracking-tight">HR System</h1>
-                <p className="text-xs text-green-100">Management Portal</p>
+                <h1 className="text-lg font-bold tracking-tight">{_t('APP_TITLE')}</h1>
+                <p className="text-xs text-green-100">{_t('APP_SUBTITLE')}</p>
               </div>
             </div>
             <button
               onClick={toggleSidebar}
               className="p-2 hover:bg-white/10 rounded-lg transition-all duration-200 hover:rotate-90"
-              aria-label="Close sidebar"
+              aria-label={_t('TOOLTIP_CLOSE_SIDEBAR')}
             >
               <X size={20} />
             </button>
@@ -170,7 +170,7 @@ export default function Sidebar() {
           <button
             onClick={toggleSidebar}
             className="relative group"
-            aria-label="Open sidebar"
+            aria-label={_t('TOOLTIP_OPEN_SIDEBAR')}
           >
             <div className="absolute inset-0 bg-white rounded-2xl blur-md opacity-40"></div>
             <div className="relative flex items-center justify-center rounded-2xl bg-white p-2.5 shadow-xl border-2 border-white/50 hover:border-white transition-all duration-300 hover:scale-105">
@@ -205,7 +205,7 @@ export default function Sidebar() {
               >
                 {/* Active indicator */}
                 {activeItem === item.label && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-green-600 rounded-r-full"></div>
+                  <div className={`absolute ${language === 'ar' ? 'right-0 rounded-l-full' : 'left-0 rounded-r-full'} top-1/2 -translate-y-1/2 w-1.5 h-8 bg-green-600`}></div>
                 )}
                 
                 <div className={`flex items-center ${isOpen ? 'gap-3.5' : 'gap-0'}`}>
@@ -219,7 +219,11 @@ export default function Sidebar() {
                     <span className={`font-medium text-[15px] ${
                       activeItem === item.label ? 'font-semibold' : ''
                     }`}>
-                      {item.label}
+                      {item.label === 'Dashboard' && _t('SIDEBAR_DASHBOARD')}
+                      {item.label === 'Employees' && _t('SIDEBAR_EMPLOYEES')}
+                      {item.label === 'Requests' && _t('SIDEBAR_REQUESTS')}
+                      {item.label === 'Financials' && _t('SIDEBAR_FINANCIALS')}
+                      {item.label === 'Settings' && _t('SIDEBAR_SETTINGS')}
                     </span>
                   )}
                 </div>
@@ -245,7 +249,7 @@ export default function Sidebar() {
 
               {/* Submenu */}
               {item.children && isOpen && expandedItems[item.label] && (
-                <ul className="mt-1.5 ml-5 space-y-1 border-l-2 border-white/10 pl-3">
+                <ul className={`mt-1.5 space-y-1 ${language === 'ar' ? 'mr-5 pr-3 border-r-2' : 'ml-5 pl-3 border-l-2'} border-white/10`}>
                   {item.children.map((child) => (
                     <li key={child.label}>
                       <button
@@ -293,7 +297,7 @@ export default function Sidebar() {
                     ref={notificationButtonRef}
                     onClick={() => setIsNotificationOpen(!isNotificationOpen)}
                     className="relative p-1.5 hover:bg-white/10 rounded-lg transition-all duration-200 hover:scale-110"
-                    aria-label="Notifications"
+                    aria-label={_t('TOOLTIP_NOTIFICATIONS')}
                   >
                     <Bell size={15} />
                     {unreadCount > 0 && (
@@ -307,8 +311,8 @@ export default function Sidebar() {
                   <button 
                     onClick={toggleLanguage}
                     className="px-2 py-1 text-xs font-semibold bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-200"
-                    aria-label="Language"
-                    title={language === 'en' ? 'Switch to Arabic' : 'التبديل إلى الإنجليزية'}
+                    aria-label={_t('TOOLTIP_LANGUAGE')}
+                    title={language === 'en' ? _t('SWITCH_TO_ARABIC') : _t('SWITCH_TO_ENGLISH')}
                   >
                     {/* show Arabic short char when ar selected */}
                     {language === 'en' ? 'EN' : 'ع'}
@@ -317,7 +321,7 @@ export default function Sidebar() {
                   <button 
                     onClick={handleLogout}
                     className="p-1.5 hover:bg-white/10 rounded-lg transition-all duration-200 hover:scale-110"
-                    aria-label="Logout"
+                    aria-label={_t('TOOLTIP_LOGOUT')}
                   >
                     <LogOut size={15} />
                   </button>

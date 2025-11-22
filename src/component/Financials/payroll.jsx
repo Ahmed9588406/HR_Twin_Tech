@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { DollarSign, Gift, TrendingDown, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { fetchFinancialData, getCount } from './finantial_api';
+import { t as _t } from '../../i18n/i18n';
 
 export default function PayrollDashboard() {
   const navigate = useNavigate();
@@ -132,7 +133,7 @@ export default function PayrollDashboard() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading payroll data...</p>
+          <p className="mt-4 text-gray-600">{_t('LOADING')}</p>
         </div>
       </div>
     );
@@ -142,7 +143,7 @@ export default function PayrollDashboard() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Error loading data</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{_t('ERROR_LOADING_DATA')}</h2>
           <p className="text-gray-600">{error}</p>
         </div>
       </div>
@@ -158,9 +159,9 @@ export default function PayrollDashboard() {
             <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
               <DollarSign size={24} />
             </div>
-            <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">Net Pay</span>
+            <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">{_t('NET_PAY')}</span>
           </div>
-          <h3 className="text-sm font-medium opacity-90 mb-1">Total Net Pay</h3>
+          <h3 className="text-sm font-medium opacity-90 mb-1">{_t('TOTAL_NET_PAY')}</h3>
           <p className="text-3xl font-bold">{totalNetPay.toFixed(2)} EGP</p>
         </div>
 
@@ -169,9 +170,9 @@ export default function PayrollDashboard() {
             <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
               <Gift size={24} />
             </div>
-            <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">Rewards</span>
+            <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">{_t('REWARDS_CARD')}</span>
           </div>
-          <h3 className="text-sm font-medium opacity-90 mb-1">Total Rewards</h3>
+          <h3 className="text-sm font-medium opacity-90 mb-1">{_t('TOTAL_REWARDS')}</h3>
           <p className="text-3xl font-bold">{totalRewards.toFixed(2)} EGP</p>
         </div>
 
@@ -180,9 +181,9 @@ export default function PayrollDashboard() {
             <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
               <TrendingDown size={24} />
             </div>
-            <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">Discounts</span>
+            <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">{_t('DISCOUNTS_CARD')}</span>
           </div>
-          <h3 className="text-sm font-medium opacity-90 mb-1">Total Discounts</h3>
+          <h3 className="text-sm font-medium opacity-90 mb-1">{_t('TOTAL_DISCOUNTS')}</h3>
           <p className="text-3xl font-bold">{totalDiscounts.toFixed(2)} EGP</p>
         </div>
       </div>
@@ -193,7 +194,7 @@ export default function PayrollDashboard() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
-            placeholder="Search employees..."
+            placeholder={_t('SEARCH_EMPLOYEES')}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
           />
         </div>
@@ -205,14 +206,14 @@ export default function PayrollDashboard() {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Employee</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Days</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Hours</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Salary</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Rewards</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Discounts</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Attendance</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Total</th>
+                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">{_t('EMPLOYEE_COL')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('DAYS')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('HOURS')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('SALARY')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('REWARDS_CARD')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('DISCOUNTS_CARD')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('ATTENDANCE')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('TOTAL')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">

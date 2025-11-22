@@ -4,15 +4,18 @@ import PayrollDashboard from './payroll';
 import RewardsDashboard from './rewards';
 import DiscountsDashboard from './discounts';
 import { Search, DollarSign, Award, TrendingDown } from 'lucide-react';
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 export default function FinancialsDashboard() {
   const [activeTab, setActiveTab] = useState('PayRoll');
   const [searchTerm, setSearchTerm] = useState('');
+  const [lang, setLang] = useState(_getLang());
+  React.useEffect(() => _subscribe(setLang), []);
 
   const tabs = [
-    { id: 'PayRoll', label: 'PayRoll', icon: DollarSign },
-    { id: 'Rewards', label: 'Rewards', icon: Award },
-    { id: 'Discount', label: 'Discount', icon: TrendingDown }
+    { id: 'PayRoll', label: _t('TAB_PAYROLL'), icon: DollarSign },
+    { id: 'Rewards', label: _t('TAB_REWARDS'), icon: Award },
+    { id: 'Discount', label: _t('TAB_DISCOUNT'), icon: TrendingDown }
   ];
 
   // Sample data for each tab
@@ -60,11 +63,11 @@ export default function FinancialsDashboard() {
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="bg-green-50 border-b border-green-100">
             <div className="grid grid-cols-5 gap-4 px-6 py-4">
-              <div className="text-green-600 font-semibold">Employee Name</div>
-              <div className="text-green-600 font-semibold">Salary</div>
-              <div className="text-green-600 font-semibold">Bonus</div>
-              <div className="text-green-600 font-semibold">Total</div>
-              <div className="text-green-600 font-semibold">Status</div>
+              <div className="text-green-600 font-semibold">{_t('EMPLOYEE_NAME')}</div>
+              <div className="text-green-600 font-semibold">{_t('SALARY')}</div>
+              <div className="text-green-600 font-semibold">{_t('BONUS')}</div>
+              <div className="text-green-600 font-semibold">{_t('TOTAL')}</div>
+              <div className="text-green-600 font-semibold">{_t('STATUS')}</div>
             </div>
           </div>
           <div className="divide-y divide-gray-100">
@@ -78,7 +81,7 @@ export default function FinancialsDashboard() {
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                     item.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                   }`}>
-                    {item.status}
+                    {item.status === 'Active' ? _t('ACTIVE') : item.status}
                   </span>
                 </div>
               </div>
@@ -91,10 +94,10 @@ export default function FinancialsDashboard() {
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="bg-green-50 border-b border-green-100">
             <div className="grid grid-cols-4 gap-4 px-6 py-4">
-              <div className="text-green-600 font-semibold">Category</div>
-              <div className="text-green-600 font-semibold">Amount</div>
-              <div className="text-green-600 font-semibold">Date</div>
-              <div className="text-green-600 font-semibold">Status</div>
+              <div className="text-green-600 font-semibold">{_t('CATEGORY')}</div>
+              <div className="text-green-600 font-semibold">{_t('AMOUNT')}</div>
+              <div className="text-green-600 font-semibold">{_t('DATE')}</div>
+              <div className="text-green-600 font-semibold">{_t('STATUS')}</div>
             </div>
           </div>
           <div className="divide-y divide-gray-100">
@@ -107,7 +110,7 @@ export default function FinancialsDashboard() {
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                     item.status === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                   }`}>
-                    {item.status}
+                    {item.status === 'Approved' ? _t('APPROVED') : item.status === 'Pending' ? _t('PENDING') : item.status}
                   </span>
                 </div>
               </div>
@@ -120,10 +123,10 @@ export default function FinancialsDashboard() {
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="bg-green-50 border-b border-green-100">
             <div className="grid grid-cols-4 gap-4 px-6 py-4">
-              <div className="text-green-600 font-semibold">Department</div>
-              <div className="text-green-600 font-semibold">Allocated</div>
-              <div className="text-green-600 font-semibold">Spent</div>
-              <div className="text-green-600 font-semibold">Remaining</div>
+              <div className="text-green-600 font-semibold">{_t('DEPARTMENT_COL')}</div>
+              <div className="text-green-600 font-semibold">{_t('ALLOCATED')}</div>
+              <div className="text-green-600 font-semibold">{_t('SPENT')}</div>
+              <div className="text-green-600 font-semibold">{_t('REMAINING_COL')}</div>
             </div>
           </div>
           <div className="divide-y divide-gray-100">
@@ -158,12 +161,12 @@ export default function FinancialsDashboard() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1 p-6 lg:p-8 overflow-auto ml-20 xl:ml-72 transition-all duration-300">
+      <div className={`flex-1 p-6 lg:p-8 overflow-auto ${lang === 'ar' ? 'mr-20 xl:mr-72' : 'ml-20 xl:ml-72'} transition-all duration-300`}>
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Financials Dashboard</h1>
-            <p className="text-gray-600">Manage salaries, expenses, and budgets</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{_t('FINANCIALS_DASHBOARD')}</h1>
+            <p className="text-gray-600">{_t('FINANCIALS_SUBTITLE')}</p>
           </div>
 
           {/* Tab Navigation */}
@@ -202,7 +205,7 @@ export default function FinancialsDashboard() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
                       type="text"
-                      placeholder="Search financials"
+                      placeholder={_t('SEARCH_FINANCIALS')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -212,7 +215,7 @@ export default function FinancialsDashboard() {
                 {renderContent()}
                 {getFilteredData().length === 0 && (
                   <div className="px-6 py-12 text-center text-gray-500">
-                    No data found
+                    {_t('NO_DATA_FOUND')}
                   </div>
                 )}
               </>

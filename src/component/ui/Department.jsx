@@ -150,17 +150,17 @@ export default function Department({
         <div className="flex items-center gap-2">
           <div className="w-1 h-6 bg-gradient-to-b from-green-500 to-emerald-600 rounded-full" />
           <h2 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-            {title}
+            {title && title !== 'Department' ? title : _t('DEPARTMENT')}
           </h2>
         </div>
         <div className="flex items-center gap-2">
           <div className="text-xs sm:text-sm font-semibold text-gray-700 bg-gradient-to-r from-green-50 to-emerald-50 px-3 py-1.5 rounded-full border border-green-200 shadow-sm">
             <span className="text-green-600">{total}</span>
-            <span className="text-gray-500 ml-1 hidden sm:inline">Total</span>
+            <span className="text-gray-500 ml-1 hidden sm:inline">{_t('TOTAL')}</span>
           </div>
           {hasManyDepartments && (
             <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full hidden md:block">
-              {chartData.length} depts
+              {chartData.length} {_t('DEPTS_SHORT')}
             </div>
           )}
         </div>
@@ -213,7 +213,7 @@ export default function Department({
               <svg className="w-16 h-16 mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
-              <p className="font-medium">No department data available</p>
+              <p className="font-medium">{_t('NO_DEPARTMENT_DATA')}</p>
             </div>
           )}
         </div>
@@ -230,13 +230,13 @@ export default function Department({
       {chartData.length > 0 && (
         <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
           <span>
-            Largest: <span className="font-semibold text-gray-700">
-              {Math.max(...chartData.map(d => d.value))} employees
+            {_t('LARGEST')}: <span className="font-semibold text-gray-700">
+              {Math.max(...chartData.map(d => d.value))} {_t('EMPLOYEES')}
             </span>
           </span>
           <span>
-            Average: <span className="font-semibold text-gray-700">
-              {Math.round(total / chartData.length)} employees
+            {_t('AVERAGE')}: <span className="font-semibold text-gray-700">
+              {Math.round(total / chartData.length)} {_t('EMPLOYEES')}
             </span>
           </span>
         </div>

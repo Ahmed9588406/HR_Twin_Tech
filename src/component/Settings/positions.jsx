@@ -3,6 +3,7 @@ import { Edit2, X, Check, Plus } from 'lucide-react';
 import PosEditModal from './Pos_editmodal';
 import { fetchPositions, createPosition, updatePosition as updatePositionApi, deletePosition } from './api/positions_api';
 import { fetchDepartments } from './api/department_api';
+import { t as _t } from '../../i18n/i18n';
 
 export default function Positions() {
   const [positions, setPositions] = useState([]);
@@ -32,7 +33,7 @@ export default function Positions() {
     if (newPosition.name && newPosition.department) {
       const department = departments.find(d => d.name === newPosition.department);
       if (!department) {
-        alert('Department not found. Please select a valid department.');
+        alert(_t('DEPARTMENT') + ' ' + _t('NOT_FOUND') || 'Department not found.');
         return;
       }
 
@@ -115,9 +116,9 @@ export default function Positions() {
         <table className="min-w-full text-left">
           <thead>
             <tr className="bg-green-50">
-              <th className="px-6 py-4 text-green-600 font-semibold">Name</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">Department</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">Actions</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">{_t('NAME')}</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">{_t('DEPARTMENT')}</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">{_t('ACTIONS')}</th>
             </tr>
           </thead>
           <tbody>
@@ -159,7 +160,7 @@ export default function Positions() {
                     value={newPosition.name}
                     onChange={(e) => setNewPosition({ ...newPosition, name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="Position name"
+                    placeholder={_t('NAME')}
                   />
                 </td>
                 <td className="px-6 py-4">
@@ -168,7 +169,7 @@ export default function Positions() {
                     onChange={(e) => setNewPosition({ ...newPosition, department: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
-                    <option value="">Select Department</option>
+                    <option value="">{_t('SELECT_DEPT')}</option>
                     {departments.map((dept) => (
                       <option key={dept.id} value={dept.name}>
                         {dept.name}
@@ -181,14 +182,14 @@ export default function Positions() {
                     <button
                       onClick={handleSaveNew}
                       className="text-green-600 hover:text-green-800 transition-colors"
-                      title="Save"
+                      title={_t('SAVE')}
                     >
                       <Check size={18} />
                     </button>
                     <button
                       onClick={handleCancelAdd}
                       className="text-red-500 hover:text-red-700 transition-colors"
-                      title="Cancel"
+                      title={_t('CANCEL')}
                     >
                       <X size={18} />
                     </button>
@@ -204,7 +205,7 @@ export default function Positions() {
                     <button
                       onClick={handleAdd}
                       className="bg-green-400 hover:bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg border-4 border-white transition-all duration-200"
-                      title="Add Position"
+                      title={_t('ADD') || 'Add'}
                     >
                       <Plus size={20} />
                     </button>

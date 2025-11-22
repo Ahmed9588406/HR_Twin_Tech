@@ -77,7 +77,7 @@ export default function WorkPlace() {
       setIsAdding(false);
       setNewWorkplace({ name: '', type: '', company: '', lat: '', lng: '' });
     } catch (error) {
-      alert('Failed to create branch: ' + (error.message || error));
+      alert(_t('FAILED_CREATE_BRANCH') + ': ' + (error.message || error));
     }
   };
 
@@ -159,7 +159,7 @@ export default function WorkPlace() {
       await deleteBranch(id);
       updateWorkplaces((prev) => prev.filter((wp) => wp.id !== id));
     } catch (error) {
-      alert('Failed to delete workplace: ' + (error.message || error));
+      alert(_t('FAILED_DELETE_WORKPLACE') + ': ' + (error.message || error));
     }
   };
 
@@ -170,9 +170,9 @@ export default function WorkPlace() {
           <thead>
             <tr className="bg-green-50">
               <th className="px-6 py-4 text-green-600 font-semibold">{_t('NAME')}</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">Type</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">Company</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">Actions</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">{_t('TYPE')}</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">{_t('COMPANY')}</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">{_t('ACTIONS')}</th>
             </tr>
           </thead>
           <tbody>
@@ -232,7 +232,7 @@ export default function WorkPlace() {
                     value={newWorkplace.type}
                     onChange={(e) => setNewWorkplace({ ...newWorkplace, type: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="Type"
+                    placeholder={_t('TYPE')}
                   />
                 </td>
 
@@ -243,7 +243,7 @@ export default function WorkPlace() {
                       value={newWorkplace.company}
                       onChange={(e) => setNewWorkplace({ ...newWorkplace, company: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                      placeholder="Company"
+                      placeholder={_t('COMPANY')}
                     />
 
                     <div className="flex gap-2 items-center">

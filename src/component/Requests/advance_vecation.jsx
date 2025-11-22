@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { fetchAdvanceRequests } from './requests_api';
+import { t as _t } from '../../i18n/i18n';
 
 export default function AdvanceRequestsTable() {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ export default function AdvanceRequestsTable() {
         setRequests(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Failed to load advance requests:', err);
-        setError('Failed to load advance requests.');
+        setError(_t('FAILED_LOAD_ADVANCE_REQUESTS'));
       } finally {
         setLoading(false);
       }
@@ -36,7 +37,7 @@ export default function AdvanceRequestsTable() {
       <div className="flex items-center justify-center min-h-48">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-500 mx-auto" />
-          <p className="mt-3 text-gray-600">Loading advance requests...</p>
+          <p className="mt-3 text-gray-600">{_t('LOADING_ADVANCE_REQUESTS')}</p>
         </div>
       </div>
     );
@@ -59,7 +60,7 @@ export default function AdvanceRequestsTable() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             type="text"
-            placeholder="Search advance requests..."
+            placeholder={_t('SEARCH_ADVANCE_REQUESTS')}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
@@ -70,12 +71,12 @@ export default function AdvanceRequestsTable() {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Employee</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Request Date</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Amount</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Payment Date</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Status</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">Comment</th>
+                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">{_t('EMPLOYEE_COL')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('REQUEST_DATE')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('AMOUNT')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('PAYMENT_DATE')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('STATUS')}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('COMMENT')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -120,20 +121,20 @@ export default function AdvanceRequestsTable() {
                           : 'bg-red-100 text-red-800'
                       }`}
                     >
-                      {req.requestStatus}
+                      {req.requestStatus === 'APPROVED' ? _t('APPROVED') : req.requestStatus === 'PENDING' ? _t('PENDING') : _t('REJECTED')}
                     </span>
                   </td>
                   <td className="py-4 px-4 text-gray-600">{req.comment}</td>
                 </tr>
               ))}
             </tbody>
-          </table>
 
-          {filtered.length === 0 && (
-            <div className="px-6 py-12 text-center text-gray-500">
-              No advance requests found.
-            </div>
-          )}
+            {filtered.length === 0 && (
+              <div className="px-6 py-12 text-center text-gray-500">
+                {_t('NO_ADVANCE_REQUESTS')}
+              </div>
+            )}
+          </table>
         </div>
       </div>
     </div>
