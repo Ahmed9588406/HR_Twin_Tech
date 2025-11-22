@@ -1,4 +1,4 @@
-const DEPARTMENTS_API_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/setting/departments';
+const DEPARTMENTS_API_URL = 'https://api.shl-hr.com/api/v1/setting/departments';
 
 export const fetchDepartments = async () => {
   try {
@@ -49,7 +49,7 @@ export const fetchDepartmentById = async (id) => {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const url = `https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/setting/department/${id}`;
+    const url = `https://api.shl-hr.com/api/v1/setting/department/${id}`;
     const response = await fetch(url, {
       method: 'GET',
       headers: {

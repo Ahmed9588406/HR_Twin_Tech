@@ -5,7 +5,7 @@ const fetchVacationRequests = async () => {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const response = await fetch('https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/requests/vacation', {
+    const response = await fetch('https://api.shl-hr.com/api/v1/requests/vacation', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -36,7 +36,7 @@ export const fetchRequestById = async (requestId) => {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const response = await fetch(`https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/requests/${requestId}`, {
+    const response = await fetch(`https://api.shl-hr.com/api/v1/requests/${requestId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -194,7 +194,7 @@ export const fetchAdvanceRequests = async () => {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const response = await fetch('https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/requests/advance', {
+    const response = await fetch('https://api.shl-hr.com/api/v1/requests/advance', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -226,7 +226,7 @@ export const fetchOvertimeRequests = async () => {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const response = await fetch('https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/requests/overtime', {
+    const response = await fetch('https://api.shl-hr.com/api/v1/requests/overtime', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

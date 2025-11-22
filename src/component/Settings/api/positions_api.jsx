@@ -1,4 +1,4 @@
-const POSITIONS_API_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/setting/job-positions';
+const POSITIONS_API_URL = 'https://api.shl-hr.com/api/v1/setting/job-positions';
 
 export const fetchPositions = async () => {
   try {
@@ -47,7 +47,7 @@ export const fetchPositionById = async (id) => {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const url = `https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/setting/job-position/${id}`;
+    const url = `https://api.shl-hr.com/api/v1/setting/job-position/${id}`;
     const response = await fetch(url, {
       method: 'GET',
       headers: {

@@ -2,8 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Phone, AlertCircle, Edit, Send, Trash2, Lock, Calendar, Clock, DollarSign, MessageSquare, CheckCircle } from 'lucide-react';
 import { fetchRequestById, approveVacationRequest, rejectVacationRequest } from './requests_api';
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 export default function VacationRequestPage() {
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => _subscribe(setLang), []);
+
   const location = useLocation();
   const navigate = useNavigate();
   const { requestId } = location.state || {};
@@ -11,8 +15,8 @@ export default function VacationRequestPage() {
   const [status, setStatus] = useState('Pending');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [approving, setApproving] = useState(false); // new state
-  const [rejecting, setRejecting] = useState(false); // new state
+  const [approving, setApproving] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
 
   useEffect(() => {
     const loadRequestData = async () => {
@@ -103,7 +107,7 @@ export default function VacationRequestPage() {
       }
 
       // Turn absolute ngrok URL into relative path for the dev proxy
-      // e.g. https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/requests/download?path=...
+      // e.g. https://api.shl-hr.com/api/v1/requests/download?path=...
       // -> /api/v1/requests/download?path=...
       const relativeUrl = fileUrl.replace(/^https?:\/\/[^/]+/, '');
 
@@ -145,7 +149,7 @@ export default function VacationRequestPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading request details...</p>
+          <p className="mt-4 text-gray-600">{_t('LOADING_REQUEST')}</p>
         </div>
       </div>
     );
@@ -155,13 +159,13 @@ export default function VacationRequestPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">No Request Data</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{_t('NO_REQUEST_DATA')}</h2>
           <p className="text-gray-600 mb-4">{error || 'No request information available.'}</p>
           <button 
             onClick={() => navigate('/req-dashboard')}
             className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
           >
-            Go to Requests Dashboard
+            {_t('GO_TO_REQ_DASH')}
           </button>
         </div>
       </div>
@@ -181,7 +185,7 @@ export default function VacationRequestPage() {
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">Back</span>
+            <span className="font-medium">{_t('BACK')}</span>
           </button>
         </div>
       </div>
@@ -217,7 +221,7 @@ export default function VacationRequestPage() {
                   <div className="mt-6 w-full">
                     <div className="border rounded-lg py-3 text-center bg-green-50 border-green-200">
                       <CheckCircle className="w-6 h-6 mx-auto mb-1 text-green-600" />
-                      <span className="font-semibold text-green-700">Active Employee</span>
+                      <span className="font-semibold text-green-700">{_t('ACTIVE_EMPLOYEE')}</span>
                     </div>
                   </div>
 
@@ -254,7 +258,7 @@ export default function VacationRequestPage() {
             {/* Status Card */}
             <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-gray-900">Request Status</h3>
+                <h3 className="text-xl font-bold text-gray-900">{_t('REQUEST_STATUS')}</h3>
                 <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
                   status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
                   status === 'APPROVED' || status === 'Accepted' ? 'bg-green-100 text-green-700' :
@@ -271,14 +275,14 @@ export default function VacationRequestPage() {
                     disabled={rejecting}
                     className={`flex-1 ${rejecting ? 'bg-red-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'} text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl`}
                   >
-                    {rejecting ? 'Rejecting...' : 'Reject'}
+                    {rejecting ? _t('REJECTING') : _t('REJECT')}
                   </button>
                   <button
                     onClick={handleAccept}
                     disabled={approving}
                     className={`flex-1 ${approving ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl`}
                   >
-                    {approving ? 'Approving...' : 'Accept'}
+                    {approving ? _t('APPROVING') : _t('ACCEPT')}
                   </button>
                 </div>
               )}
@@ -286,11 +290,11 @@ export default function VacationRequestPage() {
 
             {/* Request Details Card */}
             <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">Request Details</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-6">{_t('REQUEST_DETAILS')}</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Request Type</label>
+                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{_t('REQUEST_TYPE')}</label>
                   <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-green-600" />
                     <span className="text-gray-900 font-medium capitalize">{requestData.requestType}</span>
@@ -298,7 +302,7 @@ export default function VacationRequestPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Request Date</label>
+                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{_t('REQUEST_DATE')}</label>
                   <div className="flex items-center gap-2">
                     <Clock className="w-5 h-5 text-green-600" />
                     <span className="text-gray-900 font-medium">{requestData.requestDate}</span>
@@ -306,7 +310,7 @@ export default function VacationRequestPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Start Date</label>
+                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{_t('START_DATE')}</label>
                   <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-green-600" />
                     <span className="text-gray-900 font-medium">{requestData.startDate}</span>
@@ -314,7 +318,7 @@ export default function VacationRequestPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">End Date</label>
+                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{_t('END_DATE')}</label>
                   <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-red-600" />
                     <span className="text-gray-900 font-medium">{requestData.endDate}</span>
@@ -324,24 +328,24 @@ export default function VacationRequestPage() {
                 <div className="md:col-span-2">
                   <div className="inline-flex items-center gap-2 bg-green-50 px-4 py-2 rounded-lg">
                     <Clock className="w-4 h-4 text-green-600" />
-                    <span className="text-green-700 font-semibold">Duration: {duration} Days</span>
+                    <span className="text-green-700 font-semibold">{_t('DURATION')}: {duration} {_t('DAYS')}</span>
                   </div>
                 </div>
 
                 <div className="md:col-span-2 space-y-2">
                   <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
                     <MessageSquare className="w-4 h-4" />
-                    Comment
+                    {_t('COMMENT')}
                   </label>
                   <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <p className="text-gray-700">{requestData.comment || 'No comment provided.'}</p>
+                    <p className="text-gray-700">{requestData.comment || _t('NO_COMMENT')}</p>
                   </div>
                 </div>
 
                 {/* File Paths */}
                 {requestData.filePaths && requestData.filePaths.length > 0 && (
                   <div className="md:col-span-2 space-y-2">
-                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Attached Files</label>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{_t('ATTACHED_FILES')}</label>
                     <div className="space-y-2">
                       {requestData.filePaths.map((filePath, index) => (
                         <button
@@ -349,7 +353,7 @@ export default function VacationRequestPage() {
                           onClick={() => downloadFile(filePath)}
                           className="block bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg p-3 transition-colors font-medium text-left w-full"
                         >
-                          📎 Download Document {index + 1}
+                          📎 {_t('DOWNLOAD_DOC')} {index + 1}
                         </button>
                       ))}
                     </div>
@@ -362,29 +366,29 @@ export default function VacationRequestPage() {
             <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
               <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <DollarSign className="w-6 h-6 text-green-600" />
-                Financial Details
+                {_t('FINANCIAL_DETAILS')}
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">OverTime Hours</label>
+                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{_t('OVERTIME_MINS')}</label>
                   <div className="text-2xl font-bold text-gray-400">-</div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Advance Amount</label>
+                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{_t('ADVANCE_AMOUNT')}</label>
                   <div className="text-2xl font-bold text-gray-400">-</div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">OverTime Amount</label>
+                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{_t('OVERTIME_AMOUNT')}</label>
                   <div className="text-2xl font-bold text-gray-400">-</div>
                 </div>
 
                 <div className="md:col-span-3 pt-4 border-t border-gray-200">
                   <label className="flex items-center gap-3 cursor-pointer group">
                     <input type="checkbox" className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500" />
-                    <span className="text-gray-700 font-medium group-hover:text-gray-900 transition-colors">Paid From Company</span>
+                    <span className="text-gray-700 font-medium group-hover:text-gray-900 transition-colors">{_t('PAID_FROM_COMPANY')}</span>
                   </label>
                 </div>
               </div>

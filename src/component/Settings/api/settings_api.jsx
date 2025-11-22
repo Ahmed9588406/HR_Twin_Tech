@@ -1,8 +1,8 @@
 // use the provided absolute URL for all requests
-const API_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/setting/branch';
-const COMPANY_API_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/setting/company';
-const SHIFTS_API_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/setting/shifts';
-const DEPARTMENTS_API_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/setting/departments';
+const API_URL = 'https://api.shl-hr.com/api/v1/setting/branch';
+const COMPANY_API_URL = 'https://api.shl-hr.com/api/v1/setting/company';
+const SHIFTS_API_URL = 'https://api.shl-hr.com/api/v1/setting/shifts';
+const DEPARTMENTS_API_URL = 'https://api.shl-hr.com/api/v1/setting/departments';
 
 export const fetchBranches = async () => {
   try {

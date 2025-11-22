@@ -183,7 +183,7 @@ export default function EmployeeManager() {
   useEffect(() => {
     const fetchAttendanceStats = async () => {
       try {
-        const response = await fetch('https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/attendance/statistics');
+        const response = await fetch('https://api.shl-hr.com/api/v1/attendance/statistics');
         const text = await response.text();
         try {
           const data = JSON.parse(text);

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Bell, X, Check, Trash2, Clock, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Bell, X, Check, Trash2, Clock, FileText, AlertCircle, CheckCircle, Wifi, WifiOff } from 'lucide-react';
 import { notificationAPI } from './api/notification_api';
 import { showBrowserNotification } from '../../firebase_config';
 
@@ -70,6 +70,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, onClick, isSel
             onToggleSelect(notification.id);
           }}
           className="mt-1 w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
+          onClick={(e) => e.stopPropagation()}
         />
         <NotificationIcon type={notification.type} />
         
@@ -150,7 +151,6 @@ const ToastNotification = ({ notification, onClose }) => {
 // Play notification sound
 const playNotificationSound = () => {
   try {
-    // Create a more pleasant notification sound
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -198,7 +198,6 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
   const [selectedNotifications, setSelectedNotifications] = useState(new Set());
   const [toastNotification, setToastNotification] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0); // Key to force list re-render
   const modalRef = useRef(null);
   const subscriptionRef = useRef(null);
   const isModalOpenRef = useRef(isOpen);
@@ -214,24 +213,71 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
     isModalOpenRef.current = isOpen;
   }, [isOpen]);
   
-  // Initialize WebSocket connection on mount (persistent connection)
+  // Handle new notification callback
+  const handleNewNotification = useCallback((notification) => {
+    console.log('🔔 NotificationModal received new notification:', notification);
+    
+    setNotifications(prev => {
+      // Check if notification already exists
+      const exists = prev.some(n => n.id === notification.id);
+      if (exists) {
+        console.log('⏭️ Notification already in list, skipping:', notification.id);
+        return prev;
+      }
+      
+      console.log('✨ Adding new notification to list');
+      return [notification, ...prev];
+    });
+    
+    // Play notification sound
+    playNotificationSound();
+    
+    // Show browser notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+      showBrowserNotification(notification.title || 'New Notification', {
+        body: notification.message || 'You have a new notification',
+        icon: '/notification-icon.png',
+        tag: notification.id?.toString(),
+        requireInteraction: false
+      });
+    }
+    
+    // Show toast notification only if modal is closed
+    if (!isModalOpenRef.current) {
+      setToastNotification(notification);
+    }
+  }, []);
+  
+  // Initialize WebSocket connection on mount
   useEffect(() => {
     console.log('🚀 Component mounted, initializing WebSocket for empCode:', empCode);
     
     const initializeConnection = async () => {
       try {
         setConnectionStatus('connecting');
-        await notificationAPI.connect(empCode);
-        setConnectionStatus('connected');
-        console.log('✅ WebSocket connected for employee:', empCode);
+        
+        // Connect to WebSocket
+        const connected = await notificationAPI.connect(empCode);
+        
+        if (connected) {
+          setConnectionStatus('connected');
+          console.log('✅ WebSocket connected successfully');
+        } else {
+          setConnectionStatus('disconnected');
+          console.error('❌ WebSocket connection failed');
+        }
         
         // Load initial notifications
+        setLoading(true);
         const data = await notificationAPI.fetchNotifications(empCode);
         setNotifications(data);
         console.log('📥 Initial load:', data.length, 'notifications');
+        setLoading(false);
       } catch (error) {
-        console.error('❌ WebSocket connection failed:', error);
+        console.error('❌ Initialization failed:', error);
         setConnectionStatus('disconnected');
+        setLoading(false);
+        
         // Retry connection after 5 seconds
         setTimeout(initializeConnection, 5000);
       }
@@ -240,13 +286,42 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
     initializeConnection();
     
     return () => {
-      console.log('🔌 Component unmounting, disconnecting WebSocket');
+      console.log('🔌 Component unmounting');
       if (subscriptionRef.current) {
         subscriptionRef.current();
+        subscriptionRef.current = null;
       }
-      notificationAPI.disconnect();
+      // Don't disconnect on unmount to keep connection alive
     };
   }, [empCode]);
+  
+  // Subscribe to real-time notifications
+  useEffect(() => {
+    console.log('📡 Setting up notification subscription');
+    
+    const unsubscribe = notificationAPI.subscribe(handleNewNotification);
+    subscriptionRef.current = unsubscribe;
+    
+    console.log('✅ Subscription active, waiting for notifications...');
+    
+    return () => {
+      if (subscriptionRef.current) {
+        console.log('🔌 Cleaning up subscription');
+        subscriptionRef.current();
+        subscriptionRef.current = null;
+      }
+    };
+  }, [handleNewNotification]);
+  
+  // Monitor connection status
+  useEffect(() => {
+    const checkConnection = setInterval(() => {
+      const state = notificationAPI.getConnectionState();
+      setConnectionStatus(state);
+    }, 2000);
+    
+    return () => clearInterval(checkConnection);
+  }, []);
   
   // Load notifications when modal opens
   useEffect(() => {
@@ -262,54 +337,6 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
     }
   }, [isOpen, empCode]);
   
-  // Subscribe to real-time notifications (always active)
-  useEffect(() => {
-    console.log('📡 Setting up notification subscription');
-    
-    const unsubscribe = notificationAPI.subscribe((notification) => {
-      console.log('🔔 NEW NOTIFICATION RECEIVED:', notification);
-      
-      setNotifications(prev => {
-        // Check if notification already exists
-        if (prev.some(n => n.id === notification.id)) {
-          return prev;
-        }
-        
-        console.log('✨ Adding new notification to list');
-        return [notification, ...prev];
-      });
-      
-      // Force immediate re-render of the list by updating the key
-      setRefreshKey(prev => prev + 1);
-      
-      // Play notification sound
-      playNotificationSound();
-      
-      // Show browser notification
-      if ('Notification' in window && Notification.permission === 'granted') {
-        showBrowserNotification(notification.title || 'New Notification', {
-          body: notification.message || 'You have a new notification',
-          icon: '/notification-icon.png',
-          tag: notification.id,
-          requireInteraction: false
-        });
-      }
-      
-      // Show toast notification only if modal is closed
-      if (!isModalOpenRef.current) {
-        setToastNotification(notification);
-      }
-    });
-    
-    subscriptionRef.current = unsubscribe;
-    
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
-  }, []);
-  
   // Close modal when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -317,7 +344,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
         isOpen &&
         modalRef.current &&
         !modalRef.current.contains(event.target) &&
-        buttonRef.current &&
+        buttonRef?.current &&
         !buttonRef.current.contains(event.target)
       ) {
         onClose();
@@ -374,7 +401,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
   const connectWebSocket = async () => {
     try {
       setConnectionStatus('connecting');
-      await notificationAPI.connect(empCode);
+      await notificationAPI.forceReconnect();
       setConnectionStatus('connected');
       console.log('✅ WebSocket reconnected');
     } catch (error) {
@@ -383,23 +410,9 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
     }
   };
   
-  const loadNotifications = async () => {
-    setLoading(true);
-    try {
-      console.log('📥 Fetching notifications for empCode:', empCode);
-      const data = await notificationAPI.fetchNotifications(empCode);
-      setNotifications(data);
-      console.log('📥 Loaded notifications:', data.length);
-    } catch (error) {
-      console.error('❌ Failed to load notifications:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await notificationAPI.markAsRead(empCode, notificationId); // Use empCode
+      await notificationAPI.markAsRead(empCode, notificationId);
       setNotifications(prev =>
         prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
       );
@@ -410,7 +423,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
   
   const handleMarkAllAsRead = async () => {
     try {
-      await notificationAPI.markAllAsRead(empCode); // Use empCode
+      await notificationAPI.markAllAsRead(empCode);
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     } catch (error) {
       console.error('Failed to mark all as read:', error);
@@ -419,8 +432,13 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
   
   const handleDelete = async (notificationId) => {
     try {
-      await notificationAPI.deleteNotification(empCode, notificationId); // Use empCode
+      await notificationAPI.deleteNotification(empCode, notificationId);
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      setSelectedNotifications(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(notificationId);
+        return newSet;
+      });
     } catch (error) {
       console.error('Failed to delete notification:', error);
     }
@@ -455,17 +473,17 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
   
   const handleDeleteSelected = async () => {
     if (selectedNotifications.size === 0) return;
+    
     const idsToDelete = Array.from(selectedNotifications);
+    
     try {
-      await Promise.all(idsToDelete.map(id => notificationAPI.deleteNotification(empCode, id))); // Use empCode
+      await Promise.all(idsToDelete.map(id => notificationAPI.deleteNotification(empCode, id)));
       setNotifications(prev => prev.filter(n => !selectedNotifications.has(n.id)));
       setSelectedNotifications(new Set());
     } catch (error) {
       console.error('Failed to delete selected notifications:', error);
     }
   };
-  
-  const filteredNotifications = notifications;
   
   const unreadCount = notifications.filter(n => !n.read).length;
   
@@ -511,18 +529,26 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
             <div className="flex items-center gap-2">
               <Bell className="w-5 h-5" />
               <h3 className="font-bold text-lg">Notifications</h3>
+              {unreadCount > 0 && (
+                <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs font-semibold">
+                  {unreadCount}
+                </span>
+              )}
               {connectionStatus === 'connected' && (
-                <span className="w-2 h-2 bg-green-300 rounded-full animate-pulse" title="Live - Connected"></span>
+                <Wifi className="w-4 h-4 animate-pulse" title="Live - Connected" />
               )}
               {connectionStatus === 'connecting' && (
-                <span className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse" title="Connecting..."></span>
+                <span className="text-xs bg-yellow-500 px-2 py-1 rounded" title="Connecting...">
+                  Connecting...
+                </span>
               )}
               {connectionStatus === 'disconnected' && (
                 <button
                   onClick={connectWebSocket}
-                  className="text-xs bg-red-500 hover:bg-red-600 px-2 py-1 rounded"
+                  className="text-xs bg-red-500 hover:bg-red-600 px-2 py-1 rounded flex items-center gap-1"
                   title="Click to reconnect"
                 >
+                  <WifiOff className="w-3 h-3" />
                   Reconnect
                 </button>
               )}
@@ -552,8 +578,8 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
           </div>
         </div>
         
-        {/* Notifications List - Uses refreshKey to force re-render on new notification */}
-        <div className="max-h-96 overflow-y-auto" key={refreshKey}>
+        {/* Notifications List */}
+        <div className="max-h-96 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="w-8 h-8 border-4 border-green-200 border-t-green-600 rounded-full animate-spin"></div>
@@ -587,15 +613,13 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
               disabled={unreadCount === 0}
               className="flex-1 py-2 text-sm font-medium text-green-600 hover:text-green-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              <Check className="w-4 h-4 inline mr-1" />
-              Mark all as read
             </button>
             {selectedNotifications.size > 0 && (
               <button
                 onClick={handleDeleteSelected}
                 className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors border border-red-300 rounded-lg"
               >
-                Delete Selected ({selectedNotifications.size})
+                Delete ({selectedNotifications.size})
               </button>
             )}
           </div>

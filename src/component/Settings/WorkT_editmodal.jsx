@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
 import { updateShift, createShift, fetchBranches } from './api/settings_api';
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 export default function WorkTEditModal({ timing, onClose, onSave }) {
   const [name, setName] = useState('');
@@ -12,6 +13,13 @@ export default function WorkTEditModal({ timing, onClose, onSave }) {
   const [timeZone, setTimeZone] = useState('Africa/Cairo');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
+
+  // language subscription for re-render when toggled
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => {
+    const unsub = _subscribe((l) => setLang(l));
+    return () => unsub();
+  }, []);
 
   // Days mapping: 0=SUN, 1=MON, 2=TUE, 3=WED, 4=THU, 5=FRI, 6=SAT
   const DAYS = [
@@ -79,9 +87,9 @@ export default function WorkTEditModal({ timing, onClose, onSave }) {
 
   const handleSave = async () => {
     setError(null);
-    if (!name) return setError('Name is required');
-    if (!branchId) return setError('branchId is required');
-    if (!start || !end) return setError('Start and end are required');
+    if (!name) return setError(_t('NAME') + ' ' + _t('CANCEL')); // minimal feedback - reused keys
+    if (!branchId) return setError(_t('SELECT_A_BRANCH'));
+    if (!start || !end) return setError(_t('START_TIME') + ' / ' + _t('END_TIME'));
 
     // Send selectedDays as-is (0-6) to match the table mapping
     const payload = {
@@ -114,28 +122,28 @@ export default function WorkTEditModal({ timing, onClose, onSave }) {
           <X size={22} />
         </button>
 
-        <h3 className="text-xl font-semibold mb-4">{timing?.id ? 'Edit Shift' : 'Add Shift'}</h3>
+        <h3 className="text-xl font-semibold mb-4">{timing?.id ? _t('EDIT_SHIFT') : _t('ADD_SHIFT')}</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm text-gray-600">Name</label>
+            <label className="text-sm text-gray-600">{_t('NAME')}</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full mt-2 p-2 border rounded"
-              placeholder="Shift Name"
+              placeholder={_t('NAME')}
             />
           </div>
 
           <div>
-            <label className="text-sm text-gray-600">Branch</label>
+            <label className="text-sm text-gray-600">{_t('BRANCH')}</label>
             <select
               value={branchId || ''}
               onChange={(e) => setBranchId(e.target.value)}
               className="w-full mt-2 p-2 border rounded"
             >
               <option value="" disabled>
-                Select a branch
+                {_t('SELECT_A_BRANCH')}
               </option>
               {branches.map((branch) => (
                 <option key={branch.id} value={branch.id}>
@@ -146,7 +154,7 @@ export default function WorkTEditModal({ timing, onClose, onSave }) {
           </div>
 
           <div>
-            <label className="text-sm text-gray-600">Start Time</label>
+            <label className="text-sm text-gray-600">{_t('START_TIME')}</label>
             <input
               value={start}
               onChange={(e) => setStart(e.target.value)}
@@ -156,7 +164,7 @@ export default function WorkTEditModal({ timing, onClose, onSave }) {
           </div>
 
           <div>
-            <label className="text-sm text-gray-600">End Time</label>
+            <label className="text-sm text-gray-600">{_t('END_TIME')}</label>
             <input
               value={end}
               onChange={(e) => setEnd(e.target.value)}
@@ -166,18 +174,18 @@ export default function WorkTEditModal({ timing, onClose, onSave }) {
           </div>
 
           <div className="md:col-span-2">
-            <label className="text-sm text-gray-600">Time Zone</label>
+            <label className="text-sm text-gray-600">{_t('TIME_ZONE')}</label>
             <input
               value={timeZone}
               onChange={(e) => setTimeZone(e.target.value)}
               className="w-full mt-2 p-2 border rounded"
-              placeholder="Africa/Cairo"
+              placeholder={_t('TIME_ZONE')}
             />
           </div>
         </div>
 
         <div className="mt-4">
-          <div className="text-sm text-gray-600 mb-2">Select Working Days</div>
+          <div className="text-sm text-gray-600 mb-2">{_t('SELECT_WORKING_DAYS')}</div>
           <div className="flex flex-wrap gap-2">
             {DAYS.map((d) => (
               <label
@@ -205,14 +213,14 @@ export default function WorkTEditModal({ timing, onClose, onSave }) {
 
         <div className="mt-6 flex justify-end gap-3">
           <button onClick={onClose} disabled={isSaving} className="px-4 py-2 bg-gray-200 rounded">
-            Cancel
+            {_t('CANCEL')}
           </button>
           <button
             onClick={handleSave}
             disabled={isSaving}
             className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded flex items-center gap-2"
           >
-            {isSaving ? 'Saving...' : <><Save size={16} /> {timing?.id ? 'Save' : 'Add'}</>}
+            {isSaving ? _t('SAVING') : <><Save size={16} /> {timing?.id ? _t('SAVE') : _t('SAVE')}</>}
           </button>
         </div>
       </div>

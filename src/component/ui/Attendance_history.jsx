@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Search, Filter, RefreshCw, ChevronDown, X } from 'lucide-react';
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 /**
  * Attendance History Filter Component - Horizontal Bar
@@ -16,12 +17,14 @@ export default function AttendanceHistoryFilter({
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => _subscribe((l) => setLang(l)), []);
 
   const statusOptions = [
-    { value: 'all', label: 'All Status', color: 'gray', bgColor: 'bg-gray-100', textColor: 'text-gray-700' },
-    { value: 'present', label: 'Present', color: 'green', bgColor: 'bg-green-100', textColor: 'text-green-700' },
-    { value: 'absent', label: 'Absent', color: 'red', bgColor: 'bg-red-100', textColor: 'text-red-700' },
-    { value: 'on-leave', label: 'On Leave', color: 'blue', bgColor: 'bg-blue-100', textColor: 'text-blue-700' }
+    { value: 'all', label: _t('ALL_STATUS'), color: 'gray', bgColor: 'bg-gray-100', textColor: 'text-gray-700' },
+    { value: 'present', label: _t('STATUS_PRESENT'), color: 'green', bgColor: 'bg-green-100', textColor: 'text-green-700' },
+    { value: 'absent', label: _t('STATUS_ABSENT'), color: 'red', bgColor: 'bg-red-100', textColor: 'text-red-700' },
+    { value: 'on-leave', label: _t('STATUS_ON_LEAVE'), color: 'blue', bgColor: 'bg-blue-100', textColor: 'text-blue-700' }
   ];
 
   const handleFilterChange = (updates) => {
@@ -73,7 +76,7 @@ export default function AttendanceHistoryFilter({
             <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-sm">
               <Filter className="w-4 h-4 text-white" />
             </div>
-            <span className="font-semibold text-gray-900 hidden sm:inline">Filters:</span>
+            <span className="font-semibold text-gray-900 hidden sm:inline">{_t('FILTERS_TITLE')}</span>
           </div>
 
           {/* Date Picker - Primary Filter */}
@@ -82,20 +85,20 @@ export default function AttendanceHistoryFilter({
             <input
               type="date"
               value={selectedDate}
-              onChange={(e) => handleDateChange(e.target.value)}
+              onChange={(e) => { setSelectedDate(e.target.value); handleFilterChange({ date: e.target.value }); }}
               className="bg-transparent text-sm font-semibold text-green-700 border-none outline-none cursor-pointer"
             />
-            <span className="text-xs text-green-600 font-medium hidden md:inline">Primary</span>
+            <span className="text-xs text-green-600 font-medium hidden md:inline">{_t('PRIMARY')}</span>
           </div>
 
           {/* Department Filter - Secondary */}
           <div className="relative">
             <select
               value={selectedDepartment}
-              onChange={(e) => handleDepartmentChange(e.target.value)}
+              onChange={(e) => { setSelectedDepartment(e.target.value); handleFilterChange({ department: e.target.value }); }}
               className="appearance-none bg-gray-50 border border-gray-200 hover:border-green-500 px-4 py-2 pr-8 rounded-lg text-sm font-medium text-gray-700 cursor-pointer outline-none transition-all"
             >
-              <option value="all">All Departments</option>
+              <option value="all">{_t('ALL_DEPARTMENTS')}</option>
               {departments.map((dept, index) => (
                 <option key={index} value={dept}>{dept}</option>
               ))}
@@ -103,7 +106,7 @@ export default function AttendanceHistoryFilter({
             <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           </div>
 
-          {/* Status Quick Filters - Without Late */}
+          {/* Status Quick Filters */}
           <div className="flex items-center gap-2">
             {statusOptions.map((status) => (
               <button
@@ -130,7 +133,7 @@ export default function AttendanceHistoryFilter({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by name..."
+              placeholder={_t('SEARCH_BY_NAME')}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -153,23 +156,28 @@ export default function AttendanceHistoryFilter({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2 ml-auto">
-            {activeFiltersCount > 0 && (
-              <button
-                onClick={handleReset}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-all"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Reset
-              </button>
-            )}
+            {/* Only show reset if something active */}
+            <button
+              onClick={() => {
+                const today = new Date().toISOString().split('T')[0];
+                setSelectedDate(today);
+                setSelectedDepartment('all');
+                setSelectedStatus('all');
+                setSearchQuery('');
+                handleFilterChange({ date: today, department: 'all', status: 'all', search: '' });
+              }}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-all"
+            >
+              <RefreshCw className="w-4 h-4" />
+              {_t('RESET')}
+            </button>
           </div>
         </div>
 
         {/* Active Filters Summary */}
         <div className="mt-3 flex items-center gap-2 flex-wrap">
-          {/* Always show selected date as primary filter */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-gray-500">Filtering by:</span>
+            <span className="text-xs font-medium text-gray-500">{_t('FILTERING_BY')}</span>
             <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded-full border-2 border-green-300">
               <Calendar className="w-3 h-3" />
               {new Date(selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -180,10 +188,7 @@ export default function AttendanceHistoryFilter({
             <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full border border-blue-200">
               {selectedDepartment}
               <button
-                onClick={() => {
-                  setSelectedDepartment('all');
-                  handleFilterChange({ department: 'all' });
-                }}
+                onClick={() => { setSelectedDepartment('all'); handleFilterChange({ department: 'all' }); }}
                 className="hover:bg-blue-100 rounded-full p-0.5"
               >
                 <X className="w-3 h-3" />
@@ -192,12 +197,9 @@ export default function AttendanceHistoryFilter({
           )}
           {selectedStatus !== 'all' && (
             <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-purple-50 text-purple-700 rounded-full border border-purple-200">
-              {currentStatus?.label}
+              {statusOptions.find(s => s.value === selectedStatus)?.label}
               <button
-                onClick={() => {
-                  setSelectedStatus('all');
-                  handleFilterChange({ status: 'all' });
-                }}
+                onClick={() => { setSelectedStatus('all'); handleFilterChange({ status: 'all' }); }}
                 className="hover:bg-purple-100 rounded-full p-0.5"
               >
                 <X className="w-3 h-3" />
@@ -208,10 +210,7 @@ export default function AttendanceHistoryFilter({
             <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-amber-50 text-amber-700 rounded-full border border-amber-200">
               "{searchQuery}"
               <button
-                onClick={() => {
-                  setSearchQuery('');
-                  handleFilterChange({ search: '' });
-                }}
+                onClick={() => { setSearchQuery(''); handleFilterChange({ search: '' }); }}
                 className="hover:bg-amber-100 rounded-full p-0.5"
               >
                 <X className="w-3 h-3" />

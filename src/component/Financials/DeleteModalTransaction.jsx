@@ -16,7 +16,7 @@ export default function DeleteModalTransaction({ transaction, type = 'reward', o
       }
 
       const response = await fetch(
-        `https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/financial/${transaction.transactionId}`,
+        `https://api.shl-hr.com/api/v1/financial/${transaction.transactionId}`,
         {
           method: 'DELETE',
           headers: {

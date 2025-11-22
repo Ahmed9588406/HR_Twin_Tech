@@ -7,8 +7,12 @@ import OnLeaveModal from './OnLeave_modal';
 import EmployeeSalaryCard from './employee_salary';
 import EmployeeAttendanceHistory from './employee_history';
 import EmployeeShiftDept from './employee_shift_dept_admin';
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 export default function EmployeeProfile() {
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => _subscribe(setLang), []);
+
   const location = useLocation();
   const navigate = useNavigate();
   const { employee } = location.state || {};
@@ -96,41 +100,25 @@ export default function EmployeeProfile() {
 
   // Helper function to format last sign-in date
   const formatLastSignIn = (dateString) => {
-    if (!dateString) return { display: 'N/A', fullDate: 'N/A' };
+    if (!dateString) return { display: _t('NA'), fullDate: _t('NA') };
     
     const date = new Date(dateString);
     const today = new Date();
     const isToday = date.toDateString() === today.toDateString();
     
-    const timeOptions = { 
-      hour: '2-digit',
-      minute: '2-digit'
-    };
+    const timeOptions = { hour: '2-digit', minute: '2-digit' };
     const timeStr = date.toLocaleString('en-US', timeOptions);
     
     let display;
     if (isToday) {
-      display = `Today, ${timeStr}`;
+      display = `${_t('TODAY')}, ${timeStr}`;
     } else {
-      const dateOptions = { 
-        weekday: 'short', 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric'
-      };
+      const dateOptions = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
       const dateStr = date.toLocaleString('en-US', dateOptions);
       display = `${dateStr}, ${timeStr}`;
     }
     
-    const fullDate = date.toLocaleString('en-US', { 
-      weekday: 'short', 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-    
+    const fullDate = date.toLocaleString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     return { display, fullDate };
   };
 
@@ -140,7 +128,7 @@ export default function EmployeeProfile() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading profile...</p>
+          <p className="mt-4 text-gray-600">{_t('LOADING_PROFILE')}</p>
         </div>
       </div>
     );
@@ -151,12 +139,9 @@ export default function EmployeeProfile() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">{error || 'No Employee Data'}</h2>
-          <button 
-            onClick={() => navigate('/dashboard')}
-            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-          >
-            Go to Dashboard
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{error || _t('NO_EMPLOYEE_DATA')}</h2>
+          <button onClick={() => navigate('/dashboard')} className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+            {_t('GO_TO_DASHBOARD')}
           </button>
         </div>
       </div>
@@ -172,7 +157,7 @@ export default function EmployeeProfile() {
 
   const lastSignIn = profileData?.lastSignIn 
     ? formatLastSignIn(profileData.lastSignIn) 
-    : { display: employee.checkInTime || 'N/A', fullDate: employee.checkInTime || 'N/A' };
+    : { display: employee.checkInTime || _t('NA'), fullDate: employee.checkInTime || _t('NA') };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -181,20 +166,17 @@ export default function EmployeeProfile() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <button 
-                onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-              >
+              <button onClick={() => navigate('/dashboard')} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
                 <ArrowLeft className="w-5 h-5" />
-                <span className="font-medium">Back to Dashboard</span>
+                <span className="font-medium">{_t('BACK_TO_DASHBOARD')}</span>
               </button>
             </div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-500 bg-clip-text text-transparent">
-              Employee Portal
+              {_t('EMPLOYEE_PORTAL')}
             </h1>
             <div className="flex items-center gap-3">
               <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                Active Now
+                {_t('ACTIVE_NOW')}
               </span>
             </div>
           </div>
@@ -222,50 +204,38 @@ export default function EmployeeProfile() {
                     {profileData?.empName || employee.name}
                   </h2>
                   <p className="text-green-600 font-medium mt-1">
-                    {profileData?.jobPosition || employee.jobPositionName || 'N/A'}
+                    {profileData?.jobPosition || employee.jobPositionName || _t('NA')}
                   </p>
                   
                   <div className="flex items-center gap-2 mt-3 text-sm text-slate-600">
                     <Clock className="w-4 h-4" />
-                    <span>Last signed in: <strong title={lastSignIn.fullDate}>{lastSignIn.display}</strong></span>
+                    <span>{_t('LAST_SIGNED_IN')} <strong title={lastSignIn.fullDate}>{lastSignIn.display}</strong></span>
                   </div>
 
                   <div className="flex gap-2 mt-6 w-full">
-                    <button 
-                      onClick={handleMarkAttendance}
-                      className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
-                    >
+                    <button onClick={handleMarkAttendance} className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
                       <UserCheck className="w-4 h-4" />
-                      Attendance
+                      {_t('ATTENDANCE')}
                     </button>
-                    <button 
-                      onClick={handleMarkLeave}
-                      className="flex-1 px-4 py-2.5 bg-green-50 text-green-700 rounded-xl font-medium hover:bg-green-100 transition-colors flex items-center justify-center gap-2"
-                    >
+                    <button onClick={handleMarkLeave} className="flex-1 px-4 py-2.5 bg-green-50 text-green-700 rounded-xl font-medium hover:bg-green-100 transition-colors flex items-center justify-center gap-2">
                       <LogOut className="w-4 h-4" />
-                      Leave
+                      {_t('LEAVE')}
                     </button>
                   </div>
 
                   {/* Stats */}
                   <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-slate-200">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-slate-800">
-                        {profileData?.absencesCount || employee.absenceDays || 0}
-                      </div>
-                      <div className="text-xs text-slate-600 mt-1">Absence</div>
+                      <div className="text-2xl font-bold text-slate-800">{profileData?.absencesCount || employee.absenceDays || 0}</div>
+                      <div className="text-xs text-slate-600 mt-1">{_t('ABSENCE')}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-indigo-600">
-                        {employee.leaveTime ? 'Yes' : 'No'}
-                      </div>
-                      <div className="text-xs text-slate-600 mt-1">On Leave</div>
+                      <div className="text-2xl font-bold text-indigo-600">{employee.leaveTime ? 'Yes' : 'No'}</div>
+                      <div className="text-xs text-slate-600 mt-1">{_t('ON_LEAVE')}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-slate-800">
-                        {profileData?.daysLeftInVacation || employee.remainingDays || 0}
-                      </div>
-                      <div className="text-xs text-slate-600 mt-1">Days Left</div>
+                      <div className="text-2xl font-bold text-slate-800">{profileData?.daysLeftInVacation || employee.remainingDays || 0}</div>
+                      <div className="text-xs text-slate-600 mt-1">{_t('DAYS_LEFT')}</div>
                     </div>
                   </div>
                 </div>
@@ -282,9 +252,9 @@ export default function EmployeeProfile() {
                 <div>
                   <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <TrendingUp className="w-5 h-5 text-green-600" />
-                    Attendance Rate
+                    {_t('ATTENDANCE_RATE')}
                   </h3>
-                  <p className="text-sm text-slate-600 mt-1">Based on recent records</p>
+                  <p className="text-sm text-slate-600 mt-1">{_t('BASED_ON_RECENT')}</p>
                 </div>
                 <div className="text-right">
                   <div className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-green-500 bg-clip-text text-transparent">

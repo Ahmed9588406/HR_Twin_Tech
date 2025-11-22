@@ -4,6 +4,7 @@ import EditModal from './editmodal';
 import PinModal from './pinmodal';
 import { fetchBranches, fetchBranchById, createBranch, deleteBranch } from './api/settings_api';
 import { useOutletContext } from 'react-router-dom';
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 export default function WorkPlace() {
   const { workplaces, updateWorkplaces } = useOutletContext();
@@ -13,6 +14,13 @@ export default function WorkPlace() {
   const [selectedWorkplace, setSelectedWorkplace] = useState(null);
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // language subscription for reactive labels
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => {
+    const unsub = _subscribe((l) => setLang(l));
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     const loadBranches = async () => {
@@ -35,7 +43,7 @@ export default function WorkPlace() {
 
   const handleSaveNew = async () => {
     if (!newWorkplace.name || !newWorkplace.lat || !newWorkplace.lng) {
-      alert('Please provide name, latitude and longitude.');
+      alert(_t('SELECT_LAT_LNG_REQUIRED'));
       return;
     }
 
@@ -43,7 +51,7 @@ export default function WorkPlace() {
       const lat = parseFloat(newWorkplace.lat);
       const lng = parseFloat(newWorkplace.lng);
       if (Number.isNaN(lat) || Number.isNaN(lng)) {
-        alert('Latitude and longitude must be valid numbers.');
+        alert(_t('SELECT_LAT_LNG_REQUIRED'));
         return;
       }
 
@@ -144,7 +152,7 @@ export default function WorkPlace() {
   };
 
   const handleDelete = async (id) => {
-    const confirmed = window.confirm('Are you sure you want to delete this workplace?');
+    const confirmed = window.confirm(_t('DELETE_CONFIRM'));
     if (!confirmed) return;
 
     try {
@@ -161,21 +169,11 @@ export default function WorkPlace() {
         <table className="min-w-full text-left">
           <thead>
             <tr className="bg-green-50">
-              <th className="px-6 py-4 text-green-600 font-semibold">Name</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">{_t('NAME')}</th>
               <th className="px-6 py-4 text-green-600 font-semibold">Type</th>
               <th className="px-6 py-4 text-green-600 font-semibold">Company</th>
               <th className="px-6 py-4 text-green-600 font-semibold">Actions</th>
             </tr>
-            {/* <tr>
-              <th colSpan={4} className="px-6 py-2">
-                <button
-                  onClick={handleTestFetch}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-                >
-                  Test Fetch Branch by ID (1)
-                </button>
-              </th>
-            </tr> */}
           </thead>
           <tbody>
             {workplaces.map((wp) => (
@@ -193,21 +191,21 @@ export default function WorkPlace() {
                     <button
                       onClick={() => handlePin(wp)}
                       className="text-gray-500 hover:text-green-600 transition-colors"
-                      title="Place Pin on Map"
+                      title={_t('PLACE_PIN_ON_MAP')}
                     >
                       <MapPin size={18} />
                     </button>
                     <button
                       onClick={() => handleEdit(wp)}
                       className="text-green-400 hover:text-green-600 transition-colors"
-                      title="Edit"
+                      title={_t('EDIT')}
                     >
                       <Edit2 size={18} />
                     </button>
                     <button
                       onClick={() => handleDelete(wp.id)}
                       className="text-red-500 hover:text-red-700 transition-colors"
-                      title="Delete"
+                      title={_t('DELETE')}
                     >
                       <X size={22} />
                     </button>
@@ -224,7 +222,7 @@ export default function WorkPlace() {
                     value={newWorkplace.name}
                     onChange={(e) => setNewWorkplace({ ...newWorkplace, name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="Workplace name"
+                    placeholder={_t('NAME')}
                   />
                 </td>
 
@@ -239,7 +237,6 @@ export default function WorkPlace() {
                 </td>
 
                 <td className="px-6 py-4">
-                  {/* Company input + small coords inputs underneath */}
                   <div className="flex flex-col gap-2">
                     <input
                       type="text"
@@ -256,7 +253,7 @@ export default function WorkPlace() {
                         value={newWorkplace.lat}
                         onChange={(e) => setNewWorkplace({ ...newWorkplace, lat: e.target.value })}
                         className="w-1/2 px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                        placeholder="Latitude"
+                        placeholder={_t('LATITUDE')}
                       />
                       <input
                         type="number"
@@ -264,13 +261,13 @@ export default function WorkPlace() {
                         value={newWorkplace.lng}
                         onChange={(e) => setNewWorkplace({ ...newWorkplace, lng: e.target.value })}
                         className="w-1/2 px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                        placeholder="Longitude"
+                        placeholder={_t('LONGITUDE')}
                       />
 
                       {/* Set Pin button for add-row */}
                       <button
                         onClick={handlePinForNew}
-                        title="Pick on map"
+                        title={_t('PICK_ON_MAP')}
                         className="ml-2 text-gray-500 hover:text-green-600 transition-colors"
                       >
                         <MapPin size={18} />
@@ -284,14 +281,14 @@ export default function WorkPlace() {
                     <button
                       onClick={handleSaveNew}
                       className="text-green-600 hover:text-green-800 transition-colors"
-                      title="Save"
+                      title={_t('SAVE')}
                     >
                       <Check size={18} />
                     </button>
                     <button
                       onClick={handleCancelAdd}
                       className="text-red-500 hover:text-red-700 transition-colors"
-                      title="Cancel"
+                      title={_t('CANCEL')}
                     >
                       <X size={18} />
                     </button>
@@ -307,7 +304,7 @@ export default function WorkPlace() {
                     <button
                       onClick={handleAdd}
                       className="bg-green-400 hover:bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg border-4 border-white transition-all duration-200"
-                      title="Add Work Place"
+                      title={_t('ADD_WORKPLACE')}
                     >
                       <Plus size={20} />
                     </button>

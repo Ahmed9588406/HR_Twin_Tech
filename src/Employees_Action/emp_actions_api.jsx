@@ -1,4 +1,4 @@
-const BASE_URL = 'https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1';
+const BASE_URL = 'https://api.shl-hr.com/api/v1';
 
 const BULK_ACTIONS = {
   CHANGE_POSITION: {

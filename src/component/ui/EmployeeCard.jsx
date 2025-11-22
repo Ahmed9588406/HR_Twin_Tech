@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Phone, AlertCircle, Edit, Send, Trash2, Lock } from 'lucide-react';
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 /**
  * Modern Employee Card Component
@@ -21,6 +22,8 @@ export default function EmployeeCard({
   showActions = true // New prop to control action icons
 }) {
   const navigate = useNavigate();
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => _subscribe(setLang), []);
 
   const defaultEmployee = {
     name: "Abdulrahman Ahmed",
@@ -35,12 +38,23 @@ export default function EmployeeCard({
 
   // Helper function to format time to 12-hour with AM/PM
   const formatTime12Hour = (time) => {
-    if (!time || time === 'N/A') return time;
+    if (!time || time === 'N/A') return _t('NA');
     const [hours, minutes] = time.split(':');
     const hour = parseInt(hours, 10);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const hour12 = hour % 12 || 12;
     return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  // Translate status
+  const getStatusText = (status) => {
+    if (status === 'Stay here' || status === 'Present') return _t('STAY_HERE');
+    if (status === 'Checked out') return _t('CHECKED_OUT');
+    if (status === 'On break') return _t('ON_BREAK');
+    if (status === 'In meeting') return _t('IN_MEETING');
+    if (status === 'Absent') return _t('ABSENT');
+    if (status === 'On Leave') return _t('ON_LEAVE');
+    return status;
   };
 
   // Construct avatar URL from base64 data
@@ -186,7 +200,7 @@ export default function EmployeeCard({
           `}>
             {currentStatus.icon}
             <span className="text-xs font-medium whitespace-nowrap">
-              {emp.status}
+              {getStatusText(emp.status)}
             </span>
           </div>
 

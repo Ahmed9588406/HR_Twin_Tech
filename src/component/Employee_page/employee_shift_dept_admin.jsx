@@ -19,7 +19,7 @@ const EmployeeShiftDept = ({ empCode }) => {
           throw new Error('Auth token not found; please log in again.');
         }
 
-        const url = `https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/dashboard/${empCode}/details`;
+        const url = `https://api.shl-hr.com/api/v1/dashboard/${empCode}/details`;
         console.log('[DEBUG] Fetching shift/dept data from URL:', url);
 
         const response = await fetch(url, {

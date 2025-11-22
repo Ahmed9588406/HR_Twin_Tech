@@ -13,7 +13,7 @@ const fetchAttendanceRecords = async (empCode, options = {}) => {
     const month = options.month !== undefined ? options.month : now.getMonth() + 1;
     const year = options.year !== undefined ? options.year : now.getFullYear();
 
-    const url = `https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/emp-dashboard/attendance-history?month=${month}&year=${year}`;
+    const url = `https://api.shl-hr.com/api/v1/emp-dashboard/attendance-history?month=${month}&year=${year}`;
 
     const res = await fetch(url, {
       method: 'GET',

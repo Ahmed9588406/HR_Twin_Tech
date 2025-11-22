@@ -87,7 +87,7 @@ export default function Sidebar() {
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
-        const response = await fetch('https://noneffusive-reminiscent-tanna.ngrok-free.dev/api/v1/setting/admin');
+        const response = await fetch('https://api.shl-hr.com/api/v1/setting/admin');
         if (!response.ok) throw new Error('Failed to fetch admin data');
         const data = await response.json();
         setAdminData({
@@ -103,6 +103,34 @@ export default function Sidebar() {
     };
     fetchAdminData();
   }, []);
+
+  // Add language state (import small i18n runtime)
+  const [language, setLanguage] = useState(() => {
+    try {
+      return localStorage.getItem('app_lang') || 'en';
+    } catch {
+      return 'en';
+    }
+  });
+
+  useEffect(() => {
+    // Lazy import to avoid cyclic or server issues
+    let unsub;
+    import('../../i18n/i18n').then(i18n => {
+      setLanguage(i18n.getLang());
+      unsub = i18n.subscribe((lang) => setLanguage(lang));
+    }).catch(() => {});
+    return () => {
+      if (typeof unsub === 'function') unsub();
+    };
+  }, []);
+
+  const toggleLanguage = async () => {
+    const i18n = await import('../../i18n/i18n');
+    const current = i18n.getLang();
+    i18n.setLang(current === 'en' ? 'ar' : 'en');
+    // local state will be updated by subscriber
+  };
 
   return (
     <div 
@@ -274,12 +302,18 @@ export default function Sidebar() {
                       </span>
                     )}
                   </button>
+
+                  {/* Language toggle: show word label (EN / ع) */}
                   <button 
-                    className="p-1.5 hover:bg-white/10 rounded-lg transition-all duration-200 hover:scale-110"
+                    onClick={toggleLanguage}
+                    className="px-2 py-1 text-xs font-semibold bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-200"
                     aria-label="Language"
+                    title={language === 'en' ? 'Switch to Arabic' : 'التبديل إلى الإنجليزية'}
                   >
-                    <Globe size={15} />
+                    {/* show Arabic short char when ar selected */}
+                    {language === 'en' ? 'EN' : 'ع'}
                   </button>
+
                   <button 
                     onClick={handleLogout}
                     className="p-1.5 hover:bg-white/10 rounded-lg transition-all duration-200 hover:scale-110"

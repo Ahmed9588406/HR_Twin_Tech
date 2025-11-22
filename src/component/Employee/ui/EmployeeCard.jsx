@@ -1,20 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-import CreateNewEmployee from "../../Employee_page/Create_new_Employee"; // Import the modal
-import { fetchEmployeeById } from "../../Settings/api/employees_api"; // Import the API function
+import CreateNewEmployee from "../../Employee_page/Create_new_Employee"; 
+import { fetchEmployeeById } from "../../Settings/api/employees_api"; 
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../../i18n/i18n';
 
-/**
- * Modern Employee Card Component
- * 
- * Props:
- *  - employee (object) - { name, department, role, contentType, image, status }
- *  - onEdit (function) - edit button handler
- *  - onNotify (function) - notification/bell button handler
- *  - onDelete (function) - delete button handler
- *  - onLock (function) - lock/security button handler
- *  - onPhone (function) - phone button handler
- *  - onInfo (function) - info button handler
- */
 export default function EmployeeCard({ 
   employee,
   onClick,
@@ -26,8 +15,10 @@ export default function EmployeeCard({
   onInfo
 }) {
   const navigate = useNavigate();
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // State to control modal visibility
-  const [editEmployeeData, setEditEmployeeData] = useState(null); // State to store fetched employee data
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); 
+  const [editEmployeeData, setEditEmployeeData] = useState(null); 
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => _subscribe(setLang), []);
 
   // Dummy data for demonstration
   const defaultEmployee = {
@@ -149,7 +140,7 @@ export default function EmployeeCard({
             <button
               onClick={(e) => callHandler(e, onPhone)}
               className="p-1.5 sm:p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-              title="Call"
+              title={_t('CALL')}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-phone-call w-4 h-4 sm:w-5 sm:h-5 text-gray-600" aria-hidden="true">
                 <path d="M2.003 2.883a9.072 9.072 0 0 0 0 12.728l2.121-2.121a7.072 7.072 0 0 1 0-9.486L2.003 2.883z"></path>
@@ -161,7 +152,7 @@ export default function EmployeeCard({
             <button
               onClick={(e) => callHandler(e, onNotify)}
               className="p-1.5 sm:p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-              title="Notify"
+              title={_t('NOTIFY')}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bell w-4 h-4 sm:w-5 sm:h-5 text-gray-600" aria-hidden="true">
                 <path d="M18 8a6 6 0 0 0-12 0v4a6 6 0 0 0 12 0V8z"></path>
@@ -174,7 +165,7 @@ export default function EmployeeCard({
             <button
               onClick={(e) => callHandler(e, onEdit)}
               className="p-1.5 sm:p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-              title="Edit"
+              title={_t('EDIT')}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-edit w-4 h-4 sm:w-5 sm:h-5 text-gray-600" aria-hidden="true">
                 <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -185,7 +176,7 @@ export default function EmployeeCard({
             <button
               onClick={(e) => callHandler(e, onInfo)}
               className="p-1.5 sm:p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-              title="Send"
+              title={_t('SEND')}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-paper-plane w-4 h-4 sm:w-5 sm:h-5 text-gray-600" aria-hidden="true">
                 <path d="M2.003 12.293l18.364-9.192a1 1 0 0 1 1.415.447l2.121 4.243a1 1 0 0 1-.447 1.415L13.414 12l10.121 5.707a1 1 0 0 1 .447 1.415l-2.121 4.243a1 1 0 0 1-1.415.447L2.003 12.293z"></path>
@@ -195,7 +186,7 @@ export default function EmployeeCard({
             <button
               onClick={(e) => callHandler(e, onDelete)}
               className="p-1.5 sm:p-2 bg-gray-100 hover:bg-red-50 rounded-lg transition-colors"
-              title="Delete"
+              title={_t('DELETE')}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2 w-4 h-4 sm:w-5 sm:h-5 text-red-600" aria-hidden="true">
                 <path d="M3 6h18"></path>
@@ -208,7 +199,7 @@ export default function EmployeeCard({
             <button
               onClick={(e) => callHandler(e, onLock)}
               className="p-1.5 sm:p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-              title="Lock"
+              title={_t('LOCK')}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-lock w-4 h-4 sm:w-5 sm:h-5 text-gray-600" aria-hidden="true">
                 <path d="M17 8v4a5 5 0 0 1-10 0V8"></path>
@@ -224,8 +215,8 @@ export default function EmployeeCard({
       {/* Edit Employee Modal */}
       {isEditModalOpen && (
         <CreateNewEmployee
-          employeeData={editEmployeeData} // Pass the fetched employee data
-          onClose={handleCloseModal} // Close modal handler
+          employeeData={editEmployeeData} 
+          onClose={handleCloseModal} 
           onSuccess={() => {
             handleCloseModal();
             console.log("Employee updated successfully!");
