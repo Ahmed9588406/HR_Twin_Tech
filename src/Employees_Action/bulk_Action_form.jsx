@@ -4,26 +4,31 @@ import ChangePositionForm from './change_position_form';
 import ChangeDepartmentForm from './change_dep';
 import RewardDiscountForm from './reward_discount_form';
 import SendVacationForm from './send_vecation_form'; // added import
+import { t as _t } from '../i18n/i18n';
 
 const BULK_ACTIONS = {
   CHANGE_POSITION: {
+    key: 'CHANGE_POSITION',
     icon: User,
-    label: 'Change the Position',
+    label: _t('BULK_CHANGE_POSITION'),
     color: 'from-emerald-500 to-teal-500'
   },
   CHANGE_DEPARTMENT: {
+    key: 'CHANGE_DEPARTMENT',
     icon: Building2,
-    label: 'Change the Department',
+    label: _t('BULK_CHANGE_DEPARTMENT'),
     color: 'from-green-500 to-emerald-500'
   },
   ADD_REWARD_DISCOUNT: {
+    key: 'ADD_REWARD_DISCOUNT',
     icon: Percent,
-    label: 'Add Reward or Discount',
+    label: _t('BULK_ADD_REWARD_DISCOUNT'),
     color: 'from-teal-500 to-cyan-500'
   },
   SEND_VACATION: {
+    key: 'SEND_VACATION',
     icon: Palmtree,
-    label: 'Send Vacation',
+    label: _t('BULK_SEND_VACATION'),
     color: 'from-emerald-600 to-green-500'
   }
 };
@@ -99,18 +104,22 @@ export default function BulkActionsModal({ selectedActions = [], onClose = () =>
   };
 
   const handleActionClick = (action) => {
-    if (action.label === 'Change the Position') {
-      setShowPositionForm(true);
-    } else if (action.label === 'Change the Department') {
-      setShowDepartmentForm(true);
-    } else if (action.label === 'Add Reward or Discount') {
-      setShowRewardDiscountForm(true);
-    } else if (action.label === 'Send Vacation') {
-      setShowSendVacationForm(true);
-    } else {
-      // Placeholder for other actions
-      console.log(`Applying ${action.label} to ${selectedActions.length} selected employees`);
-      onSuccess();
+    switch (action.key) {
+      case 'CHANGE_POSITION':
+        setShowPositionForm(true);
+        break;
+      case 'CHANGE_DEPARTMENT':
+        setShowDepartmentForm(true);
+        break;
+      case 'ADD_REWARD_DISCOUNT':
+        setShowRewardDiscountForm(true);
+        break;
+      case 'SEND_VACATION':
+        setShowSendVacationForm(true);
+        break;
+      default:
+        console.log(`Applying ${action.label} to ${selectedActions.length} selected employees`);
+        onSuccess();
     }
   };
 
@@ -174,7 +183,7 @@ export default function BulkActionsModal({ selectedActions = [], onClose = () =>
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
                 <Building2 className="w-5 h-5 text-white" />
               </div>
-              Bulk Actions
+              {_t('BULK_ACTIONS_TITLE')}
             </h2>
             <button
               onClick={onClose}
@@ -226,7 +235,7 @@ export default function BulkActionsModal({ selectedActions = [], onClose = () =>
         <div className="px-8 pb-8">
           <div className="pt-4 border-t border-slate-200">
             <p className="text-center text-sm text-slate-500">
-              Select an action to apply to selected items ({selectedActions.length} selected)
+              {_t('BULK_ACTIONS_FOOTER').replace('{{n}}', String(selectedActions.length))}
             </p>
           </div>
         </div>

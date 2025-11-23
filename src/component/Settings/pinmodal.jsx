@@ -19,6 +19,43 @@ export default function PinModal({ workplace, onClose }) {
     setLng(workplace?.lng ?? 0);
   }, [workplace]);
 
+  // New useEffect to get current location on mount
+  useEffect(() => {
+    const fetchCurrentLocation = () => {
+      if (!navigator.geolocation) {
+        console.warn('Geolocation is not supported by this browser.');
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const newLat = parseFloat(latitude.toFixed(6));
+          const newLng = parseFloat(longitude.toFixed(6));
+          setSelectedLat(newLat);
+          setSelectedLng(newLng);
+          setLat(newLat);
+          setLng(newLng);
+          // Update refs for map initialization
+          initialLatRef.current = newLat;
+          initialLngRef.current = newLng;
+        },
+        (error) => {
+          console.warn('Unable to retrieve current location: ' + error.message);
+          // Fall back to workplace or defaults
+          const fallbackLat = workplace?.lat || 30.0444;
+          const fallbackLng = workplace?.lng || 31.2357;
+          setSelectedLat(fallbackLat);
+          setSelectedLng(fallbackLng);
+          setLat(fallbackLat);
+          setLng(fallbackLng);
+          initialLatRef.current = fallbackLat;
+          initialLngRef.current = fallbackLng;
+        }
+      );
+    };
+    fetchCurrentLocation();
+  }, [workplace]);
+
   useEffect(() => {
     const initializeMap = () => {
       if (!window.L || leafletMapRef.current) return;
@@ -148,6 +185,34 @@ export default function PinModal({ workplace, onClose }) {
     }
   };
 
+  // New function to get current location
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by this browser.');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const newLat = parseFloat(latitude.toFixed(6));
+        const newLng = parseFloat(longitude.toFixed(6));
+        setSelectedLat(newLat);
+        setSelectedLng(newLng);
+        setLat(newLat);
+        setLng(newLng);
+        if (markerRef.current) {
+          markerRef.current.setLatLng([newLat, newLng]);
+        }
+        if (leafletMapRef.current) {
+          leafletMapRef.current.setView([newLat, newLng]);
+        }
+      },
+      (error) => {
+        alert('Unable to retrieve your location: ' + error.message);
+      }
+    );
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
       <div 
@@ -210,6 +275,13 @@ export default function PinModal({ workplace, onClose }) {
               />
             </div>
           </div>
+          {/* New Get Current Location Button */}
+          <button
+            onClick={getCurrentLocation}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
+          >
+            Get Current Location
+          </button>
         </div>
 
         {/* Action Buttons */}

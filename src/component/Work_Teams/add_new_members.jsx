@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, UserCircle, Search, Users, Plus, Trash2, Sparkles, Loader2 } from 'lucide-react';
-import { addEmployeeToTeam, removeEmployeeFromTeam, fetchTeamMembers } from './api/work_teams_api';
+import { addEmployeeToTeam, removeEmployeeFromTeam, fetchTeamById } from './api/work_teams_api';
 import { fetchEmployees as fetchSettingsEmployees } from '../Settings/api/employees_api';
 
 export default function AddNewMembers({ team, onClose, onMembersChange }) {
@@ -11,13 +11,14 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [teamData, setTeamData] = useState(null);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [employeesRes, membersRes] = await Promise.allSettled([
+        const [employeesRes, teamRes] = await Promise.allSettled([
           fetchSettingsEmployees(),
-          fetchTeamMembers(team.id)
+          fetchTeamById(team.id)
         ]);
 
         const rawEmployees = employeesRes.status === 'fulfilled' ? employeesRes.value : [];
@@ -30,8 +31,8 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
           deptartment: e.department ?? e.dept
         }));
 
-        const rawMembers = membersRes.status === 'fulfilled' ? membersRes.value : [];
-        const memberList = (Array.isArray(rawMembers) ? rawMembers : (rawMembers.content || rawMembers.data || [])).map(m => ({
+        const rawTeam = teamRes.status === 'fulfilled' ? teamRes.value : {};
+        const memberList = (Array.isArray(rawTeam.teamMembers) ? rawTeam.teamMembers : []).map(m => ({
           empCode: m.id,
           empName: m.name,
           jobPosition: m.jobTitle,
@@ -42,10 +43,12 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
 
         setEmployees(empList);
         setMembers(memberList);
+        setTeamData(rawTeam);
       } catch (error) {
         console.error('Unexpected error loading data:', error);
         setEmployees([]);
         setMembers([]);
+        setTeamData(null);
       } finally {
         setInitialLoading(false);
       }
@@ -66,8 +69,8 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
       try {
         const result = await addEmployeeToTeam(team.id, selectedEmployeeId);
         if (result.success) {
-          const updatedMembers = await fetchTeamMembers(team.id);
-          const memberList = (Array.isArray(updatedMembers) ? updatedMembers : (updatedMembers.content || updatedMembers.data || [])).map(m => ({
+          const updatedTeam = await fetchTeamById(team.id);
+          const memberList = (Array.isArray(updatedTeam.teamMembers) ? updatedTeam.teamMembers : []).map(m => ({
             empCode: m.id,
             empName: m.name,
             jobPosition: m.jobTitle,
@@ -76,12 +79,13 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
             deptartment: m.department
           }));
           setMembers(memberList);
+          setTeamData(updatedTeam);
           setSelectedEmployeeId('');
           if (onMembersChange) onMembersChange();
         } else {
           alert(result.message);
-          const updatedMembers = await fetchTeamMembers(team.id);
-          const memberList = (Array.isArray(updatedMembers) ? updatedMembers : (updatedMembers.content || updatedMembers.data || [])).map(m => ({
+          const updatedTeam = await fetchTeamById(team.id);
+          const memberList = (Array.isArray(updatedTeam.teamMembers) ? updatedTeam.teamMembers : []).map(m => ({
             empCode: m.id,
             empName: m.name,
             jobPosition: m.jobTitle,
@@ -90,6 +94,7 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
             deptartment: m.department
           }));
           setMembers(memberList);
+          setTeamData(updatedTeam);
           if (onMembersChange) onMembersChange();
         }
       } catch (error) {
@@ -105,8 +110,8 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
     if (window.confirm('Are you sure you want to remove this member?')) {
       try {
         await removeEmployeeFromTeam(team.id, employeeId);
-        const updatedMembers = await fetchTeamMembers(team.id);
-        const memberList = (Array.isArray(updatedMembers) ? updatedMembers : (updatedMembers.content || updatedMembers.data || [])).map(m => ({
+        const updatedTeam = await fetchTeamById(team.id);
+        const memberList = (Array.isArray(updatedTeam.teamMembers) ? updatedTeam.teamMembers : []).map(m => ({
           empCode: m.id,
           empName: m.name,
           jobPosition: m.jobTitle,
@@ -115,6 +120,7 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
           deptartment: m.department
         }));
         setMembers(memberList);
+        setTeamData(updatedTeam);
         if (onMembersChange) onMembersChange();
       } catch (error) {
         console.error('Error removing member:', error);
@@ -194,7 +200,7 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
           <div className="flex items-center gap-2 mb-4">
             <h2 className="text-xl font-semibold text-gray-800">Team Members</h2>
             <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
-              {members.length}
+              {teamData?.numberOfEmployees ?? members.length}
             </span>
           </div>
 
@@ -209,7 +215,7 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
               <p className="text-gray-500 text-sm">Start building your team by adding members below</p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-lg border border-gray-200">
+            <div className="overflow-x-auto rounded-lg border border-gray-200">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -223,17 +229,17 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
                 <tbody className="divide-y divide-gray-200">
                   {members.map((member) => (
                     <tr key={member.empCode ?? member.id} className="border-b hover:bg-gray-50 transition">
-                      <td className="py-3">
+                      <td className="px-4 py-3">
                         <img
                           src={getEmployeeImage(member)}
                           alt={member.empName}
                           className="w-8 h-8 rounded-full object-cover"
                         />
                       </td>
-                      <td className="py-3">{member.empName}</td>
-                      <td className="py-3">{member.deptartment || 'N/A'}</td>
-                      <td className="py-3">{member.jobPosition || 'N/A'}</td>
-                      <td className="py-3">
+                      <td className="px-4 py-3 truncate">{member.empName}</td>
+                      <td className="px-4 py-3 truncate">{member.deptartment || 'N/A'}</td>
+                      <td className="px-4 py-3 truncate">{member.jobPosition || 'N/A'}</td>
+                      <td className="px-4 py-3 text-center">
                         <button
                           onClick={() => handleRemoveMember(member.empCode ?? member.id)}
                           className="text-red-500 hover:text-red-700 transition"

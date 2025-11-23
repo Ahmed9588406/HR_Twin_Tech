@@ -20,6 +20,32 @@ export default function EditModal({ workplace, onClose }) {
     }
   }, [workplace]);
 
+  // New useEffect to get current location on mount
+  useEffect(() => {
+    const fetchCurrentLocation = () => {
+      if (!navigator.geolocation) {
+        console.warn('Geolocation is not supported by this browser.');
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setLatitude(latitude.toString());
+          setLongitude(longitude.toString());
+        },
+        (error) => {
+          console.warn('Unable to retrieve current location: ' + error.message);
+          // Fall back to workplace if available
+          if (workplace) {
+            setLatitude(workplace.lat ?? workplace.latitude ?? '');
+            setLongitude(workplace.lng ?? workplace.longitude ?? '');
+          }
+        }
+      );
+    };
+    fetchCurrentLocation();
+  }, [workplace]);
+
   const openPinPicker = () => {
     // prepare target object for PinModal: include existing coords and id
     setPinTarget({
@@ -41,6 +67,24 @@ export default function EditModal({ workplace, onClose }) {
       if (newLat !== undefined) setLatitude(newLat);
       if (newLng !== undefined) setLongitude(newLng);
     }
+  };
+
+  // New function to get current location
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by this browser.');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setLatitude(latitude.toString());
+        setLongitude(longitude.toString());
+      },
+      (error) => {
+        alert('Unable to retrieve your location: ' + error.message);
+      }
+    );
   };
 
   const handleCancel = () => {
@@ -135,14 +179,24 @@ export default function EditModal({ workplace, onClose }) {
             <label className="block text-gray-500 text-sm font-medium mb-2">
               Longitude
             </label>
-            <input
-              type="number"
-              step="any"
-              value={longitude}
-              onChange={(e) => setLongitude(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="Longitude"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                step="any"
+                value={longitude}
+                onChange={(e) => setLongitude(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Longitude"
+              />
+              {/* New Get Current Location Button */}
+              <button
+                onClick={getCurrentLocation}
+                title="Get current location"
+                className="text-gray-500 hover:text-green-600 transition-colors p-2"
+              >
+                <MapPin size={18} />
+              </button>
+            </div>
           </div>
         </div>
 

@@ -60,7 +60,7 @@ export default function EmployeeManager() {
               id: team.id,
               name: team.name,
               managers: team.managerName,
-              employeeCount: team.employeeCount || 0,
+              employeeCount: team.numberOfEmployees || 0,
               members: team.members || []
             }));
             setDepartments(mappedTeams);
@@ -95,7 +95,7 @@ export default function EmployeeManager() {
           id: team.id,
           name: team.name,
           managers: team.managerName,
-          employeeCount: team.employeeCount || 0,
+          employeeCount: team.numberOfEmployees || 0,
           members: team.members || []
         }));
         setDepartments(mappedTeams);
@@ -120,7 +120,7 @@ export default function EmployeeManager() {
           id: team.id,
           name: team.name,
           managers: team.managerName,
-          employeeCount: team.employeeCount || 0,
+          employeeCount: team.numberOfEmployees || 0,
           members: team.members || []
         }));
         setDepartments(mappedTeams);
@@ -170,7 +170,7 @@ export default function EmployeeManager() {
           id: team.id,
           name: team.name,
           managers: team.managerName,
-          employeeCount: team.employeeCount || 0, // Adjust based on API response
+          employeeCount: team.numberOfEmployees || 0, // Adjust based on API response
           members: team.members || []
         }));
         setDepartments(mappedTeams);

@@ -339,12 +339,13 @@ export const uploadEmployeePhoto = async (empCode, file) => {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const url = `${BASE_URL}emp-dashboard/upload-file?empCode=${encodeURIComponent(empCode)}`; // Add empCode as query param
+    const url = `${BASE_URL}emp-dashboard/upload-file`; // Remove empCode query param
 
     const formData = new FormData();
+    // Removed: formData.append('empCode', empCode); // Not needed in request
     formData.append('file', file); // Only append the file
 
-    console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type, 'for empCode:', empCode);
+    console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
 
     const response = await fetch(url, {
       method: 'POST',

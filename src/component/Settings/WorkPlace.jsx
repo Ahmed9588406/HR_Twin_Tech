@@ -21,6 +21,7 @@ export default function WorkPlace() {
     const unsub = _subscribe((l) => setLang(l));
     return () => unsub();
   }, []);
+  const isRtl = lang === 'ar';
 
   useEffect(() => {
     const loadBranches = async () => {
@@ -166,13 +167,13 @@ export default function WorkPlace() {
   return (
     <div className="relative">
       <div className="overflow-x-auto rounded-2xl border border-green-200 shadow-sm">
-        <table className="min-w-full text-left">
+        <table className={`min-w-full ${isRtl ? 'text-right' : 'text-left'}`}>
           <thead>
             <tr className="bg-green-50">
               <th className="px-6 py-4 text-green-600 font-semibold">{_t('NAME')}</th>
               <th className="px-6 py-4 text-green-600 font-semibold">{_t('TYPE')}</th>
               <th className="px-6 py-4 text-green-600 font-semibold">{_t('COMPANY')}</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">{_t('ACTIONS')}</th>
+              <th className="px-6 py-4 text-green-600 font-semibold text-center">{_t('ACTIONS')}</th>
             </tr>
           </thead>
           <tbody>
@@ -186,15 +187,15 @@ export default function WorkPlace() {
                 </td>
                 <td className="px-6 py-4 text-gray-500">{wp.type}</td>
                 <td className="px-6 py-4 text-gray-500">{wp.company}</td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => handlePin(wp)}
-                      className="text-gray-500 hover:text-green-600 transition-colors"
-                      title={_t('PLACE_PIN_ON_MAP')}
-                    >
-                      <MapPin size={18} />
-                    </button>
+                <td className="px-6 py-4 text-center">
+                   <div className="flex items-center justify-center gap-4">
+                     <button
+                       onClick={() => handlePin(wp)}
+                       className="text-gray-500 hover:text-green-600 transition-colors"
+                       title={_t('PLACE_PIN_ON_MAP')}
+                     >
+                       <MapPin size={18} />
+                     </button>
                     <button
                       onClick={() => handleEdit(wp)}
                       className="text-green-400 hover:text-green-600 transition-colors"
@@ -213,7 +214,7 @@ export default function WorkPlace() {
                 </td>
               </tr>
             ))}
-            {/* New row for adding */}
+
             {isAdding && (
               <tr className="border-t border-green-200 bg-green-50">
                 <td className="px-6 py-4">
@@ -225,7 +226,6 @@ export default function WorkPlace() {
                     placeholder={_t('NAME')}
                   />
                 </td>
-
                 <td className="px-6 py-4">
                   <input
                     type="text"
@@ -235,7 +235,6 @@ export default function WorkPlace() {
                     placeholder={_t('TYPE')}
                   />
                 </td>
-
                 <td className="px-6 py-4">
                   <div className="flex flex-col gap-2">
                     <input
@@ -245,7 +244,6 @@ export default function WorkPlace() {
                       className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
                       placeholder={_t('COMPANY')}
                     />
-
                     <div className="flex gap-2 items-center">
                       <input
                         type="number"
@@ -263,8 +261,6 @@ export default function WorkPlace() {
                         className="w-1/2 px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
                         placeholder={_t('LONGITUDE')}
                       />
-
-                      {/* Set Pin button for add-row */}
                       <button
                         onClick={handlePinForNew}
                         title={_t('PICK_ON_MAP')}
@@ -275,28 +271,19 @@ export default function WorkPlace() {
                     </div>
                   </div>
                 </td>
-
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleSaveNew}
-                      className="text-green-600 hover:text-green-800 transition-colors"
-                      title={_t('SAVE')}
-                    >
+                    <button onClick={handleSaveNew} className="text-green-600 hover:text-green-800 transition-colors" title={_t('SAVE')}>
                       <Check size={18} />
                     </button>
-                    <button
-                      onClick={handleCancelAdd}
-                      className="text-red-500 hover:text-red-700 transition-colors"
-                      title={_t('CANCEL')}
-                    >
+                    <button onClick={handleCancelAdd} className="text-red-500 hover:text-red-700 transition-colors" title={_t('CANCEL')}>
                       <X size={18} />
                     </button>
                   </div>
                 </td>
               </tr>
             )}
-            {/* Empty row for floating button */}
+
             {!isAdding && (
               <tr>
                 <td colSpan={4} className="relative py-6">
@@ -316,21 +303,8 @@ export default function WorkPlace() {
         </table>
       </div>
 
-      {/* Modal */}
-      {isModalOpen && (
-        <EditModal 
-          workplace={selectedWorkplace} 
-          onClose={handleCloseModal} 
-        />
-      )}
-
-      {/* Pin Modal */}
-      {isPinModalOpen && (
-        <PinModal 
-          workplace={selectedWorkplace} 
-          onClose={handleClosePinModal} 
-        />
-      )}
+      {isModalOpen && <EditModal workplace={selectedWorkplace} onClose={handleCloseModal} />}
+      {isPinModalOpen && <PinModal workplace={selectedWorkplace} onClose={handleClosePinModal} />}
     </div>
   );
 }

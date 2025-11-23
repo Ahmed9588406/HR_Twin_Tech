@@ -94,6 +94,26 @@ export default {
     LOADING_SHIFTS: 'Loading shifts...',
     NO_SHIFTS: 'No shifts found',
     ADD_SHIFT: 'Add Shift',
+    // WorkTiming modal specific
+    EDIT_SHIFT: 'Edit Shift',
+    SELECT_A_BRANCH: 'Select a branch',
+    TIME_ZONE: 'Time Zone',
+    SELECT_WORKING_DAYS: 'Select working days',
+    // Weekday names / shorts
+    DAY_SUN: 'Sunday',
+    DAY_MON: 'Monday',
+    DAY_TUE: 'Tuesday',
+    DAY_WED: 'Wednesday',
+    DAY_THU: 'Thursday',
+    DAY_FRI: 'Friday',
+    DAY_SAT: 'Saturday',
+    SUN_SHORT: 'SUN',
+    MON_SHORT: 'MON',
+    TUE_SHORT: 'TUE',
+    WED_SHORT: 'WED',
+    THU_SHORT: 'THU',
+    FRI_SHORT: 'FRI',
+    SAT_SHORT: 'SAT',
 
     // Settings - Attendance
     ATTENDANCE_MGMT: 'Attendance Management',
@@ -384,7 +404,9 @@ export default {
     EDIT_AMOUNT: 'Edit Amount',
     DELETE_REWARD: 'Delete Reward',
     DELETE_DISCOUNT: 'Delete Discount',
-    TRY_ADJUST_FILTERS: 'Try adjusting your search or filters'
+    TRY_ADJUST_FILTERS: 'Try adjusting your search or filters',
+    FAILED_LOAD_REWARDS: 'Failed to load rewards. Please try again later.',
+    CURRENCY: 'EGP'
     ,
     // Requests - Profile Page
     LOADING_REQUEST: 'Loading request...'
@@ -407,6 +429,14 @@ export default {
     , PAID_FROM_COMPANY: 'Paid from company'
     , ACTIVE_EMPLOYEE: 'Active Employee'
     , EMPLOYEES_ACTION_SUBTITLE: 'Manage and monitor employee actions such as promotions, leaves, and warnings'
+
+    // Bulk Actions modal
+    , BULK_ACTIONS_TITLE: 'Bulk Actions'
+    , BULK_CHANGE_POSITION: 'Change Position'
+    , BULK_CHANGE_DEPARTMENT: 'Change Department'
+    , BULK_ADD_REWARD_DISCOUNT: 'Add Reward / Discount'
+    , BULK_SEND_VACATION: 'Send Vacation'
+    , BULK_ACTIONS_FOOTER: 'Select an action to apply to selected items ({{n}} selected)'
   },
   ar: {
     // General
@@ -503,6 +533,26 @@ export default {
     LOADING_SHIFTS: 'جاري تحميل الورديات...',
     NO_SHIFTS: 'لا توجد ورديات',
     ADD_SHIFT: 'إضافة وردية',
+    // WorkTiming modal specific (Arabic):
+    EDIT_SHIFT: 'تعديل الوردية',
+    SELECT_A_BRANCH: 'اختر فرعًا',
+    TIME_ZONE: 'المنطقة الزمنية',
+    SELECT_WORKING_DAYS: 'اختر أيام العمل',
+    // Weekday names / shorts (Arabic full names, shorts left as English codes)
+    DAY_SUN: 'الأحد',
+    DAY_MON: 'الإثنين',
+    DAY_TUE: 'الثلاثاء',
+    DAY_WED: 'الأربعاء',
+    DAY_THU: 'الخميس',
+    DAY_FRI: 'الجمعة',
+    DAY_SAT: 'السبت',
+    SUN_SHORT: 'SUN',
+    MON_SHORT: 'MON',
+    TUE_SHORT: 'TUE',
+    WED_SHORT: 'WED',
+    THU_SHORT: 'THU',
+    FRI_SHORT: 'FRI',
+    SAT_SHORT: 'SAT',
 
     // Settings - Attendance
     ATTENDANCE_MGMT: 'إدارة الحضور',
@@ -793,7 +843,9 @@ export default {
     EDIT_AMOUNT: 'تعديل المبلغ',
     DELETE_REWARD: 'حذف المكافأة',
     DELETE_DISCOUNT: 'حذف الخصم',
-    TRY_ADJUST_FILTERS: 'جرّب تعديل البحث أو عوامل التصفية'
+    TRY_ADJUST_FILTERS: 'جرّب تعديل البحث أو عوامل التصفية',
+    FAILED_LOAD_REWARDS: 'فشل في تحميل المكافآت. يرجى المحاولة مرة أخرى لاحقًا.',
+    CURRENCY: 'جنيه مصري'
     ,
     // Requests - Profile Page
     LOADING_REQUEST: 'جارٍ تحميل الطلب...'
@@ -816,5 +868,13 @@ export default {
     , PAID_FROM_COMPANY: 'مدفوع من الشركة'
     , ACTIVE_EMPLOYEE: 'موظف نشط'
     , EMPLOYEES_ACTION_SUBTITLE: 'إدارة ومراقبة إجراءات الموظفين مثل الترقيات والإجازات والإنذارات'
+
+    // Bulk Actions modal (Arabic)
+    , BULK_ACTIONS_TITLE: 'إجراءات مجمعة'
+    , BULK_CHANGE_POSITION: 'تغيير المنصب'
+    , BULK_CHANGE_DEPARTMENT: 'تغيير القسم'
+    , BULK_ADD_REWARD_DISCOUNT: 'إضافة مكافأة / خصم'
+    , BULK_SEND_VACATION: 'إرسال إجازة'
+    , BULK_ACTIONS_FOOTER: 'اختر إجراءً لتطبيقه على العناصر المحددة ({{n}} محدد)'
   }
 };

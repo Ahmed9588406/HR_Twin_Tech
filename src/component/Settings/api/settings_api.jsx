@@ -458,7 +458,18 @@ export const createShift = async (shiftData) => {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('Auth token not found; please log in again.');
 
-    // Expecting payload shape: { branchId, name, start, end, selectedDays, timeZone }
+    // Validate and normalize incoming shiftData to match required API shape
+    const payload = {
+      branchId: Number(shiftData.branchId),
+      name: String(shiftData.name),
+      start: String(shiftData.start), // expected "HH:MM:SS"
+      end: String(shiftData.end),     // expected "HH:MM:SS"
+      selectedDays: Array.isArray(shiftData.selectedDays) ? shiftData.selectedDays.map(Number) : [],
+      timeZone: shiftData.timeZone || 'Africa/Cairo'
+    };
+
+    console.log('Creating shift with payload:', payload);
+
     const res = await fetch(SHIFTS_API_URL, {
       method: 'POST',
       headers: {
@@ -467,21 +478,28 @@ export const createShift = async (shiftData) => {
         Authorization: `Bearer ${token}`,
         'ngrok-skip-browser-warning': 'true'
       },
-      body: JSON.stringify(shiftData)
+      body: JSON.stringify(payload)
     });
 
     const text = await res.text();
-    console.log('Create shift response:', res.status, text);
+    // Try parse JSON if possible
+    let json;
+    try { json = text ? JSON.parse(text) : null; } catch (err) { json = null; }
+
+    console.log('Create shift response status:', res.status, 'body:', json ?? text);
 
     if (!res.ok) {
-      throw new Error(`Failed to create shift: ${res.status} - ${text}`);
+      // Prefer structured server error message when available
+      const serverMsg = json && (json.message || json.error || (json.data && json.data.message)) ? (json.message || json.error || json.data.message) : text;
+      const code = json && json.code ? json.code : null;
+      const errMsg = `Failed to create shift${code ? ` (${code})` : ''}: ${serverMsg || res.status}`;
+      const error = new Error(errMsg);
+      error.serverResponse = json ?? text;
+      throw error;
     }
 
-    try {
-      return JSON.parse(text);
-    } catch {
-      return text;
-    }
+    // Return parsed JSON (created shift)
+    return json;
   } catch (err) {
     console.error('Error in createShift:', err);
     throw err;
