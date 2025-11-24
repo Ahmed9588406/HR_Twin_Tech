@@ -1,3 +1,5 @@
+import { getLang } from '../i18n/i18n'; // add near top of file (after existing imports)
+
 export const fetchEmpAttendanceHistory = async (empCode, options = {}) => {
   // options optional: { page, size } — sent as query params
   try {
@@ -354,44 +356,51 @@ export const uploadEmployeePhoto = async (empCode, file) => {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const url = `${BASE_URL}emp-dashboard/upload-file`; // Remove empCode query param
+    const url = `${BASE_URL}emp-dashboard/upload-file`;
 
     const formData = new FormData();
-    // Removed: formData.append('empCode', empCode); // Not needed in request
-    formData.append('file', file); // Only append the file
+    formData.append('file', file); // key must match backend expectation
 
-    console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
+    const lang = (typeof getLang === 'function' ? getLang() : (localStorage.getItem('i18nLang') || 'en')) || 'en';
+
+    console.log('Uploading photo with PUT method:', { url, fileName: file.name, fileSize: file.size, fileType: file.type });
 
     const response = await fetch(url, {
-      method: 'POST',
+      method: 'PUT', // Changed from POST to PUT to match Postman screenshot
       headers: {
         Authorization: `Bearer ${token}`,
         'ngrok-skip-browser-warning': 'true',
         'X-Time-Zone': 'Africa/Cairo',
-        'Accept-Language': 'ar',
-        // Do not set Content-Type for FormData
+        'Accept-Language': lang,
+        // Do NOT set Content-Type for FormData - browser will set it with boundary
       },
       body: formData,
     });
 
     console.log('Upload response status:', response.status);
+    console.log('Upload response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
-      let errorMessage = 'Failed to upload photo';
+      // try to read body as JSON or text
+      let serverMsg = '';
       try {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
-        console.log('Error data:', errorData);
-      } catch (e) {
-        // If not JSON, get text
         const text = await response.text();
-        errorMessage = text || `${response.status}: ${response.statusText}`;
-        console.log('Error text:', text);
+        console.error('Server error response body:', text);
+        try {
+          const json = text ? JSON.parse(text) : null;
+          serverMsg = json?.message || json?.error || text || `${response.status} ${response.statusText}`;
+        } catch {
+          serverMsg = text || `${response.status} ${response.statusText}`;
+        }
+      } catch (e) {
+        serverMsg = `${response.status}: ${response.statusText}`;
       }
-      throw new Error(errorMessage);
+
+      console.error('uploadEmployeePhoto failed', { url, status: response.status, serverMsg });
+      throw new Error(`${serverMsg} (status ${response.status})`);
     }
 
-    const data = await response.json();
+    const data = await response.json().catch(() => null);
     console.log('Photo uploaded successfully:', data);
     return data;
   } catch (error) {

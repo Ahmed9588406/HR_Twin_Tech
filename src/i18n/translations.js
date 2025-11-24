@@ -537,8 +537,11 @@ const translations = {
     , NO_DISCOUNTS: 'No discounts available.'
     , TYPE_LABEL: 'Type:'
 
+    // Photo upload
+    , FAILED_UPLOAD_PHOTO: 'Failed to upload photo'
+
     // Requests - Vacation (ensure explicit Arabic for "no vacation requests")
-    , NO_VACATION_REQUESTS: 'لا توجد طلبات إجازة'
+    , NO_VACATION_REQUESTS: 'No vacation requests'
   },
   ar: {
     // General
@@ -1067,6 +1070,9 @@ const translations = {
     , UNABLE_LOAD_DISCOUNTS: 'تعذر تحميل الخصومات.'
     , NO_DISCOUNTS: 'لا توجد خصومات متاحة.'
     , TYPE_LABEL: 'النوع:'
+
+    // Photo upload
+    , FAILED_UPLOAD_PHOTO: 'فشل في رفع الصورة'
 
     // Requests - Vacation (ensure explicit Arabic for "no vacation requests")
     , NO_VACATION_REQUESTS: 'لا توجد طلبات إجازة'

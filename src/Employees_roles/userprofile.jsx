@@ -163,10 +163,16 @@ export default function UserProfile({
     try {
       await uploadEmployeePhoto(user.code, file);
       // On success, refresh the photoSrc (assuming the API updates the profile)
-      // For simplicity, you can reload the page or update photoSrc with a new URL if provided
       window.location.reload(); // Or update photoSrc dynamically if the response includes new URL
     } catch (error) {
-      setUploadError(error.message);
+      // Log full server error for debugging
+      console.error('Upload failed (detailed):', error);
+
+      // Present a friendly localized message to the user and keep the server message in console
+      const friendly = _t('FAILED_UPLOAD_PHOTO') || copy.attendanceFail || 'Failed to upload photo';
+      setUploadError(`${friendly}: ${error.message ? error.message : ''}`);
+      // Optionally also show alert
+      alert(`${friendly}.`);
     } finally {
       setUploading(false);
     }

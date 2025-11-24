@@ -511,55 +511,5 @@ export const lockEmployee = async (employeeId) => {
   }
 };
 
-// Upload employee photo
-export const uploadEmployeePhoto = async (empCode, file) => {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('Auth token not found; please log in again.');
-    }
-
-    const url = `${BASE_URL}/emp-dashboard/upload-file`; // No query params
-
-    const formData = new FormData();
-    formData.append('file', file); // Only append the file
-
-    console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'ngrok-skip-browser-warning': 'true',
-        'X-Time-Zone': 'Africa/Cairo',
-        'Accept-Language': 'ar',
-        // Do not set Content-Type for FormData
-      },
-      body: formData,
-    });
-
-    console.log('Upload response status:', response.status);
-
-    if (!response.ok) {
-      let errorMessage = 'Failed to upload photo';
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
-        console.log('Error data:', errorData);
-      } catch (e) {
-        // If not JSON, get text
-        const text = await response.text();
-        errorMessage = text || `${response.status}: ${response.statusText}`;
-        console.log('Error text:', text);
-      }
-      throw new Error(errorMessage);
-    }
-
-    const data = await response.json();
-    console.log('Photo uploaded successfully:', data);
-    return data;
-  } catch (error) {
-    console.error('Error uploading photo:', error);
-    throw error;
-  }
-};
+// Replace the local uploadEmployeePhoto implementation with a re-export from the shared Employees_roles API
+export { uploadEmployeePhoto } from '../../../Employees_roles/employee_role_api';
