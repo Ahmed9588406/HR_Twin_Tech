@@ -22,6 +22,15 @@ export function setLang(lang) {
       document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     }
     subscribers.forEach(cb => cb(lang));
+
+    // Dispatch a global event for any code listening on window (backwards compatibility)
+    if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') {
+      try {
+        window.dispatchEvent(new CustomEvent('languageChange', { detail: { lang } }));
+      } catch (e) {
+        // ignore event dispatch errors
+      }
+    }
   }
 }
 

@@ -15,6 +15,7 @@ const translations = {
     ACTIONS: 'Actions',
     SEARCH: 'Search',
     TRANSLATION_TOGGLE: 'Translation',
+    LOGOUT: 'Logout',
 
     // Dashboard / User Profile
     MY_PROFILE: 'My Profile',
@@ -271,6 +272,9 @@ const translations = {
     NO_DEPARTMENT_DATA: 'No department data available',
     LARGEST: 'Largest',
     AVERAGE: 'Average',
+    DEPARTMENT_NAME: 'Department Name',
+    ENTER_DEPARTMENT_NAME: 'Enter department name',
+    SELECT_MANAGER: 'Select Manager',
 
     // Cards
     EMPLOYEE_SINGULAR: 'Employee',
@@ -579,6 +583,7 @@ const translations = {
     ACTIONS: 'إجراءات',
     SEARCH: 'بحث',
     TRANSLATION_TOGGLE: 'الترجمة',
+    LOGOUT: 'تسجيل الخروج',
 
     // Dashboard / User Profile
     MY_PROFILE: 'ملفي الشخصي',
@@ -835,6 +840,9 @@ const translations = {
     NO_DEPARTMENT_DATA: 'لا توجد بيانات للأقسام',
     LARGEST: 'الأكبر',
     AVERAGE: 'المتوسط',
+    DEPARTMENT_NAME: 'اسم القسم',
+    ENTER_DEPARTMENT_NAME: 'أدخل اسم القسم',
+    SELECT_MANAGER: 'اختر المدير',
 
     // Cards
     EMPLOYEE_SINGULAR: 'موظف',
@@ -1087,6 +1095,14 @@ const translations = {
     , UNABLE_LOAD_DISCOUNTS: 'تعذر تحميل الخصومات.'
     , NO_DISCOUNTS: 'لا توجد خصومات متاحة.'
     , TYPE_LABEL: 'النوع:'
+
+    // Pagination / Logs labels used by logs.jsx
+    , PAGE: 'صفحة'
+    , OF: 'من'
+    , PREVIOUS: 'السابق'
+
+    // Requests - Vacation (ensure explicit Arabic for "no vacation requests")
+    , NO_VACATION_REQUESTS: 'لا توجد طلبات إجازة'
   }
 };
 

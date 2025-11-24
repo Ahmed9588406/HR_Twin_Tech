@@ -104,10 +104,10 @@ export default function Sidebar() {
     fetchAdminData();
   }, []);
 
-  // Add language state (import small i18n runtime)
+  // Add language state (use same key as i18n and initialize to i18nLang)
   const [language, setLanguage] = useState(() => {
     try {
-      return localStorage.getItem('app_lang') || 'en';
+      return localStorage.getItem('i18nLang') || 'en';
     } catch {
       return 'en';
     }
@@ -117,6 +117,7 @@ export default function Sidebar() {
     // Lazy import to avoid cyclic or server issues
     let unsub;
     import('../../i18n/i18n').then(i18n => {
+      // initialize from i18n and subscribe for changes
       setLanguage(i18n.getLang());
       unsub = i18n.subscribe((lang) => setLanguage(lang));
     }).catch(() => {});
@@ -128,7 +129,7 @@ export default function Sidebar() {
   const toggleLanguage = () => {
     import('../../i18n/i18n').then(i18n => {
       const newLang = language === 'en' ? 'ar' : 'en';
-      i18n.setLang(newLang); // This will trigger all subscribers
+      i18n.setLang(newLang); // setLang will update localStorage, notify subscribers and dispatch window event
     }).catch(() => {});
   };
 

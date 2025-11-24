@@ -1,3 +1,4 @@
+// Fetch vacation requests
 const fetchVacationRequests = async () => {
   try {
     const token = localStorage.getItem('token');
@@ -21,7 +22,7 @@ const fetchVacationRequests = async () => {
     }
 
     const data = await response.json();
-    console.log('Vacation requests response:', data); // Log the response
+    console.log('Vacation requests response:', data);
     return data;
   } catch (error) {
     console.error('Error fetching vacation requests:', error);
@@ -29,6 +30,7 @@ const fetchVacationRequests = async () => {
   }
 };
 
+// Fetch request by ID
 export const fetchRequestById = async (requestId) => {
   try {
     const token = localStorage.getItem('token');
@@ -52,7 +54,7 @@ export const fetchRequestById = async (requestId) => {
     }
 
     const data = await response.json();
-    console.log('Request by ID response:', data); // Log the response
+    console.log('Request by ID response:', data);
     return data;
   } catch (error) {
     console.error('Error fetching request by ID:', error);
@@ -60,18 +62,15 @@ export const fetchRequestById = async (requestId) => {
   }
 };
 
-// Approve or reject a vacation request (resilient: tries multiple HTTP methods and returns detailed errors)
+// Approve vacation request
 export const approveVacationRequest = async (requestId, paid = true) => {
   const token = localStorage.getItem('token');
   if (!token) {
     throw new Error('Auth token not found; please log in again.');
   }
 
-  // relative URL (dev proxy handles forwarding)
-  const relativePath = `/api/v1/requests/approve/${encodeURIComponent(requestId)}?paid=${paid ? 'true' : 'false'}`;
-
-  // methods to try in order
-  const methods = ['POST', 'PUT', 'PATCH', 'GET'];
+  const fullUrl = `https://api.shl-hr.com/api/v1/requests/approve/${encodeURIComponent(requestId)}?paid=${paid ? 'true' : 'false'}`;
+  const methods = ['PUT', 'POST', 'PATCH'];
 
   let lastError = null;
   for (const method of methods) {
@@ -79,16 +78,14 @@ export const approveVacationRequest = async (requestId, paid = true) => {
       const opts = {
         method,
         headers: {
+          'Content-Type': 'application/json',
           Accept: 'application/json',
           Authorization: `Bearer ${token}`,
           'ngrok-skip-browser-warning': 'true',
         },
       };
 
-      // Content-Type not needed when no body; keep it off to avoid backend confusion
-      const res = await fetch(relativePath, opts);
-
-      // Try to parse body (prefer JSON, fallback to text)
+      const res = await fetch(fullUrl, opts);
       let bodyText = '';
       try {
         bodyText = await res.text();
@@ -96,7 +93,6 @@ export const approveVacationRequest = async (requestId, paid = true) => {
         bodyText = '';
       }
 
-      // attempt to parse JSON if possible
       let parsed = null;
       try {
         parsed = bodyText ? JSON.parse(bodyText) : null;
@@ -105,44 +101,36 @@ export const approveVacationRequest = async (requestId, paid = true) => {
       }
 
       if (res.ok) {
-        // return parsed JSON if available, else a success object
         return parsed ?? { success: true, methodUsed: method };
       }
 
-      // If 4xx -> likely client error; surface immediately with details
       if (res.status >= 400 && res.status < 500) {
         const message = parsed?.message || bodyText || `HTTP ${res.status} ${res.statusText}`;
         throw new Error(`Failed to approve request (${method}): ${res.status} - ${message}`);
       }
 
-      // For 5xx, keep trying other methods but remember the error
       const message = parsed?.message || bodyText || `HTTP ${res.status} ${res.statusText}`;
       lastError = new Error(`Server error approving request (${method}): ${res.status} - ${message}`);
-      // continue to next method
     } catch (err) {
-      // network or parsing error - store and continue trying other methods
       lastError = err;
     }
   }
 
-  // All methods failed — throw the last captured error with extra context
   const details = lastError ? lastError.message : 'Unknown error';
   const error = new Error(`All methods failed to approve request ${requestId}. Last error: ${details}`);
   console.error(error);
   throw error;
 };
 
-// Reject a vacation request (resilient: tries multiple HTTP methods and returns detailed errors)
+// Reject vacation request
 export const rejectVacationRequest = async (requestId) => {
   const token = localStorage.getItem('token');
   if (!token) {
     throw new Error('Auth token not found; please log in again.');
   }
 
-  const relativePath = `/api/v1/requests/reject/${encodeURIComponent(requestId)}`;
-
-  // methods to try in order (include DELETE for reject)
-  const methods = ['POST', 'PUT', 'PATCH', 'DELETE', 'GET'];
+  const fullUrl = `https://api.shl-hr.com/api/v1/requests/reject/${encodeURIComponent(requestId)}`;
+  const methods = ['PUT', 'POST', 'PATCH', 'DELETE'];
 
   let lastError = null;
   for (const method of methods) {
@@ -150,19 +138,27 @@ export const rejectVacationRequest = async (requestId) => {
       const opts = {
         method,
         headers: {
+          'Content-Type': 'application/json',
           Accept: 'application/json',
           Authorization: `Bearer ${token}`,
           'ngrok-skip-browser-warning': 'true',
         },
       };
 
-      const res = await fetch(relativePath, opts);
-
+      const res = await fetch(fullUrl, opts);
       let bodyText = '';
-      try { bodyText = await res.text(); } catch (e) { bodyText = ''; }
+      try {
+        bodyText = await res.text();
+      } catch (e) {
+        bodyText = '';
+      }
 
       let parsed = null;
-      try { parsed = bodyText ? JSON.parse(bodyText) : null; } catch (e) { parsed = null; }
+      try {
+        parsed = bodyText ? JSON.parse(bodyText) : null;
+      } catch (e) {
+        parsed = null;
+      }
 
       if (res.ok) {
         return parsed ?? { success: true, methodUsed: method };
@@ -184,7 +180,7 @@ export const rejectVacationRequest = async (requestId) => {
   const error = new Error(`All methods failed to reject request ${requestId}. Last error: ${details}`);
   console.error(error);
   throw error;
-}
+};
 
 // Fetch advance requests
 export const fetchAdvanceRequests = async () => {
@@ -250,7 +246,7 @@ export const fetchOvertimeRequests = async () => {
   }
 };
 
-// Paged Logs endpoints (server-side pagination)
+// Fetch vacation logs (paginated)
 export const fetchVacationLogs = async (page = 0, size = 5) => {
   try {
     const token = localStorage.getItem('token');
@@ -289,6 +285,7 @@ export const fetchVacationLogs = async (page = 0, size = 5) => {
   }
 };
 
+// Fetch advance logs (paginated)
 export const fetchAdvanceLogs = async (page = 0, size = 5) => {
   try {
     const token = localStorage.getItem('token');
@@ -327,6 +324,7 @@ export const fetchAdvanceLogs = async (page = 0, size = 5) => {
   }
 };
 
+// Fetch overtime logs (paginated)
 export const fetchOvertimeLogs = async (page = 0, size = 5) => {
   try {
     const token = localStorage.getItem('token');
@@ -365,5 +363,6 @@ export const fetchOvertimeLogs = async (page = 0, size = 5) => {
   }
 };
 
+// Export fetchVacationRequests as both named and default
 export { fetchVacationRequests };
 export default fetchVacationRequests;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell } from 'lucide-react';
+import { ArrowLeft, Bell, LogOut } from 'lucide-react';
 import { t as _t, getLang as _getLang, subscribe as _subscribe, setLang as _setLang } from '../i18n/i18n';
 import { fetchEmployeeProfile } from './employee_role_api';
 import UserProfile from './userprofile';
@@ -112,6 +112,17 @@ export default function UserProfileView() {
   
   const handleAdvanceRequest = () => setShowAdvanceModal(true);
 
+  const handleLogout = () => {
+    // Clear all localStorage items
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('code');
+    localStorage.removeItem('userData');
+    
+    // Navigate to login page
+    navigate('/');
+  };
+
   const formatLastSignIn = (dateString) => {
     if (!dateString) return { display: _t('NA'), fullDate: _t('NA') };
     const date = new Date(dateString);
@@ -168,6 +179,14 @@ export default function UserProfileView() {
                 aria-label={_t('NOTIFICATIONS')}
               >
                 <Bell className="w-6 h-6" />
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                aria-label={_t('LOGOUT')}
+              >
+                <LogOut className="w-5 h-5" />
+                <span className="font-medium hidden sm:inline">{_t('LOGOUT')}</span>
               </button>
               <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">{_t('ACTIVE_STATUS')}</span>
             </div>

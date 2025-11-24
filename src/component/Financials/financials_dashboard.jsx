@@ -10,6 +10,7 @@ export default function FinancialsDashboard() {
   const [activeTab, setActiveTab] = useState('PayRoll');
   const [searchTerm, setSearchTerm] = useState('');
   const [lang, setLang] = useState(_getLang());
+  const [selectedMonth, setSelectedMonth] = useState('');
   React.useEffect(() => _subscribe(setLang), []);
 
   const tabs = [
@@ -146,15 +147,14 @@ export default function FinancialsDashboard() {
 
   const renderContent = () => {
     if (activeTab === 'PayRoll') {
-      return <PayrollDashboard />;
+      return <PayrollDashboard selectedMonth={selectedMonth} />;
     }
     if (activeTab === 'Rewards') {
-      return <RewardsDashboard />;
+      return <RewardsDashboard selectedMonth={selectedMonth} />;
     }
     if (activeTab === 'Discount') {
-      return <DiscountsDashboard />;
+      return <DiscountsDashboard selectedMonth={selectedMonth} />;
     }
-    // For other tabs, keep existing table logic or add placeholder
     return renderTable();
   };
 
@@ -197,21 +197,44 @@ export default function FinancialsDashboard() {
           {/* Tab Content */}
           <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
             {activeTab === 'PayRoll' || activeTab === 'Rewards' || activeTab === 'Discount' ? (
+              <div className="mb-6 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <label className="text-sm text-gray-600">{_t('FILTER_BY_MONTH')}</label>
+                  <input
+                    type="month"
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                  {selectedMonth && (
+                    <button
+                      onClick={() => setSelectedMonth('')}
+                      className="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700"
+                    >
+                      {_t('RESET')}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="mb-6 flex items-center justify-between">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    placeholder={_t('SEARCH_FINANCIALS')}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'PayRoll' || activeTab === 'Rewards' || activeTab === 'Discount' ? (
               renderContent()
             ) : (
               <>
-                <div className="mb-6 flex items-center justify-between">
-                  <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="text"
-                      placeholder={_t('SEARCH_FINANCIALS')}
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                  </div>
-                </div>
                 {renderContent()}
                 {getFilteredData().length === 0 && (
                   <div className="px-6 py-12 text-center text-gray-500">

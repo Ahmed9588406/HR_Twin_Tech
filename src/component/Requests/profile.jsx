@@ -12,7 +12,7 @@ export default function VacationRequestPage() {
   const navigate = useNavigate();
   const { requestId } = location.state || {};
   const [requestData, setRequestData] = useState(null);
-  const [status, setStatus] = useState('Pending');
+  const [status, setStatus] = useState('PENDING');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [approving, setApproving] = useState(false);
@@ -29,7 +29,9 @@ export default function VacationRequestPage() {
         setLoading(true);
         const data = await fetchRequestById(requestId);
         setRequestData(data);
-        setStatus(data.requestStatus || 'Pending');
+        // Normalize the status to uppercase for consistency
+        const normalizedStatus = (data.requestStatus || 'PENDING').toUpperCase();
+        setStatus(normalizedStatus);
       } catch (err) {
         console.error('Failed to fetch request data:', err);
         setError('Failed to load request data. Please try again.');
@@ -46,41 +48,51 @@ export default function VacationRequestPage() {
     const prevStatus = status;
     try {
       setApproving(true);
-      setStatus('Approving...');
-      await approveVacationRequest(requestId, true);
+      setStatus('APPROVING...');
+      // Call approve API with paid=true
+      const result = await approveVacationRequest(requestId, true);
+      console.log('Approve result:', result);
       setStatus('APPROVED');
-      // refresh request data to reflect server state
+      // Refresh request data to reflect server state
       try {
         const fresh = await fetchRequestById(requestId);
         setRequestData(fresh);
+        const normalizedStatus = (fresh.requestStatus || 'APPROVED').toUpperCase();
+        setStatus(normalizedStatus);
       } catch (refreshErr) {
         console.warn('Failed to refresh request after approve:', refreshErr);
       }
     } catch (err) {
       console.error('Approve failed:', err);
-      alert('Failed to approve request: ' + (err.message || 'Please try again.'));
+      alert(_t('FAILED_TO_APPROVE') + ': ' + (err.message || 'Please try again.'));
       setStatus(prevStatus || 'PENDING');
     } finally {
       setApproving(false);
     }
   };
+
   const handleReject = async () => {
     if (!requestId) return;
     const prevStatus = status;
     try {
       setRejecting(true);
-      setStatus('Rejecting...');
-      await rejectVacationRequest(requestId);
+      setStatus('REJECTING...');
+      // Call reject API
+      const result = await rejectVacationRequest(requestId);
+      console.log('Reject result:', result);
       setStatus('REJECTED');
+      // Refresh request data
       try {
         const fresh = await fetchRequestById(requestId);
         setRequestData(fresh);
+        const normalizedStatus = (fresh.requestStatus || 'REJECTED').toUpperCase();
+        setStatus(normalizedStatus);
       } catch (refreshErr) {
         console.warn('Failed to refresh request after reject:', refreshErr);
       }
     } catch (err) {
       console.error('Reject failed:', err);
-      alert('Failed to reject request: ' + (err.message || 'Please try again.'));
+      alert(_t('FAILED_TO_REJECT') + ': ' + (err.message || 'Please try again.'));
       setStatus(prevStatus || 'PENDING');
     } finally {
       setRejecting(false);
@@ -260,9 +272,10 @@ export default function VacationRequestPage() {
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-gray-900">{_t('REQUEST_STATUS')}</h3>
                 <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                  status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
-                  status === 'APPROVED' || status === 'Accepted' ? 'bg-green-100 text-green-700' :
-                  'bg-red-100 text-red-700'
+                  status === 'PENDING' || status === 'APPROVING...' || status === 'REJECTING...' ? 'bg-yellow-100 text-yellow-700' :
+                  status === 'APPROVED' ? 'bg-green-100 text-green-700' :
+                  status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                  'bg-gray-100 text-gray-700'
                 }`}>
                   {status}
                 </span>
@@ -272,18 +285,32 @@ export default function VacationRequestPage() {
                 <div className="flex gap-4">
                   <button
                     onClick={handleReject}
-                    disabled={rejecting}
-                    className={`flex-1 ${rejecting ? 'bg-red-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'} text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl`}
+                    disabled={rejecting || approving}
+                    className={`flex-1 ${rejecting || approving ? 'bg-red-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'} text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl`}
                   >
-                    {rejecting ? _t('REJECTING') : _t('REJECT')}
+                    {rejecting ? _t('REJECTING') || 'Rejecting...' : _t('REJECT') || 'Reject'}
                   </button>
                   <button
                     onClick={handleAccept}
-                    disabled={approving}
-                    className={`flex-1 ${approving ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl`}
+                    disabled={approving || rejecting}
+                    className={`flex-1 ${approving || rejecting ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl`}
                   >
-                    {approving ? _t('APPROVING') : _t('ACCEPT')}
+                    {approving ? _t('APPROVING') || 'Approving...' : _t('ACCEPT') || 'Accept'}
                   </button>
+                </div>
+              )}
+
+              {status === 'APPROVED' && (
+                <div className="flex items-center justify-center gap-2 text-green-600 bg-green-50 py-4 rounded-xl">
+                  <CheckCircle className="w-6 h-6" />
+                  <span className="font-semibold">{_t('REQUEST_APPROVED') || 'Request has been approved'}</span>
+                </div>
+              )}
+
+              {status === 'REJECTED' && (
+                <div className="flex items-center justify-center gap-2 text-red-600 bg-red-50 py-4 rounded-xl">
+                  <AlertCircle className="w-6 h-6" />
+                  <span className="font-semibold">{_t('REQUEST_REJECTED') || 'Request has been rejected'}</span>
                 </div>
               )}
             </div>

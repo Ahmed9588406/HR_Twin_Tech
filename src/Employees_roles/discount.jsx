@@ -1,7 +1,7 @@
 import { Minus, Calendar } from 'lucide-react';
 import { fetchEmployeeDiscounts } from './employee_role_api';
 import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../i18n/i18n';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function EmployeeDiscounts({ empCode }) {
   const [discountsData, setDiscountsData] = useState([]);
@@ -15,58 +15,6 @@ export default function EmployeeDiscounts({ empCode }) {
     return () => unsub();
   }, []);
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
-
-  // draggable state (card)
-  const containerRef = useRef(null);
-  const [useTransformCenter, setUseTransformCenter] = useState(true);
-  const [pos, setPos] = useState({ left: 0, top: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const onMove = (e) => {
-      if (!isDragging) return;
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const left = clientX - offset.x;
-      const top = clientY - offset.y;
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      const el = containerRef.current;
-      const w = el ? el.offsetWidth : 520;
-      const h = el ? el.offsetHeight : 360;
-      const clampedLeft = Math.max(8, Math.min(left, vw - w - 8));
-      const clampedTop = Math.max(8, Math.min(top, vh - h - 8));
-      setPos({ left: clampedLeft, top: clampedTop });
-      e.preventDefault && e.preventDefault();
-    };
-    const onUp = () => { if (isDragging) setIsDragging(false); };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-    window.addEventListener('touchmove', onMove, { passive: false });
-    window.addEventListener('touchend', onUp);
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-      window.removeEventListener('touchmove', onMove, { passive: false });
-      window.removeEventListener('touchend', onUp);
-    };
-  }, [isDragging, offset]);
-
-  const startDrag = (e) => {
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const el = containerRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    if (useTransformCenter) {
-      setPos({ left: rect.left, top: rect.top });
-      setUseTransformCenter(false);
-    }
-    setOffset({ x: clientX - rect.left, y: clientY - rect.top });
-    setIsDragging(true);
-    e.preventDefault();
-  };
 
   useEffect(() => {
     let mounted = true;
@@ -122,28 +70,13 @@ export default function EmployeeDiscounts({ empCode }) {
   }
 
   return (
-    <div
-      ref={containerRef}
-      style={
-        useTransformCenter
-          ? { transform: 'translate(-50%, -50%)', left: '50%', top: '50%', position: 'fixed' }
-          : { left: `${pos.left}px`, top: `${pos.top}px`, position: 'fixed' }
-      }
-      className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200 max-w-2xl"
-      dir={dir}
-      lang={lang}
-    >
-      {/* make header draggable */}
-      <div onMouseDown={startDrag} onTouchStart={startDrag} className="cursor-grab">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <Minus className="w-5 h-5 text-red-600" />
-              {_t('DISCOUNTS_TITLE')}
-            </h3>
-            <p className="text-sm text-slate-600 mt-1">{_t('DISCOUNTS_SUBTITLE')}</p>
-          </div>
-        </div>
+    <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200" dir={dir} lang={lang}>
+      <div className="mb-6">
+        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <Minus className="w-5 h-5 text-red-600" />
+          {_t('DISCOUNTS_TITLE')}
+        </h3>
+        <p className="text-sm text-slate-600 mt-1">{_t('DISCOUNTS_SUBTITLE')}</p>
       </div>
 
       <div className="space-y-4">

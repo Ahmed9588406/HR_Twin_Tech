@@ -229,51 +229,65 @@ export const postVacationRequest = async (empCode, payload = {}, file = null) =>
     const token = localStorage.getItem('token') || '';
     const url = `${BASE_URL}emp-dashboard/vacation-request`;
 
-    let res;
-    if (file) {
-      const form = new FormData();
-      // fields expected by API per image: requestDate, startDate, endDate, leaveType, comment, attachments
-      form.append('empCode', empCode || '');
-      if (payload.requestDate) form.append('requestDate', payload.requestDate);
-      if (payload.startDate) form.append('startDate', payload.startDate);
-      if (payload.endDate) form.append('endDate', payload.endDate);
-      if (payload.leaveType) form.append('leaveType', payload.leaveType);
-      if (payload.comment) form.append('comment', payload.comment);
-      // attachments key (single file). Adjust if API expects array.
-      form.append('attachments', file);
-
-      res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          Authorization: token ? `Bearer ${token}` : '',
-          'ngrok-skip-browser-warning': 'true',
-          'X-Time-Zone': 'Africa/Cairo',
-          'Accept-Language': 'ar',
-          // do NOT set Content-Type for FormData
-        },
-        body: form,
-      });
-    } else {
-      // JSON payload (no attachments)
-      const body = {
-        empCode: empCode || '',
-        ...payload
-      };
-      res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token ? `Bearer ${token}` : '',
-          'ngrok-skip-browser-warning': 'true',
-          'X-Time-Zone': 'Africa/Cairo',
-          'Accept-Language': 'ar',
-        },
-        body: JSON.stringify(body)
-      });
+    const form = new FormData();
+    
+    // Add all required fields based on the image specification
+    form.append('empCode', empCode || '');
+    
+    // Use 'startDate' instead of 'leaveStartDate'
+    if (payload.startDate) {
+      form.append('startDate', payload.startDate);
     }
+    
+    // Use 'endDate' instead of 'leaveEndDate'
+    if (payload.endDate) {
+      form.append('endDate', payload.endDate);
+    }
+    
+    // Use 'requestDate' 
+    if (payload.requestDate) {
+      form.append('requestDate', payload.requestDate);
+    }
+    
+    // Use 'leaveType' (should be 'ANNUAL' or 'SICK')
+    if (payload.leaveType) {
+      form.append('leaveType', payload.leaveType);
+    }
+    
+    // Use 'comment' 
+    if (payload.comment) {
+      form.append('comment', payload.comment);
+    }
+    
+    // Add attachment if file exists
+    if (file) {
+      form.append('attachments', file);
+    }
+
+    console.log('Submitting vacation request with FormData:');
+    for (let pair of form.entries()) {
+      console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name : pair[1]));
+    }
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: token ? `Bearer ${token}` : '',
+        'ngrok-skip-browser-warning': 'true',
+        'X-Time-Zone': 'Africa/Cairo',
+        'Accept-Language': 'ar',
+        // Do NOT set Content-Type for FormData - browser sets it automatically with boundary
+      },
+      body: form,
+    });
+
+    console.log('Response status:', res.status);
+    console.log('Response headers:', Object.fromEntries(res.headers.entries()));
 
     if (!res.ok) {
       const text = await res.text().catch(() => '');
+      console.error('Error response body:', text);
+      
       let serverMsg = text || `${res.status} ${res.statusText}`;
       try {
         const json = text ? JSON.parse(text) : null;
@@ -285,8 +299,9 @@ export const postVacationRequest = async (empCode, payload = {}, file = null) =>
       throw new Error(serverMsg);
     }
 
-    // try parse json response, otherwise return null
+    // Try parse json response, otherwise return null
     const data = await res.json().catch(() => null);
+    console.log('Success response:', data);
     return data;
   } catch (err) {
     console.error('Error in postVacationRequest:', err);

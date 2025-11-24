@@ -123,11 +123,15 @@ export default function VacationRequest({ employee = {}, onClose = () => {}, onS
         requestDate,
         startDate,
         endDate,
-        leaveType,
+        leaveType, // Should be 'ANNUAL' or 'SICK'
         comment: comments
       };
 
-      // call helper: will send multipart if file exists, JSON otherwise
+      console.log('Submitting vacation request with payload:', payload);
+      console.log('Employee code:', employee.code);
+      console.log('File:', file ? file.name : 'No file');
+
+      // Call helper: will send multipart FormData
       const result = await postVacationRequest(employee.code, payload, file);
       console.log('Vacation request result:', result);
 
@@ -136,13 +140,14 @@ export default function VacationRequest({ employee = {}, onClose = () => {}, onS
       onSuccess();
     } catch (err) {
       console.error('Leave request failed:', err);
-      // extract friendly message if possible
+      // Extract friendly message if possible
       let msg = copy.submitFailureFallback;
       try {
         const m = String(err.message || err);
-        const possibleJson = m.trim().startsWith('{') ? JSON.parse(m) : null;
-        if (possibleJson && possibleJson.message) msg = possibleJson.message;
-        else if (m) msg = m;
+        // If the error message is already in Arabic or is a simple string, use it directly
+        if (m && m.trim()) {
+          msg = m;
+        }
       } catch {}
       alert(`${copy.failurePrefix} ${msg}`);
     } finally {

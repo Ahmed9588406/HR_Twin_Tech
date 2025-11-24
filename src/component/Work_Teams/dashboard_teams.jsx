@@ -21,6 +21,7 @@ export default function EmployeeManager() {
   const [editingTeam, setEditingTeam] = useState(null); // State for the team being edited
   const [selectedTeam, setSelectedTeam] = useState(null); // State for the selected team in members modal
   const [attendanceStats, setAttendanceStats] = useState([]); // State for attendance statistics
+  const [isLoading, setIsLoading] = useState(true); // Add loading state
 
   const tabs = [
     { id: 'Employees', label: _t('EMPLOYEES'), icon: User, path: '/employees' },
@@ -51,6 +52,7 @@ export default function EmployeeManager() {
   const handleDelete = async (id) => {
     if (window.confirm(_t('CONFIRM_DELETE_TEAM'))) {
       try {
+        setIsLoading(true);
         await deleteTeam(id);
         // Reload teams after deletion
         const loadTeams = async () => {
@@ -66,12 +68,15 @@ export default function EmployeeManager() {
             setDepartments(mappedTeams);
           } catch (error) {
             console.error('Error reloading teams:', error);
+          } finally {
+            setIsLoading(false);
           }
         };
         await loadTeams();
       } catch (error) {
         console.error('Error deleting team:', error);
         alert(`${_t('FAILED_TO_DELETE_TEAM')}: ${error.message}`);
+        setIsLoading(false);
       }
     }
   };
@@ -90,6 +95,7 @@ export default function EmployeeManager() {
     // Reload teams when members change
     const loadTeams = async () => {
       try {
+        setIsLoading(true);
         const fetchedTeams = await fetchTeams();
         const mappedTeams = fetchedTeams.map(team => ({
           id: team.id,
@@ -101,6 +107,8 @@ export default function EmployeeManager() {
         setDepartments(mappedTeams);
       } catch (error) {
         console.error('Error reloading teams:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     loadTeams();
@@ -115,6 +123,7 @@ export default function EmployeeManager() {
     // Reload teams to update employee counts if needed
     const loadTeams = async () => {
       try {
+        setIsLoading(true);
         const fetchedTeams = await fetchTeams();
         const mappedTeams = fetchedTeams.map(team => ({
           id: team.id,
@@ -126,6 +135,8 @@ export default function EmployeeManager() {
         setDepartments(mappedTeams);
       } catch (error) {
         console.error('Error reloading teams:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     loadTeams();
@@ -164,6 +175,7 @@ export default function EmployeeManager() {
   useEffect(() => {
     const loadTeams = async () => {
       try {
+        setIsLoading(true);
         const fetchedTeams = await fetchTeams();
         // Assuming the API returns an array of teams with id, name, managerName, etc.
         const mappedTeams = fetchedTeams.map(team => ({
@@ -177,6 +189,8 @@ export default function EmployeeManager() {
       } catch (error) {
         console.error('Error loading teams:', error);
         // alert('Failed to load teams');
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -286,41 +300,50 @@ export default function EmployeeManager() {
                     </div>
                   </div>
 
-                  {/* Table Body */}
-                  <div className="divide-y divide-gray-100">
-                    {filteredDepartments.map((dept) => (
-                      <div key={dept.id} className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
-                        <div className="col-span-3 text-gray-800">{dept.name}</div>
-                        <div className="col-span-3 text-gray-600">{dept.managers}</div>
-                        <div className="col-span-5 text-gray-600">{dept.employeeCount}</div>
-                        <div className="col-span-1 flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleViewMembers(dept)}
-                            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                          >
-                            <Eye className="w-5 h-5 text-gray-600" />
-                          </button>
-                          <button
-                            onClick={() => handleEdit(dept)}
-                            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                          >
-                            <Edit2 className="w-5 h-5 text-green-600" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(dept.id)}
-                            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                          >
-                            <X className="w-5 h-5 text-red-600" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {filteredDepartments.length === 0 && (
-                    <div className="px-6 py-12 text-center text-gray-500">
-                      {_t('NO_DEPARTMENTS_FOUND')}
+                  {/* Loading State */}
+                  {isLoading ? (
+                    <div className="px-6 py-12 flex justify-center items-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
                     </div>
+                  ) : (
+                    <>
+                      {/* Table Body */}
+                      <div className="divide-y divide-gray-100">
+                        {filteredDepartments.map((dept) => (
+                          <div key={dept.id} className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
+                            <div className="col-span-3 text-gray-800">{dept.name}</div>
+                            <div className="col-span-3 text-gray-600">{dept.managers}</div>
+                            <div className="col-span-5 text-gray-600">{dept.employeeCount}</div>
+                            <div className="col-span-1 flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleViewMembers(dept)}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                              >
+                                <Eye className="w-5 h-5 text-gray-600" />
+                              </button>
+                              <button
+                                onClick={() => handleEdit(dept)}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                              >
+                                <Edit2 className="w-5 h-5 text-green-600" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(dept.id)}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                              >
+                                <X className="w-5 h-5 text-red-600" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {filteredDepartments.length === 0 && (
+                        <div className="px-6 py-12 text-center text-gray-500">
+                          {_t('NO_DEPARTMENTS_FOUND')}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

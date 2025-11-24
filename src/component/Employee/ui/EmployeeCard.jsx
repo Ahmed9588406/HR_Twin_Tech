@@ -250,9 +250,9 @@ export default function EmployeeCard({
               title={isLocked ? _t('UNLOCK') : _t('LOCK')}
             >
               {isLocked ? (
-                <LockOpen className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+                <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
               ) : (
-                <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                <LockOpen className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
               )}
             </button>
           </div>
