@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Briefcase, X } from 'lucide-react';
+import { t, getLang } from '../../i18n/translations';
 
 export default function PosEditModal({ position, onClose, onSave }) {
   const [name, setName] = useState('');
@@ -11,6 +12,15 @@ export default function PosEditModal({ position, onClose, onSave }) {
       setDepartment(position.department);
     }
   }, [position]);
+
+  // ensure document lang/dir reflect selected language on mount
+  useEffect(() => {
+    const lang = getLang() || 'en';
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    }
+  }, []);
 
   const handleSave = () => {
     const updatedPosition = { ...position, name, department };
@@ -28,7 +38,7 @@ export default function PosEditModal({ position, onClose, onSave }) {
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-          aria-label="Close"
+          aria-label={t('CLOSE')}
         >
           <X size={24} />
         </button>
@@ -43,28 +53,28 @@ export default function PosEditModal({ position, onClose, onSave }) {
         {/* Department Input */}
         <div className="mb-8">
           <label className="block text-gray-500 text-sm font-medium mb-3 tracking-wide">
-            Department
+            {t('DEPARTMENT')}
           </label>
           <input
             type="text"
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
             className="w-full px-4 py-3 border-b-2 border-gray-200 focus:border-green-400 focus:outline-none text-lg transition-colors"
-            placeholder="Enter department"
+            placeholder={t('ENTER_DEPARTMENT')}
           />
         </div>
 
         {/* Position Name Input */}
         <div className="mb-10">
           <label className="block text-gray-500 text-sm font-medium mb-3 tracking-wide">
-            Change Job Position Name
+            {t('CHANGE_JOB_POSITION_NAME')}
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full px-4 py-3 border-b-2 border-gray-200 focus:border-green-400 focus:outline-none text-lg transition-colors"
-            placeholder="Enter position name"
+            placeholder={t('ENTER_POSITION_NAME')}
           />
         </div>
 
@@ -74,13 +84,13 @@ export default function PosEditModal({ position, onClose, onSave }) {
             onClick={onClose}
             className="px-6 py-3 bg-gray-200 text-gray-700 rounded-2xl font-semibold hover:bg-gray-300 transition-all"
           >
-            Cancel
+            {t('CANCEL')}
           </button>
           <button
             onClick={handleSave}
             className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
           >
-            Save
+            {t('SAVE')}
           </button>
         </div>
       </div>

@@ -127,6 +127,13 @@ export const createEmployee = async (employeeData) => {
 };
 
 // Fetch employees
+const toBoolean = (value) => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+  if (typeof value === 'string') return ['true', '1', 'yes', 'locked'].includes(value.toLowerCase());
+  return false;
+};
+
 export const fetchEmployees = async () => {
   try {
     const token = localStorage.getItem('token');
@@ -147,7 +154,14 @@ export const fetchEmployees = async () => {
     }
 
     const data = await response.json();
-    return data;
+    return Array.isArray(data)
+      ? data.map(emp => ({
+          ...emp,
+          locked: toBoolean(
+            emp.locked ?? emp.isLocked ?? emp.lockedEmployee ?? emp.is_locked
+          )
+        }))
+      : [];
   } catch (error) {
     console.error('Error fetching employees:', error);
     throw error;

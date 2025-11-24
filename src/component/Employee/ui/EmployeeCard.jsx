@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import CreateNewEmployee from "../../Employee_page/Create_new_Employee"; 
 import { fetchEmployeeById } from "../../Settings/api/employees_api"; 
+import { Lock, LockOpen } from 'lucide-react';
 import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../../i18n/i18n';
 
 export default function EmployeeCard({ 
@@ -18,6 +19,7 @@ export default function EmployeeCard({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); 
   const [editEmployeeData, setEditEmployeeData] = useState(null); 
   const [lang, setLang] = useState(_getLang());
+  const [detailLocked, setDetailLocked] = useState(null); // authoritative lock from detail
   useEffect(() => _subscribe(setLang), []);
 
   // Dummy data for demonstration
@@ -95,6 +97,43 @@ export default function EmployeeCard({
     e.stopPropagation();
     if (typeof handler === 'function') handler(emp);
   };
+
+  const toBool = (v) => {
+    if (v === undefined || v === null) return null;
+    if (typeof v === 'boolean') return v;
+    if (typeof v === 'number') return v === 1;
+    if (typeof v === 'string') {
+      const s = v.toLowerCase();
+      if (['1','true','yes','locked'].includes(s)) return true;
+      if (['0','false','no','unlocked','open'].includes(s)) return false;
+    }
+    return null;
+  };
+  const resolveLocked = (e) => {
+    if (!e || typeof e !== 'object') return null;
+    const direct = toBool(
+      e.locked ?? e.isLocked ?? e.lockedEmployee ?? e.is_locked ?? e.accountLocked ?? e.lockStatus
+    );
+    if (direct !== null) return direct;
+    const inverse = toBool(
+      e.nonLocked ?? e.accountNonLocked ?? e.isNonLocked ?? e.account_non_locked
+    );
+    if (inverse !== null) return !inverse;
+    return null; // unknown
+  };
+  // Fetch detailed lock state when id changes
+  const refreshDetail = async () => {
+    if (!emp?.id) return;
+    try {
+      const data = await fetchEmployeeById(emp.id);
+      setDetailLocked(resolveLocked(data));
+    } catch (err) {
+      console.error('detail fetch failed', err);
+    }
+  };
+  useEffect(() => { setDetailLocked(null); refreshDetail(); }, [emp.id]);
+  const baseLocked = resolveLocked(emp);
+  const isLocked = (detailLocked !== null) ? detailLocked : (baseLocked !== null ? baseLocked : false);
 
   return (
     <>
@@ -196,17 +235,25 @@ export default function EmployeeCard({
               </svg>
             </button>
 
+            {/* Lock button uses detail-based state and refresh after action */}
             <button
-              onClick={(e) => callHandler(e, onLock)}
-              className="p-1.5 sm:p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-              title={_t('LOCK')}
+              onClick={async (e) => {
+                e.stopPropagation();
+                if (typeof onLock === 'function') await onLock(emp);
+                await refreshDetail();
+              }}
+              className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
+                isLocked 
+                  ? 'bg-red-100 hover:bg-red-200' 
+                  : 'bg-green-100 hover:bg-green-200'
+              }`}
+              title={isLocked ? _t('UNLOCK') : _t('LOCK')}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-lock w-4 h-4 sm:w-5 sm:h-5 text-gray-600" aria-hidden="true">
-                <path d="M17 8v4a5 5 0 0 1-10 0V8"></path>
-                <path d="M7 8V6a5 5 0 0 1 10 0v2"></path>
-                <path d="M12 18v2a2 2 0 0 0 4 0v-2"></path>
-                <path d="M8 18v2a2 2 0 0 1-4 0v-2"></path>
-              </svg>
+              {isLocked ? (
+                <LockOpen className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+              ) : (
+                <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+              )}
             </button>
           </div>
         </div>

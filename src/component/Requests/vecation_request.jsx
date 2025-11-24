@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchVacationRequests } from './requests_api';
-import { t as _t } from '../../i18n/i18n';
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 export default function VacationRequestsTable() {
   const navigate = useNavigate();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lang, setLang] = useState(_getLang());
 
   useEffect(() => {
     const loadVacationRequests = async () => {
@@ -24,6 +25,11 @@ export default function VacationRequestsTable() {
     };
 
     loadVacationRequests();
+  }, []);
+
+  useEffect(() => {
+    const unsub = _subscribe(setLang);
+    return () => unsub();
   }, []);
 
   const toProfileEmployee = (request) => ({
@@ -135,6 +141,16 @@ export default function VacationRequestsTable() {
                   <td className="py-4 px-4 text-gray-600">{request.comment}</td>
                 </tr>
               ))}
+
+              {requests.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                    {_t('NO_VACATION_REQUESTS') === 'NO_VACATION_REQUESTS'
+                      ? (lang === 'ar' ? 'لا توجد طلبات إجازة' : 'No vacation requests')
+                      : _t('NO_VACATION_REQUESTS')}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

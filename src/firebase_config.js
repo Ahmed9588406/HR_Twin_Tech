@@ -226,25 +226,29 @@ const sendTokenToServer = async (token) => {
       return;
     }
 
-    console.log('[Firebase] 📤 Sending token to server for empCode:', empCode);
+    console.log('[Firebase] 📤 Sending FCM token to server for empCode:', empCode);
 
-    const response = await fetch('/api/fcm/register', {
+    // Use backend auth token (not the FCM token) for Authorization header if available
+    const authToken = localStorage.getItem('token') || '';
+
+    // Endpoint requires the FCM token as query param
+    const url = `https://api.shl-hr.com/api/v1/firebase/update-fcm-token-web?token=${encodeURIComponent(token)}`;
+
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Authorization': authToken ? `Bearer ${authToken}` : '',
         'ngrok-skip-browser-warning': 'true'
       },
-      body: JSON.stringify({
-        empCode: empCode,
-        token: token
-      })
+      // include empCode in body so server can associate the token if needed
+      body: JSON.stringify({ empCode })
     });
 
     if (response.ok) {
-      console.log('[Firebase] ✅ Token registered with server successfully');
+      console.log('[Firebase] ✅ FCM token registered with server successfully');
     } else {
-      const errorText = await response.text();
+      const errorText = await response.text().catch(() => '');
       console.warn('[Firebase] ⚠️ Failed to register token with server:', response.status, errorText);
     }
   } catch (error) {

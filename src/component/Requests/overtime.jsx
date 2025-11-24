@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { fetchOvertimeRequests } from './requests_api';
 import { t as _t } from '../../i18n/i18n';
@@ -9,7 +8,6 @@ export default function OvertimeRequestsTable() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const load = async () => {
@@ -26,12 +24,6 @@ export default function OvertimeRequestsTable() {
     };
     load();
   }, []);
-
-  const filtered = requests.filter(r =>
-    (r.empDetails?.empName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (String(r.requestId) || '').includes(searchTerm) ||
-    (r.requestDate || '').includes(searchTerm)
-  );
 
   if (loading) {
     return (
@@ -54,19 +46,6 @@ export default function OvertimeRequestsTable() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl p-4 shadow-sm">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            type="text"
-            placeholder={_t('SEARCH_OVERTIME_REQUESTS')}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-        </div>
-      </div>
-
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -80,7 +59,7 @@ export default function OvertimeRequestsTable() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filtered.map((req) => (
+              {requests.map((req) => (
                 <tr
                   key={req.requestId}
                   role="button"
@@ -126,14 +105,15 @@ export default function OvertimeRequestsTable() {
                   <td className="py-4 px-4 text-gray-600">{req.comment || '-'}</td>
                 </tr>
               ))}
+              {requests.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                    {_t('NO_OVERTIME_REQUESTS')}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
-
-          {filtered.length === 0 && (
-            <div className="px-6 py-12 text-center text-gray-500">
-              {_t('NO_OVERTIME_REQUESTS')}
-            </div>
-          )}
         </div>
       </div>
     </div>

@@ -1,11 +1,16 @@
-export const fetchFinancialData = async () => {
+export const fetchFinancialData = async (month = null) => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const response = await fetch('https://api.shl-hr.com/api/v1/financial/table', {
+    const url = new URL('https://api.shl-hr.com/api/v1/financial/table');
+    if (month) {
+      url.searchParams.append('month', month);
+    }
+
+    const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -28,14 +33,19 @@ export const fetchFinancialData = async () => {
   }
 };
 
-export const getCount = async () => {
+export const getCount = async (month = null) => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const response = await fetch('https://api.shl-hr.com/api/v1/financial/count', {
+    const url = new URL('https://api.shl-hr.com/api/v1/financial/count');
+    if (month) {
+      url.searchParams.append('month', month);
+    }
+
+    const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -58,14 +68,19 @@ export const getCount = async () => {
   }
 };
 
-export const getReward = async () => {
+export const getReward = async (month = null) => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const response = await fetch('https://api.shl-hr.com/api/v1/financial/rewards', {
+    const url = new URL('https://api.shl-hr.com/api/v1/financial/rewards');
+    if (month) {
+      url.searchParams.append('month', month);
+    }
+
+    const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -88,14 +103,19 @@ export const getReward = async () => {
   }
 };
 
-export const getDiscounts = async () => {
+export const getDiscounts = async (month = null) => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const response = await fetch('https://api.shl-hr.com/api/v1/financial/discounts', {
+    const url = new URL('https://api.shl-hr.com/api/v1/financial/discounts');
+    if (month) {
+      url.searchParams.append('month', month);
+    }
+
+    const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

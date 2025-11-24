@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { User, X } from 'lucide-react';
 import { fetchJobPositions, changeEmployeePositions } from './emp_actions_api';
+import { t as _t } from '../i18n/i18n';
 
 export default function ChangePositionForm({ selectedActions = [], onClose = () => {}, onSuccess = () => {} }) {
   const [positions, setPositions] = useState([]);
@@ -89,7 +90,7 @@ export default function ChangePositionForm({ selectedActions = [], onClose = () 
 
   const validate = () => {
     if (!newPositionId) {
-      setError('Please select a new position.');
+      setError(_t('SELECT_NEW_POSITION'));
       return false;
     }
     return true;
@@ -109,7 +110,7 @@ export default function ChangePositionForm({ selectedActions = [], onClose = () 
       onSuccess();
     } catch (err) {
       console.error('Position change failed:', err);
-      setError('Failed to change position. Please try again.');
+      setError(_t('FAILED_CHANGE_POSITION'));
     } finally {
       setSubmitting(false);
     }
@@ -138,7 +139,7 @@ export default function ChangePositionForm({ selectedActions = [], onClose = () 
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
                 <User className="w-5 h-5 text-white" />
               </div>
-              Change Position
+              {_t('CHANGE_POSITION')}
             </h2>
             <button
               onClick={onClose}
@@ -152,9 +153,9 @@ export default function ChangePositionForm({ selectedActions = [], onClose = () 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">New Position</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">{_t('NEW_POSITION')}</label>
             {loadingPositions ? (
-              <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500">Loading positions...</div>
+              <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500">{_t('LOADING_POSITIONS')}</div>
             ) : (
               <select
                 value={newPositionId}
@@ -162,7 +163,7 @@ export default function ChangePositionForm({ selectedActions = [], onClose = () 
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 required
               >
-                <option value="">Select a position</option>
+                <option value="">{_t('SELECT_POSITION')}</option>
                 {positions.map((pos) => (
                   <option key={pos.id} value={pos.id}>{pos.jobTitle}</option>
                 ))}
@@ -173,7 +174,7 @@ export default function ChangePositionForm({ selectedActions = [], onClose = () 
           {/* Affected Employees */}
           <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
             <p className="text-sm text-emerald-700">
-              <strong>{selectedActions.length}</strong> employee(s) will be affected by this change.
+              {_t('AFFECTED_EMPLOYEES_POSITION').replace('{{count}}', selectedActions.length)}
             </p>
           </div>
 
@@ -191,14 +192,14 @@ export default function ChangePositionForm({ selectedActions = [], onClose = () 
               onClick={onClose}
               className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
             >
-              Cancel
+              {_t('CANCEL')}
             </button>
             <button
               type="submit"
               disabled={submitting || loadingPositions}
               className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-500 text-white rounded-lg hover:from-emerald-700 hover:to-green-600 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {submitting ? 'Applying...' : `Change Position (${selectedActions.length})`}
+              {submitting ? _t('APPLYING_POSITION') : `${_t('CHANGE_POSITION')} (${selectedActions.length})`}
             </button>
           </div>
         </form>

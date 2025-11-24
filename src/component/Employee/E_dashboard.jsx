@@ -9,13 +9,21 @@ function E_dashboard() {
   const location = useLocation()
   const [activeTab, setActiveTab] = useState('Work Teams')
   const [lang, setLang] = useState(_getLang())
-  useEffect(() => _subscribe(setLang), [])
+  const [, forceUpdate] = useState({})
 
-  const tabs = [
+  useEffect(() => {
+    const unsub = _subscribe((newLang) => {
+      setLang(newLang)
+      forceUpdate({}) // Force re-render
+    })
+    return unsub
+  }, [])
+
+  const tabs = React.useMemo(() => [
     { id: 'Employees', label: _t('SIDEBAR_EMPLOYEES'), icon: User, path: '/employees' },
     { id: 'Work Teams', label: _t('WORK_TEAMS'), icon: Users, path: '/dashboard-teams' },
     { id: 'Employees Action', label: _t('EMPLOYEES_ACTION'), icon: Calendar, path: '/employees-action' },
-  ]
+  ], [lang]) // Re-compute when lang changes
 
   useEffect(() => {
     const currentPath = location.pathname

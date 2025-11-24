@@ -6,7 +6,7 @@ import EditModalTransaction from './editmodal_transaction';
 import DeleteModalTransaction from './DeleteModalTransaction';
 import { t as _t, getLang as _getLang } from '../../i18n/i18n';
 
-export default function RewardsDashboard() {
+export default function RewardsDashboard({ selectedMonth }) {
   const navigate = useNavigate();
   const [rewards, setRewards] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,7 +21,7 @@ export default function RewardsDashboard() {
     const loadRewards = async () => {
       try {
         setLoading(true);
-        const data = await getReward();
+        const data = await getReward(selectedMonth);
         setRewards(data);
       } catch (err) {
         console.error('Error loading rewards:', err);
@@ -32,7 +32,7 @@ export default function RewardsDashboard() {
     };
 
     loadRewards();
-  }, []);
+  }, [selectedMonth]);
 
   // Filter rewards
   const filteredRewards = rewards.filter((reward) => {
@@ -221,6 +221,7 @@ export default function RewardsDashboard() {
           type="reward"
           onClose={() => setDeletingReward(null)}
           onSuccess={handleDeleteSuccess}
+          nonBlocking={true}
         />
       )}
     </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, X } from 'lucide-react';
+import { t, getLang } from '../../i18n/i18n';
 
 export default function PinModal({ workplace, onClose }) {
   const [selectedLat, setSelectedLat] = useState(workplace?.lat || 30.0444);
@@ -23,7 +24,7 @@ export default function PinModal({ workplace, onClose }) {
   useEffect(() => {
     const fetchCurrentLocation = () => {
       if (!navigator.geolocation) {
-        console.warn('Geolocation is not supported by this browser.');
+        console.warn(t('GEO_NOT_SUPPORTED'));
         return;
       }
       navigator.geolocation.getCurrentPosition(
@@ -40,19 +41,19 @@ export default function PinModal({ workplace, onClose }) {
           initialLngRef.current = newLng;
         },
         (error) => {
-          console.warn('Unable to retrieve current location: ' + error.message);
-          // Fall back to workplace or defaults
-          const fallbackLat = workplace?.lat || 30.0444;
-          const fallbackLng = workplace?.lng || 31.2357;
-          setSelectedLat(fallbackLat);
-          setSelectedLng(fallbackLng);
-          setLat(fallbackLat);
-          setLng(fallbackLng);
-          initialLatRef.current = fallbackLat;
-          initialLngRef.current = fallbackLng;
-        }
-      );
-    };
+          console.warn(t('UNABLE_RETRIEVE_LOCATION') + ': ' + error.message);
+           // Fall back to workplace or defaults
+           const fallbackLat = workplace?.lat || 30.0444;
+           const fallbackLng = workplace?.lng || 31.2357;
+           setSelectedLat(fallbackLat);
+           setSelectedLng(fallbackLng);
+           setLat(fallbackLat);
+           setLng(fallbackLng);
+           initialLatRef.current = fallbackLat;
+           initialLngRef.current = fallbackLng;
+         }
+       );
+     };
     fetchCurrentLocation();
   }, [workplace]);
 
@@ -188,7 +189,7 @@ export default function PinModal({ workplace, onClose }) {
   // New function to get current location
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
-      alert('Geolocation is not supported by this browser.');
+      alert(t('GEO_NOT_SUPPORTED'));
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -208,7 +209,7 @@ export default function PinModal({ workplace, onClose }) {
         }
       },
       (error) => {
-        alert('Unable to retrieve your location: ' + error.message);
+        alert(t('UNABLE_RETRIEVE_LOCATION') + ': ' + error.message);
       }
     );
   };
@@ -223,7 +224,7 @@ export default function PinModal({ workplace, onClose }) {
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10"
-          aria-label="Close"
+          aria-label={t('CLOSE')}
         >
           <X size={24} />
         </button>
@@ -234,14 +235,15 @@ export default function PinModal({ workplace, onClose }) {
             <MapPin className="w-8 h-8 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Place Pin on Map</h2>
-            <p className="text-gray-600">Click anywhere on the map or drag the pin</p>
+            <h2 className="text-2xl font-bold text-gray-900">{t('PLACE_PIN_ON_MAP')}</h2>
+            <p className="text-gray-600">{t('CLICK_MAP_OR_DRAG')}</p>
           </div>
         </div>
 
         {/* Map Container */}
         <div 
           ref={mapRef}
+          aria-label={t('PLACE_PIN_ON_MAP')}
           className="h-96 mb-6 rounded-2xl overflow-hidden shadow-lg"
           style={{ zIndex: 1 }}
         />
@@ -249,38 +251,38 @@ export default function PinModal({ workplace, onClose }) {
         {/* Coordinates Display */}
         <div className="mb-6">
           <label className="block text-gray-500 text-sm font-medium mb-2 tracking-wide">
-            Selected Coordinates
+            {t('SELECTED_COORDINATES')}
           </label>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Latitude</label>
+              <label className="text-xs text-gray-500 mb-1 block">{t('LATITUDE')}</label>
               <input
                 type="number"
                 step="0.000001"
                 value={selectedLat}
                 onChange={(e) => handleCoordinateChange(e.target.value, selectedLng)}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-400 focus:outline-none text-lg transition-colors"
-                placeholder="Latitude"
+                placeholder={t('LATITUDE')}
               />
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Longitude</label>
+              <label className="text-xs text-gray-500 mb-1 block">{t('LONGITUDE')}</label>
               <input
                 type="number"
                 step="0.000001"
                 value={selectedLng}
                 onChange={(e) => handleCoordinateChange(selectedLat, e.target.value)}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-400 focus:outline-none text-lg transition-colors"
-                placeholder="Longitude"
+                placeholder={t('LONGITUDE')}
               />
             </div>
           </div>
-          {/* New Get Current Location Button */}
+          {/* Get Current Location Button */}
           <button
             onClick={getCurrentLocation}
             className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
           >
-            Get Current Location
+            {t('GET_CURRENT_LOCATION')}
           </button>
         </div>
 
@@ -290,13 +292,13 @@ export default function PinModal({ workplace, onClose }) {
             onClick={handleCancel}
             className="px-6 py-3 bg-gray-200 text-gray-700 rounded-2xl font-semibold hover:bg-gray-300 transition-all"
           >
-            Cancel
+            {t('CANCEL')}
           </button>
           <button
             onClick={handleConfirm}
             className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
           >
-            Save Location
+            {t('SAVE_LOCATION')}
           </button>
         </div>
       </div>

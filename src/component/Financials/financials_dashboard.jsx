@@ -3,7 +3,7 @@ import Sidebar from '../ui/Sidebar';
 import PayrollDashboard from './payroll';
 import RewardsDashboard from './rewards';
 import DiscountsDashboard from './discounts';
-import { Search, DollarSign, Award, TrendingDown } from 'lucide-react';
+import { Search, DollarSign, Award, TrendingDown, PieChart } from 'lucide-react'; // Add PieChart icon
 import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 export default function FinancialsDashboard() {
@@ -15,7 +15,7 @@ export default function FinancialsDashboard() {
   const tabs = [
     { id: 'PayRoll', label: _t('TAB_PAYROLL'), icon: DollarSign },
     { id: 'Rewards', label: _t('TAB_REWARDS'), icon: Award },
-    { id: 'Discount', label: _t('TAB_DISCOUNT'), icon: TrendingDown }
+    { id: 'Discount', label: _t('TAB_DISCOUNT'), icon: TrendingDown },
   ];
 
   // Sample data for each tab

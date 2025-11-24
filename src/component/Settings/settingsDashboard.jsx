@@ -6,15 +6,23 @@ import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18
 
 export default function SettingsDashboard() {
   const [lang, setLang] = useState(_getLang());
-  useEffect(() => _subscribe(setLang), []);
+  const [, forceUpdate] = useState({});
+  
+  useEffect(() => {
+    const unsub = _subscribe((newLang) => {
+      setLang(newLang);
+      forceUpdate({}); // Force re-render
+    });
+    return unsub;
+  }, []);
 
-  const TABS = [
+  const TABS = React.useMemo(() => [
     { label: _t('TAB_WORKPLACE'), icon: Home, path: '/settings/workplace' },
     { label: _t('TAB_DEPARTMENTS'), icon: Users, path: '/settings/departments' },
     { label: _t('TAB_POSITIONS'), icon: FileText, path: '/settings/positions' },
     { label: _t('TAB_SHIFTS'), icon: DollarSign, path: '/settings/worktimings' },
     { label: _t('TAB_ATTENDANCE'), icon: Settings, path: '/settings/attendance' },
-  ];
+  ], [lang]); // Re-compute when lang changes
 
   const [activeTab, setActiveTab] = useState(TABS[0].label);
   const navigate = useNavigate();

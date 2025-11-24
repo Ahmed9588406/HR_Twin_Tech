@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Users, User, X } from 'lucide-react';
-import { createTeam, updateTeam } from './api/work_teams_api'; // Import the update API function
+import { createTeam, updateTeam } from './api/work_teams_api';
+import { getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
+import translations from '../../i18n/translations';
 
 export default function AddNewTeam({ onClose, onAddTeam, initialData }) {
   const [formData, setFormData] = useState({
@@ -8,7 +10,17 @@ export default function AddNewTeam({ onClose, onAddTeam, initialData }) {
     manager: ''
   });
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false); // Add loading state
+  const [loading, setLoading] = useState(false);
+
+  const [lang, setLang] = useState(_getLang());
+  const t = (key, params = {}) => {
+    const langData = translations[lang] || translations.en;
+    let text = langData[key] || key;
+    Object.keys(params).forEach(param => {
+      text = text.replace(new RegExp(`{{${param}}}`, 'g'), params[param]);
+    });
+    return text;
+  };
 
   useEffect(() => {
     if (initialData) {
@@ -18,6 +30,11 @@ export default function AddNewTeam({ onClose, onAddTeam, initialData }) {
       });
     }
   }, [initialData]);
+
+  useEffect(() => {
+    const unsub = _subscribe((l) => setLang(l));
+    return () => unsub();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -29,8 +46,8 @@ export default function AddNewTeam({ onClose, onAddTeam, initialData }) {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.teamName.trim()) newErrors.teamName = 'Team name is required';
-    if (!formData.manager.trim()) newErrors.manager = 'Manager name is required';
+    if (!formData.teamName.trim()) newErrors.teamName = t('TEAM_NAME_REQUIRED');
+    if (!formData.manager.trim()) newErrors.manager = t('MANAGER_NAME_REQUIRED');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -61,7 +78,7 @@ export default function AddNewTeam({ onClose, onAddTeam, initialData }) {
     <div className="flex flex-col p-6 bg-white rounded-2xl shadow-xl w-full max-w-md">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-semibold text-gray-800">
-          {initialData ? 'Edit Team' : 'Create New Team'}
+          {initialData ? t('EDIT_TEAM') : t('CREATE_NEW_TEAM')}
         </h1>
         <button
           onClick={onClose}
@@ -74,7 +91,7 @@ export default function AddNewTeam({ onClose, onAddTeam, initialData }) {
         {/* Team Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Team Name <span className="text-red-500">*</span>
+            {t('NAME')} <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -88,7 +105,7 @@ export default function AddNewTeam({ onClose, onAddTeam, initialData }) {
                   ? 'border-red-300 focus:ring-red-500'
                   : 'border-gray-300 focus:ring-green-500'
               }`}
-              placeholder="Enter team name"
+              placeholder={t('ENTER_FULL_NAME')}
             />
           </div>
           {errors.teamName && <p className="mt-1 text-sm text-red-600">{errors.teamName}</p>}
@@ -97,7 +114,7 @@ export default function AddNewTeam({ onClose, onAddTeam, initialData }) {
         {/* Manager Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Manager Name <span className="text-red-500">*</span>
+            {t('MANAGER')} <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -111,7 +128,7 @@ export default function AddNewTeam({ onClose, onAddTeam, initialData }) {
                   ? 'border-red-300 focus:ring-red-500'
                   : 'border-gray-300 focus:ring-green-500'
               }`}
-              placeholder="Enter manager name"
+              placeholder={t('ENTER_FULL_NAME')}
             />
           </div>
           {errors.manager && <p className="mt-1 text-sm text-red-600">{errors.manager}</p>}
@@ -124,14 +141,14 @@ export default function AddNewTeam({ onClose, onAddTeam, initialData }) {
             onClick={onClose}
             className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
           >
-            Cancel
+            {t('CANCEL')}
           </button>
           <button
             type="submit"
             disabled={loading}
             className="flex-1 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition disabled:opacity-50"
           >
-            {loading ? (initialData ? 'Updating...' : 'Creating...') : (initialData ? 'Update Team' : 'Create Team')}
+            {loading ? (initialData ? t('UPDATING') : t('CREATING')) : (initialData ? t('UPDATE_TEAM') : t('CREATE_TEAM'))}
           </button>
         </div>
       </form>

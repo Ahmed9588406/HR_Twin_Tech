@@ -106,7 +106,7 @@ export default function WorkTiming() {
   };
 
   return (
-    <div className="relative">
+    <div className={`relative ${isRtl ? 'rtl' : ''}`}>
       <div className="overflow-x-auto rounded-2xl border border-green-200 shadow-sm">
         <table className={`min-w-full ${isRtl ? 'text-right' : 'text-left'}`}>
           <thead>

@@ -1,4 +1,4 @@
-export default {
+const translations = {
   en: {
     // General
     BACK: 'Back',
@@ -14,7 +14,8 @@ export default {
     DELETE: 'Delete',
     ACTIONS: 'Actions',
     SEARCH: 'Search',
-    
+    TRANSLATION_TOGGLE: 'Translation',
+
     // Dashboard / User Profile
     MY_PROFILE: 'My Profile',
     ACTIVE_STATUS: 'Active',
@@ -262,6 +263,7 @@ export default {
     SEARCH_BY_NAME: 'Search by name...',
     RESET: 'Reset',
     FILTERING_BY: 'Filtering by:',
+    FILTER_BY_MONTH: 'Filter by Month',
 
     // Department widget
     TOTAL: 'Total',
@@ -284,12 +286,27 @@ export default {
     LATITUDE: 'Latitude',
     LONGITUDE: 'Longitude',
     PLACE_PIN_ON_MAP: 'Place pin on map',
+    CLICK_MAP_OR_DRAG: 'Click anywhere on the map or drag the pin',
+    // added keys for pin modal
+    CLOSE: 'Close',
+    SELECTED_COORDINATES: 'Selected Coordinates',
+    GET_CURRENT_LOCATION: 'Get Current Location',
+    SAVE_LOCATION: 'Save Location',
+    GEO_NOT_SUPPORTED: 'Geolocation is not supported by this browser.',
+    UNABLE_RETRIEVE_LOCATION: 'Unable to retrieve your location',
     PICK_ON_MAP: 'Pick on map',
     ADD_WORKPLACE: 'Add workplace',
     DELETE_CONFIRM: 'Are you sure you want to delete this item?',
     SELECT_LAT_LNG_REQUIRED: 'Please select valid latitude and longitude',
     FAILED_CREATE_BRANCH: 'Failed to create branch',
     FAILED_DELETE_WORKPLACE: 'Failed to delete workplace',
+    LOADING_WORKPLACES: 'Loading workplaces...',
+    NO_WORKPLACES: 'No workplaces',
+    NO_WORKPLACE_TO_UPDATE: 'No workplace to update.',
+    INVALID_LAT_LNG: 'Latitude and longitude must be valid numbers.',
+    FAILED_UPDATE_BRANCH: 'Failed to update branch',
+    BRANCH_NAME_PLACEHOLDER: 'Branch name',
+    GET_CURRENT_LOCATION: 'Get Current Location',
 
     // Employee Page
     EMPLOYEE_DASHBOARD: 'Employee Dashboard',
@@ -307,6 +324,7 @@ export default {
     TAB_PAYROLL: 'PayRoll',
     TAB_REWARDS: 'Rewards',
     TAB_DISCOUNT: 'Discount',
+    TAB_BUDGET: 'Budget',
     SEARCH_FINANCIALS: 'Search financials',
     NO_DATA_FOUND: 'No data found',
     EMPLOYEE_NAME: 'Employee Name',
@@ -406,8 +424,20 @@ export default {
     DELETE_DISCOUNT: 'Delete Discount',
     TRY_ADJUST_FILTERS: 'Try adjusting your search or filters',
     FAILED_LOAD_REWARDS: 'Failed to load rewards. Please try again later.',
-    CURRENCY: 'EGP'
-    ,
+    CURRENCY: 'EGP',
+    EDIT_REWARD_AMOUNT: 'Edit Reward Amount',
+    EDIT_DISCOUNT_AMOUNT: 'Edit Discount Amount',
+    UPDATE_AMOUNT_DESC: 'Update the {{type}} amount',
+    CURRENT_AMOUNT: 'Current Amount',
+    NEW_AMOUNT: 'New Amount',
+    AMOUNT_PLACEHOLDER: '0.00',
+    AMOUNT_DIFFERENCE: '{{prefix}}{{amount}}',
+    TRANSACTION_ID: 'Transaction ID',
+    AUTH_TOKEN_MISSING: 'Auth token not found; please log in again.',
+    UPDATE_FAILED: 'Failed to update {{type}}',
+    UPDATE_ERROR: 'Error updating {{type}}',
+    CHANGES_APPLIED_IMMEDIATELY: 'Changes will be applied immediately after saving',
+
     // Requests - Profile Page
     LOADING_REQUEST: 'Loading request...'
     , NO_REQUEST_DATA: 'No request data'
@@ -437,6 +467,101 @@ export default {
     , BULK_ADD_REWARD_DISCOUNT: 'Add Reward / Discount'
     , BULK_SEND_VACATION: 'Send Vacation'
     , BULK_ACTIONS_FOOTER: 'Select an action to apply to selected items ({{n}} selected)'
+
+    // Employee Actions - Reward/Discount Form
+    , ADD_REWARD_DISCOUNT: 'Add Reward or Discount'
+    , ACTION_TYPE: 'Action Type'
+    , REWARD: 'Reward'
+    , DISCOUNT: 'Discount'
+    , SELECT_AMOUNT_TYPE: 'Select Amount Type'
+    , SELECT_DAYS_TOTAL: 'Select Days (Total: {{total}} days)'
+    , SELECT_HOURS_TOTAL: 'Select Hours (Total: {{total}} hours)'
+    , REASON_OPTIONAL: 'Reason (Optional)'
+    , AFFECTED_EMPLOYEES: '{{count}} employee(s) will be affected by this change.'
+    , SELECT_ACTION_TYPE: 'Please select an action type.'
+    , SELECT_AMOUNT_TYPE_ERROR: 'Please select amount type (Amount, Days, or Hours).'
+    , ENTER_VALID_AMOUNT: 'Please enter a valid amount.'
+    , SELECT_AT_LEAST_ONE_DAY: 'Please select at least one day option.'
+    , SELECT_AT_LEAST_ONE_HOUR: 'Please select at least one hour option.'
+    , APPLY_ACTION: 'Apply {{action}} ({{count}})'
+    , APPLYING: 'Applying...'
+    , FAILED_APPLY_REWARD_DISCOUNT: 'Failed to apply reward/discount. Please try again.'
+
+    // Employee Actions - Send Vacation Form
+    , SEND_VACATION: 'Send Vacation'
+    , AFFECTED_EMPLOYEES_VACATION: '{{count}} employee(s) will be affected by this vacation.'
+    , SELECT_START_DATE: 'Please select start date.'
+    , SELECT_END_DATE: 'Please select end date.'
+    , END_DATE_AFTER_START: 'End date must be after start date.'
+    , SENDING: 'Sending...'
+    , FAILED_SEND_VACATION: 'Failed to send vacation. Please try again.'
+
+    // Employee Actions - Change Position Form
+    , CHANGE_POSITION: 'Change Position'
+    , NEW_POSITION: 'New Position'
+    , LOADING_POSITIONS: 'Loading positions...'
+    , SELECT_POSITION: 'Select a position'
+    , AFFECTED_EMPLOYEES_POSITION: '{{count}} employee(s) will be affected by this change.'
+    , SELECT_NEW_POSITION: 'Please select a new position.'
+    , APPLYING_POSITION: 'Applying...'
+    , FAILED_CHANGE_POSITION: 'Failed to change position. Please try again.'
+
+    // Delete Modal
+    , DELETE_TRANSACTION: 'Delete Transaction'
+    , CONFIRM_DELETION: 'Confirm Deletion'
+    , PERMANENT_DELETE_DESCRIPTION: 'This action will permanently delete the selected transaction. This cannot be undone.'
+    , TRANSACTION_ID: 'Transaction ID'
+    , DELETING: 'Deleting'
+    , PERMANENT_ACTION: 'This is a permanent action.'
+    , WARNING: 'Warning'
+
+    // Employee Discounts widget
+    , DISCOUNTS_TITLE: 'Discounts & Deductions'
+    , DISCOUNTS_SUBTITLE: 'Recent discounts and penalties'
+    , NA_VALUE: 'N/A'
+    , LOADING_DISCOUNTS: 'Loading discounts...'
+    , UNABLE_LOAD_DISCOUNTS: 'Unable to load discounts.'
+    , NO_DISCOUNTS: 'No discounts available.'
+    , TYPE_LABEL: 'Type:'
+
+    // Work Teams - Add New Members
+    , TEAM_MANAGEMENT: 'Team Management'
+    , TEAM_MEMBERS: 'Team Members'
+    , NO_CURRENT_MEMBERS: 'No current members'
+    , START_ADDING_MEMBERS: 'Start by adding new members from below'
+    , IMAGE: 'Image'
+    , NAME: 'Name'
+    , DEPARTMENT: 'Department'
+    , POSITION: 'Position'
+    , ACTIONS: 'Actions'
+    , ADD_NEW_MEMBER: 'Add New Member'
+    , CHOOSE_EMPLOYEE: 'Choose an employee'
+    , SEARCH_EMPLOYEES: 'Search for employees...'
+    , NO_EMPLOYEES_FOUND: 'No employees found'
+    , TRY_DIFFERENT_SEARCH: 'Try searching with a different word'
+    , ADD_MEMBER: 'Add Member'
+    , ADDING: 'Adding...'
+    , CONFIRM_REMOVE_MEMBER: 'Are you sure you want to remove this member?'
+    , FAILED_ADD_MEMBER: 'Failed to add member: {{error}}'
+    , ERROR_REMOVING_MEMBER: 'Error removing member: {{error}}'
+
+    // Work Teams - Add New Team
+    , EDIT_TEAM: 'Edit Team'
+    , CREATE_NEW_TEAM: 'Create New Team'
+    , TEAM_NAME_REQUIRED: 'Team name is required'
+    , MANAGER_NAME_REQUIRED: 'Manager name is required'
+    , CREATE_TEAM: 'Create Team'
+    , CREATING: 'Creating...'
+    , UPDATE_TEAM: 'Update Team'
+    , UPDATING: 'Updating...'
+
+    // Work Teams - Team Details
+    , LOADING_TEAM_DATA: 'Loading team data...'
+    , ERROR_LABEL: 'Error:'
+    , NO_MEMBERS_IN_TEAM: 'No members in this team'
+    , MANAGER_LABEL: 'Manager:'
+    , DASH: '—'
+    , NOT_SPECIFIED: 'Not specified'
   },
   ar: {
     // General
@@ -453,6 +578,7 @@ export default {
     DELETE: 'حذف',
     ACTIONS: 'إجراءات',
     SEARCH: 'بحث',
+    TRANSLATION_TOGGLE: 'الترجمة',
 
     // Dashboard / User Profile
     MY_PROFILE: 'ملفي الشخصي',
@@ -701,6 +827,7 @@ export default {
     SEARCH_BY_NAME: 'ابحث بالاسم...',
     RESET: 'إعادة تعيين',
     FILTERING_BY: 'التصفية حسب:',
+    FILTER_BY_MONTH: 'تصفية حسب الشهر',
 
     // Department widget
     TOTAL: 'الإجمالي',
@@ -723,12 +850,27 @@ export default {
     LATITUDE: 'خط العرض',
     LONGITUDE: 'خط الطول',
     PLACE_PIN_ON_MAP: 'ضع علامة على الخريطة',
+    CLICK_MAP_OR_DRAG: 'انقر في أي مكان على الخريطة أو اسحب الدبوس',
+    // added keys for pin modal (Arabic)
+    CLOSE: 'إغلاق',
+    SELECTED_COORDINATES: 'الإحداثيات المحددة',
+    GET_CURRENT_LOCATION: 'الحصول على الموقع الحالي',
+    SAVE_LOCATION: 'حفظ الموقع',
+    GEO_NOT_SUPPORTED: 'المتصفح لا يدعم تحديد الموقع الجغرافي.',
+    UNABLE_RETRIEVE_LOCATION: 'تعذر استرداد موقعك',
     PICK_ON_MAP: 'اختيار من الخريطة',
     ADD_WORKPLACE: 'إضافة مكان عمل',
     DELETE_CONFIRM: 'هل أنت متأكد أنك تريد حذف هذا العنصر؟',
     SELECT_LAT_LNG_REQUIRED: 'يرجى اختيار خط عرض وخط طول صالحين',
     FAILED_CREATE_BRANCH: 'فشل في إنشاء الفرع',
     FAILED_DELETE_WORKPLACE: 'فشل في حذف مكان العمل',
+    LOADING_WORKPLACES: 'جاري تحميل أماكن العمل...',
+    NO_WORKPLACES: 'لا توجد أماكن عمل',
+    NO_WORKPLACE_TO_UPDATE: 'لا يوجد مكان عمل للتحديث.',
+    INVALID_LAT_LNG: 'يجب أن يكون خطا العرض والطول أرقامًا صحيحة.',
+    FAILED_UPDATE_BRANCH: 'فشل في تحديث الفرع',
+    BRANCH_NAME_PLACEHOLDER: 'اسم الفرع',
+    GET_CURRENT_LOCATION: 'الحصول على الموقع الحالي',
 
     // Employee Page
     EMPLOYEE_DASHBOARD: 'لوحة الموظف',
@@ -746,6 +888,7 @@ export default {
     TAB_PAYROLL: 'الرواتب',
     TAB_REWARDS: 'المكافآت',
     TAB_DISCOUNT: 'الخصومات',
+    TAB_BUDGET: 'الميزانية',
     SEARCH_FINANCIALS: 'ابحث في المالية',
     NO_DATA_FOUND: 'لا توجد بيانات',
     EMPLOYEE_NAME: 'اسم الموظف',
@@ -845,8 +988,20 @@ export default {
     DELETE_DISCOUNT: 'حذف الخصم',
     TRY_ADJUST_FILTERS: 'جرّب تعديل البحث أو عوامل التصفية',
     FAILED_LOAD_REWARDS: 'فشل في تحميل المكافآت. يرجى المحاولة مرة أخرى لاحقًا.',
-    CURRENCY: 'جنيه مصري'
-    ,
+    CURRENCY: 'جنيه مصري',
+    EDIT_REWARD_AMOUNT: 'تعديل مبلغ المكافأة',
+    EDIT_DISCOUNT_AMOUNT: 'تعديل مبلغ الخصم',
+    UPDATE_AMOUNT_DESC: 'تحديث مبلغ {{type}}',
+    CURRENT_AMOUNT: 'المبلغ الحالي',
+    NEW_AMOUNT: 'المبلغ الجديد',
+    AMOUNT_PLACEHOLDER: '٠٫٠٠',
+    AMOUNT_DIFFERENCE: '{{prefix}}{{amount}}',
+    TRANSACTION_ID: 'معرف المعاملة',
+    AUTH_TOKEN_MISSING: 'لم يتم العثور على رمز المصادقة؛ يرجى تسجيل الدخول مرة أخرى.',
+    UPDATE_FAILED: 'فشل تحديث {{type}}',
+    UPDATE_ERROR: 'حدث خطأ أثناء تحديث {{type}}',
+    CHANGES_APPLIED_IMMEDIATELY: 'سيتم تطبيق التغييرات فور الحفظ',
+
     // Requests - Profile Page
     LOADING_REQUEST: 'جارٍ تحميل الطلب...'
     , NO_REQUEST_DATA: 'لا توجد بيانات للطلب'
@@ -876,5 +1031,95 @@ export default {
     , BULK_ADD_REWARD_DISCOUNT: 'إضافة مكافأة / خصم'
     , BULK_SEND_VACATION: 'إرسال إجازة'
     , BULK_ACTIONS_FOOTER: 'اختر إجراءً لتطبيقه على العناصر المحددة ({{n}} محدد)'
+
+    // Employee Actions - Reward/Discount Form
+    , ADD_REWARD_DISCOUNT: 'إضافة مكافأة أو خصم'
+    , ACTION_TYPE: 'نوع الإجراء'
+    , REWARD: 'مكافأة'
+    , DISCOUNT: 'خصم'
+    , SELECT_AMOUNT_TYPE: 'اختر نوع المبلغ'
+    , SELECT_DAYS_TOTAL: 'اختر الأيام (المجموع: {{total}} يوم)'
+    , SELECT_HOURS_TOTAL: 'اختر الساعات (المجموع: {{total}} ساعة)'
+    , REASON_OPTIONAL: 'السبب (اختياري)'
+    , AFFECTED_EMPLOYEES: '{{count}} موظف سيتم التأثير عليهم بهذا التغيير.'
+    , SELECT_ACTION_TYPE: 'يرجى اختيار نوع الإجراء.'
+    , SELECT_AMOUNT_TYPE_ERROR: 'يرجى اختيار نوع المبلغ (مبلغ، أيام، أو ساعات).'
+    , ENTER_VALID_AMOUNT: 'يرجى إدخال مبلغ صالح.'
+    , SELECT_AT_LEAST_ONE_DAY: 'يرجى اختيار خيار يوم واحد على الأقل.'
+    , SELECT_AT_LEAST_ONE_HOUR: 'يرجى اختيار خيار ساعة واحد على الأقل.'
+    , APPLY_ACTION: 'تطبيق {{action}} ({{count}})'
+    , APPLYING: 'جاري التطبيق...'
+    , FAILED_APPLY_REWARD_DISCOUNT: 'فشل في تطبيق المكافأة/الخصم. يرجى المحاولة مرة أخرى.'
+
+    // Employee Actions - Send Vacation Form
+    , SEND_VACATION: 'إرسال إجازة'
+    , AFFECTED_EMPLOYEES_VACATION: '{{count}} موظف سيتم التأثير عليهم بهذه الإجازة.'
+    , SELECT_START_DATE: 'يرجى اختيار تاريخ البدء.'
+    , SELECT_END_DATE: 'يرجى اختيار تاريخ الانتهاء.'
+    , END_DATE_AFTER_START: 'يجب أن يكون تاريخ الانتهاء بعد تاريخ البدء.'
+    , SENDING: 'جاري الإرسال...'
+    , FAILED_SEND_VACATION: 'فشل في إرسال الإجازة. يرجى المحاولة مرة أخرى.'
+
+    // Employee Actions - Change Position Form
+    , CHANGE_POSITION: 'تغيير المنصب'
+    , NEW_POSITION: 'المنصب الجديد'
+    , LOADING_POSITIONS: 'جاري تحميل المناصب...'
+    , SELECT_POSITION: 'اختر منصبًا'
+    , AFFECTED_EMPLOYEES_POSITION: '{{count}} موظف سيتم التأثير عليهم بهذا التغيير.'
+    , SELECT_NEW_POSITION: 'يرجى اختيار منصب جديد.'
+    , APPLYING_POSITION: 'جاري التطبيق...'
+    , FAILED_CHANGE_POSITION: 'فشل في تغيير المنصب. يرجى المحاولة مرة أخرى.'
+
+    // Delete Modal
+    , DELETE_TRANSACTION: 'حذف المعاملة'
+    , CONFIRM_DELETION: 'تأكيد الحذف'
+    , PERMANENT_DELETE_DESCRIPTION: 'سيؤدي هذا الإجراء إلى حذف المعاملة المحددة نهائيًا. لا يمكن التراجع عن ذلك.'
+    , TRANSACTION_ID: 'معرف المعاملة'
+    , DELETING: 'جاري الحذف'
+    , PERMANENT_ACTION: 'هذا إجراء دائم.'
+    , WARNING: 'تحذير'
+
+    // Employee Discounts widget (Arabic)
+    , DISCOUNTS_TITLE: 'الخصومات والاستقطاعات'
+    , DISCOUNTS_SUBTITLE: 'الخصومات والعقوبات الحديثة'
+    , NA_VALUE: 'غير متوفر'
+    , LOADING_DISCOUNTS: 'جارٍ تحميل الخصومات...'
+    , UNABLE_LOAD_DISCOUNTS: 'تعذر تحميل الخصومات.'
+    , NO_DISCOUNTS: 'لا توجد خصومات متاحة.'
+    , TYPE_LABEL: 'النوع:'
   }
 };
+
+// --- new named exports to help components use language & update document direction ---
+let currentLang = localStorage.getItem('i18nLang') || 'en';
+
+export function t(key) {
+  return translations[currentLang] && translations[currentLang][key]
+    ? translations[currentLang][key]
+    : key;
+}
+
+export function setLang(lang) {
+  currentLang = lang;
+  try {
+    localStorage.setItem('i18nLang', lang);
+  } catch (e) {
+    // ignore storage errors
+  }
+  if (typeof document !== 'undefined') {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  }
+}
+
+export function getLang() {
+  return currentLang;
+}
+
+// ensure initial document direction/lang
+if (typeof document !== 'undefined') {
+  document.documentElement.lang = currentLang;
+  document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+}
+
+export default translations;

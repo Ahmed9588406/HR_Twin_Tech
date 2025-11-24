@@ -22,7 +22,15 @@ function Dashboard() {
   });
 
   const [lang, setLang] = useState(_getLang());
-  useEffect(() => _subscribe(setLang), []);
+  const [, forceUpdate] = useState({});
+  
+  useEffect(() => {
+    const unsub = _subscribe((newLang) => {
+      setLang(newLang);
+      forceUpdate({}); // Force re-render
+    });
+    return unsub;
+  }, []);
 
   // Dummy employee data with more details
   const allEmployees = [

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Search, Filter, X, MapPin, Building } from "lucide-react";
-import EmployeeCard from "../../ui/EmployeeCard";
+import EmployeeCard from "./EmployeeCard";
 import CreateNewEmployee from "../../Employee_page/Create_new_Employee"; // Import the modal
 import { fetchEmployeeById } from "../../Settings/api/employees_api"; // Import the API function
 import { useNavigate } from "react-router-dom";
@@ -207,22 +207,76 @@ export default function EmployeeListView() {
       alert(copy.deleteSuccess);
     } catch (error) {
       console.error('Error deleting employee:', error);
-      alert(`${copy.deleteError} ${error.message}`);
+      alert(`${TEXT.en.deleteError} ${error.message}`);
     }
   };
 
-  const handleLock = async (employee) => {
-    const confirmLock = window.confirm(`${copy.confirmLock} ${employee.locked ? copy.unlock : copy.lock} ${employee.name}?`);
-    if (!confirmLock) return;
+  const normalizeLocked = (v) => {
+    if (v === undefined || v === null) return false;
+    if (typeof v === 'string') return ['1','true','yes','locked'].includes(v.toLowerCase());
+    return v === true || v === 1;
+  };
 
+  const handleLock = async (employee) => {
+    const currentlyLocked = normalizeLocked(
+      employee.locked ?? employee.isLocked ?? employee.lockedEmployee ?? employee.is_locked ?? employee.accountLocked ?? employee.lockStatus ?? (
+        typeof employee.nonLocked !== 'undefined' ? !normalizeLocked(employee.nonLocked) :
+        typeof employee.accountNonLocked !== 'undefined' ? !normalizeLocked(employee.accountNonLocked) :
+        typeof employee.isNonLocked !== 'undefined' ? !normalizeLocked(employee.isNonLocked) :
+        typeof employee.account_non_locked !== 'undefined' ? !normalizeLocked(employee.account_non_locked) :
+        undefined
+      )
+    );
+    const confirmLock = window.confirm(`${TEXT.en.confirmLock} ${currentlyLocked ? TEXT.en.unlock : TEXT.en.lock} ${employee.name}?`);
+    if (!confirmLock) return;
     try {
-      await lockEmployee(employee.code);
-      // Update the employee in the list
-      setEmployees(prev => prev.map(emp => emp.code === employee.code ? { ...emp, locked: !emp.locked } : emp));
-      alert(`${employee.name} ${copy.lockSuccess} ${employee.locked ? copy.unlock : copy.lock}ed successfully!`);
+      const result = await lockEmployee(employee.code);
+      let raw;
+      if (result && typeof result === 'object') {
+        if (result.locked !== undefined) raw = result.locked;
+        else if (result.isLocked !== undefined) raw = result.isLocked;
+        else if (result.lockedEmployee !== undefined) raw = result.lockedEmployee;
+        else if (result.is_locked !== undefined) raw = result.is_locked;
+        else if (result.accountLocked !== undefined) raw = result.accountLocked;
+        else if (result.lockStatus !== undefined) raw = result.lockStatus;
+        else if (result.nonLocked !== undefined) raw = !normalizeLocked(result.nonLocked);
+        else if (result.accountNonLocked !== undefined) raw = !normalizeLocked(result.accountNonLocked);
+        else if (result.isNonLocked !== undefined) raw = !normalizeLocked(result.isNonLocked);
+        else if (result.account_non_locked !== undefined) raw = !normalizeLocked(result.account_non_locked);
+        else raw = result;
+      } else {
+        raw = result;
+      }
+      let nextLocked = normalizeLocked(raw);
+      // If toggle response is ambiguous, derive from fresh detail
+      try {
+        const detail = await fetchEmployeeById(employee.code);
+        const detailRaw = (
+          detail.locked ?? detail.isLocked ?? detail.lockedEmployee ?? detail.is_locked ?? detail.accountLocked ?? detail.lockStatus ?? (
+            typeof detail.nonLocked !== 'undefined' ? !normalizeLocked(detail.nonLocked) :
+            typeof detail.accountNonLocked !== 'undefined' ? !normalizeLocked(detail.accountNonLocked) :
+            typeof detail.isNonLocked !== 'undefined' ? !normalizeLocked(detail.isNonLocked) :
+            typeof detail.account_non_locked !== 'undefined' ? !normalizeLocked(detail.account_non_locked) :
+            undefined
+          )
+        );
+        const derived = normalizeLocked(detailRaw);
+        if (typeof derived === 'boolean') nextLocked = derived;
+      } catch (_) {
+        // fall back to optimistic toggle if detail fetch fails and result was ambiguous
+        if (raw === undefined || raw === null || (typeof raw === 'string' && !['1','true','yes','locked','0','false','no','unlocked','open'].includes(String(raw).toLowerCase()))) {
+          nextLocked = !currentlyLocked;
+        }
+      }
+      setEmployees(prev =>
+        prev.map(emp =>
+          emp.code === employee.code ? { ...emp, locked: nextLocked } : emp
+        )
+      );
+      alert(`${employee.name} ${TEXT.en.lockSuccess} ${nextLocked ? TEXT.en.lock : TEXT.en.unlock}ed successfully!`);
     } catch (error) {
       console.error('Error locking/unlocking employee:', error);
-      alert(`${copy.lockError} ${error.message}`);
+      alert(`${TEXT.en.lockError} ${error.message}`);
     }
   };
 
@@ -230,7 +284,7 @@ export default function EmployeeListView() {
     if (employee.phoneNumber) {
       window.location.href = `tel:${employee.phoneNumber}`;
     } else {
-      alert(copy.noPhone);
+      alert(TEXT.en.noPhone);
     }
   };
 
@@ -239,7 +293,7 @@ export default function EmployeeListView() {
     if (employee.email) {
       window.location.href = `mailto:${employee.email}`;
     } else {
-      alert(`${copy.employeeInfo} ${employee.name}\n${copy.email} ${employee.email || copy.na}\n${copy.phone} ${employee.phoneNumber || copy.na}\n${copy.department} ${employee.departmentName || copy.na}`);
+      alert(`${TEXT.en.employeeInfo} ${employee.name}\n${TEXT.en.email} ${employee.email || TEXT.en.na}\n${TEXT.en.phone} ${employee.phoneNumber || TEXT.en.na}\n${TEXT.en.department} ${employee.departmentName || TEXT.en.na}`);
     }
   };
 
@@ -500,16 +554,25 @@ export default function EmployeeListView() {
                 <EmployeeCard
                   key={index}
                   employee={{
-                    id: employee.code, // Add the employee ID (code) for fetching
+                    id: employee.code,
                     name: employee.name,
-                    role: employee.jobPositionName, // Use jobPositionName for the role
+                    role: employee.jobPositionName,
                     department: employee.departmentName,
-                    contentType: employee.contentType, // Pass contentType
-                    image: employee.data, // Pass base64 image data
-                    status: employee.status
+                    contentType: employee.contentType,
+                    image: employee.data,
+                    status: employee.status,
+                    locked: normalizeLocked(
+                      employee.locked ?? employee.isLocked ?? employee.lockedEmployee ?? employee.is_locked ?? employee.accountLocked ?? employee.lockStatus ?? (
+                        typeof employee.nonLocked !== 'undefined' ? !normalizeLocked(employee.nonLocked) :
+                        typeof employee.accountNonLocked !== 'undefined' ? !normalizeLocked(employee.accountNonLocked) :
+                        typeof employee.isNonLocked !== 'undefined' ? !normalizeLocked(employee.isNonLocked) :
+                        typeof employee.account_non_locked !== 'undefined' ? !normalizeLocked(employee.account_non_locked) :
+                        undefined
+                      )
+                    )
                   }}
-                  onClick={() => handleCardClick(employee)} // Pass the full employee object
-                  onEdit={() => handleEdit(employee)} // Pass the edit handler
+                  onClick={() => handleCardClick(employee)}
+                  onEdit={() => handleEdit(employee)}
                   onNotify={() => handleNotify(employee)}
                   onDelete={() => handleDelete(employee)}
                   onLock={() => handleLock(employee)}

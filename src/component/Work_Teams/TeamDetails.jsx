@@ -1,10 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { fetchTeamById } from './api/work_teams_api';
 import { getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
+import translations from '../../i18n/translations';
 import { User, Briefcase } from 'lucide-react';
 
 export default function TeamDetails({ teamId }) {
   const [lang, setLang] = useState(_getLang());
+  const t = (key, params = {}) => {
+    const langData = translations[lang] || translations.en;
+    let text = langData[key] || key;
+    Object.keys(params).forEach(param => {
+      text = text.replace(new RegExp(`{{${param}}}`, 'g'), params[param]);
+    });
+    return text;
+  };
+
   useEffect(() => {
     const unsub = _subscribe((l) => setLang(l));
     return () => unsub();
@@ -51,7 +61,7 @@ export default function TeamDetails({ teamId }) {
   if (loading) {
     return (
       <div className="bg-white rounded-2xl shadow-lg p-4 border border-slate-200" dir={dir} lang={lang}>
-        <div className="text-sm text-slate-600">Loading team...</div>
+        <div className="text-sm text-slate-600">{t('LOADING_TEAM_DATA')}</div>
       </div>
     );
   }
@@ -59,7 +69,7 @@ export default function TeamDetails({ teamId }) {
   if (error) {
     return (
       <div className="bg-white rounded-2xl shadow-lg p-4 border border-slate-200 text-red-600" dir={dir} lang={lang}>
-        Error: {error}
+        {t('ERROR_LABEL')} {error}
       </div>
     );
   }
@@ -76,14 +86,14 @@ export default function TeamDetails({ teamId }) {
             <Briefcase className="w-5 h-5 text-emerald-600" />
             {team.name}
           </h4>
-          <div className="text-sm text-slate-500">Manager: {team.managerName || '—'}</div>
+          <div className="text-sm text-slate-500">{t('MANAGER_LABEL')} {team.managerName || t('DASH')}</div>
         </div>
         <div className="text-sm text-slate-600">{team.numberOfEmployees ?? (team.teamMembers.length)}</div>
       </div>
 
       <div className="divide-y divide-slate-100">
         {team.teamMembers.length === 0 ? (
-          <div className="text-sm text-slate-500 py-4">No members</div>
+          <div className="text-sm text-slate-500 py-4">{t('NO_MEMBERS_IN_TEAM')}</div>
         ) : (
           team.teamMembers.map((m) => (
             <div key={m.id} className="py-3 flex items-center gap-3">

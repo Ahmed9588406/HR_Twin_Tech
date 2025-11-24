@@ -24,18 +24,26 @@ export default function WorkPlace() {
   const isRtl = lang === 'ar';
 
   useEffect(() => {
+    let mounted = true;
     const loadBranches = async () => {
       // Only load if workplaces is empty to avoid redundant fetches
-      if (workplaces.length === 0 && !loading) {
+      if (workplaces.length === 0) {
         setLoading(true);
-        const data = await fetchBranches();
-        console.log('Setting workplaces:', data);
-        updateWorkplaces(data);
-        setLoading(false);
+        try {
+          const data = await fetchBranches();
+          if (mounted) {
+            updateWorkplaces(data || []);
+          }
+        } catch (err) {
+          console.error('Failed to fetch branches:', err);
+        } finally {
+          if (mounted) setLoading(false);
+        }
       }
     };
     loadBranches();
-  }, []); // Remove updateWorkplaces from dependencies
+    return () => { mounted = false; };
+  }, []); // keep deps minimal to avoid repeated fetches
 
   const handleAdd = () => {
     setIsAdding(true);
@@ -177,17 +185,33 @@ export default function WorkPlace() {
             </tr>
           </thead>
           <tbody>
-            {workplaces.map((wp) => (
-              <tr
-                key={wp.id}
-                className="border-t border-green-200 hover:bg-green-50 transition-colors"
-              >
-                <td className="px-6 py-4 font-medium text-green-600">
-                  {wp.name}
+            {loading ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-8 text-center">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mb-3" />
+                    <div className="text-gray-600">{_t('LOADING_WORKPLACES')}</div>
+                  </div>
                 </td>
-                <td className="px-6 py-4 text-gray-500">{wp.type}</td>
-                <td className="px-6 py-4 text-gray-500">{wp.company}</td>
-                <td className="px-6 py-4 text-center">
+              </tr>
+            ) : workplaces.length === 0 && !isAdding ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
+                  {_t('NO_WORKPLACES') || 'No workplaces'}
+                </td>
+              </tr>
+            ) : (
+              workplaces.map((wp) => (
+                <tr
+                  key={wp.id}
+                  className="border-t border-green-200 hover:bg-green-50 transition-colors"
+                >
+                  <td className="px-6 py-4 font-medium text-green-600">
+                    {wp.name}
+                  </td>
+                  <td className="px-6 py-4 text-gray-500">{wp.type}</td>
+                  <td className="px-6 py-4 text-gray-500">{wp.company}</td>
+                  <td className="px-6 py-4 text-center">
                    <div className="flex items-center justify-center gap-4">
                      <button
                        onClick={() => handlePin(wp)}
@@ -212,8 +236,9 @@ export default function WorkPlace() {
                     </button>
                   </div>
                 </td>
-              </tr>
-            ))}
+                </tr>
+              ))
+            )}
 
             {isAdding && (
               <tr className="border-t border-green-200 bg-green-50">

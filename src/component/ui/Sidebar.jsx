@@ -125,12 +125,25 @@ export default function Sidebar() {
     };
   }, []);
 
-  const toggleLanguage = async () => {
-    const i18n = await import('../../i18n/i18n');
-    const current = i18n.getLang();
-    i18n.setLang(current === 'en' ? 'ar' : 'en');
-    // local state will be updated by subscriber
+  const toggleLanguage = () => {
+    import('../../i18n/i18n').then(i18n => {
+      const newLang = language === 'en' ? 'ar' : 'en';
+      i18n.setLang(newLang); // This will trigger all subscribers
+    }).catch(() => {});
   };
+
+  useEffect(() => {
+    const handleLanguageChange = (e) => {
+      if (e.detail && e.detail.lang) {
+        setLanguage(e.detail.lang);
+      }
+    };
+    
+    window.addEventListener('languageChange', handleLanguageChange);
+    return () => {
+      window.removeEventListener('languageChange', handleLanguageChange);
+    };
+  }, []);
 
   return (
     <div 
