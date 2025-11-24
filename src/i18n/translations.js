@@ -352,8 +352,17 @@ const translations = {
     REQUESTS_SUBTITLE: 'Manage employee requests for vacations, advances, and overtime',
     REQUESTS_VACATION: 'Vacation Request',
     REQUESTS_ADVANCE: 'Advance Request',
-    REQUESTS_OVERTIME: 'Over Time'
-    ,
+    REQUESTS_OVERTIME: 'Over Time',
+    REQUESTS_LOGS: 'Logs',
+    REQUEST_APPROVED: 'Request has been approved',
+    REQUEST_REJECTED: 'Request has been rejected',
+    APPROVE: 'Approve',
+
+    // Pagination / Logs labels used by logs.jsx
+    PAGE: 'Page',
+    OF: 'of',
+    PREVIOUS: 'Previous',
+
     // Work Teams
     WORK_TEAMS_DASHBOARD: 'Work Teams Dashboard',
     WORK_TEAMS_SUBTITLE: 'Manage and monitor work teams information',
@@ -528,44 +537,8 @@ const translations = {
     , NO_DISCOUNTS: 'No discounts available.'
     , TYPE_LABEL: 'Type:'
 
-    // Work Teams - Add New Members
-    , TEAM_MANAGEMENT: 'Team Management'
-    , TEAM_MEMBERS: 'Team Members'
-    , NO_CURRENT_MEMBERS: 'No current members'
-    , START_ADDING_MEMBERS: 'Start by adding new members from below'
-    , IMAGE: 'Image'
-    , NAME: 'Name'
-    , DEPARTMENT: 'Department'
-    , POSITION: 'Position'
-    , ACTIONS: 'Actions'
-    , ADD_NEW_MEMBER: 'Add New Member'
-    , CHOOSE_EMPLOYEE: 'Choose an employee'
-    , SEARCH_EMPLOYEES: 'Search for employees...'
-    , NO_EMPLOYEES_FOUND: 'No employees found'
-    , TRY_DIFFERENT_SEARCH: 'Try searching with a different word'
-    , ADD_MEMBER: 'Add Member'
-    , ADDING: 'Adding...'
-    , CONFIRM_REMOVE_MEMBER: 'Are you sure you want to remove this member?'
-    , FAILED_ADD_MEMBER: 'Failed to add member: {{error}}'
-    , ERROR_REMOVING_MEMBER: 'Error removing member: {{error}}'
-
-    // Work Teams - Add New Team
-    , EDIT_TEAM: 'Edit Team'
-    , CREATE_NEW_TEAM: 'Create New Team'
-    , TEAM_NAME_REQUIRED: 'Team name is required'
-    , MANAGER_NAME_REQUIRED: 'Manager name is required'
-    , CREATE_TEAM: 'Create Team'
-    , CREATING: 'Creating...'
-    , UPDATE_TEAM: 'Update Team'
-    , UPDATING: 'Updating...'
-
-    // Work Teams - Team Details
-    , LOADING_TEAM_DATA: 'Loading team data...'
-    , ERROR_LABEL: 'Error:'
-    , NO_MEMBERS_IN_TEAM: 'No members in this team'
-    , MANAGER_LABEL: 'Manager:'
-    , DASH: '—'
-    , NOT_SPECIFIED: 'Not specified'
+    // Requests - Vacation (ensure explicit Arabic for "no vacation requests")
+    , NO_VACATION_REQUESTS: 'لا توجد طلبات إجازة'
   },
   ar: {
     // General
@@ -920,17 +893,16 @@ const translations = {
     REQUESTS_SUBTITLE: 'إدارة طلبات الموظفين للإجازات والسلف والعمل الإضافي',
     REQUESTS_VACATION: 'طلب إجازة',
     REQUESTS_ADVANCE: 'طلب سلفة',
-    REQUESTS_OVERTIME: 'عمل إضافي'
-    ,
-    // Work Teams
-    WORK_TEAMS_DASHBOARD: 'لوحة فرق العمل',
-    WORK_TEAMS_SUBTITLE: 'إدارة ومراقبة معلومات فرق العمل',
-    SELECT_WORK_TIMING: 'اختر مواعيد العمل',
-    NO_DEPARTMENTS_FOUND: 'لا توجد أقسام',
-    ADD_NEW_TEAM: 'إضافة فريق جديد',
-    MANAGERS: 'المديرون',
-    NUM_OF_EMPLOYEES: 'عدد الموظفين',
-    SEARCH: 'بحث',
+    REQUESTS_OVERTIME: 'عمل إضافي',
+    REQUESTS_LOGS: 'سجلات الطلبات',
+    REQUEST_APPROVED: 'تم الموافقة على الطلب',
+    REQUEST_REJECTED: 'تم رفض الطلب',
+    APPROVE: 'قبول',
+
+    // Pagination / Logs labels used by logs.jsx
+    PAGE: 'صفحة',
+    OF: 'من',
+    PREVIOUS: 'السابق',
 
     // Employee Actions
     EMP_ACTION_DASHBOARD: 'لوحة إجراءات الموظفين',
@@ -1095,11 +1067,6 @@ const translations = {
     , UNABLE_LOAD_DISCOUNTS: 'تعذر تحميل الخصومات.'
     , NO_DISCOUNTS: 'لا توجد خصومات متاحة.'
     , TYPE_LABEL: 'النوع:'
-
-    // Pagination / Logs labels used by logs.jsx
-    , PAGE: 'صفحة'
-    , OF: 'من'
-    , PREVIOUS: 'السابق'
 
     // Requests - Vacation (ensure explicit Arabic for "no vacation requests")
     , NO_VACATION_REQUESTS: 'لا توجد طلبات إجازة'

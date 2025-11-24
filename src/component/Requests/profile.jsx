@@ -187,6 +187,17 @@ export default function VacationRequestPage() {
   const employee = requestData.empDetails;
   const duration = calculateDuration(requestData.startDate, requestData.endDate);
 
+  // helper to map runtime status to translation key
+  const statusToKey = (s) => {
+    const norm = String(s || '').toUpperCase().trim();
+    if (norm === 'APPROVED' || /AP?PROV|APROV|APPROV|APPROVED|APROVED|ACCEPT/.test(norm)) return 'APPROVED';
+    if (norm === 'REJECTED' || /REJ|REJECT/.test(norm)) return 'REJECTED';
+    if (norm === 'PENDING' || /PEND/.test(norm)) return 'PENDING';
+    if (norm === 'APPROVING...' || /APPROVING/.test(norm)) return 'APPROVING';
+    if (norm === 'REJECTING...' || /REJECTING/.test(norm)) return 'REJECTING';
+    return norm || '-';
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -277,7 +288,7 @@ export default function VacationRequestPage() {
                   status === 'REJECTED' ? 'bg-red-100 text-red-700' :
                   'bg-gray-100 text-gray-700'
                 }`}>
-                  {status}
+                  {_t(statusToKey(status))}
                 </span>
               </div>
               
@@ -303,14 +314,14 @@ export default function VacationRequestPage() {
               {status === 'APPROVED' && (
                 <div className="flex items-center justify-center gap-2 text-green-600 bg-green-50 py-4 rounded-xl">
                   <CheckCircle className="w-6 h-6" />
-                  <span className="font-semibold">{_t('REQUEST_APPROVED') || 'Request has been approved'}</span>
+                  <span className="font-semibold">{_t('REQUEST_APPROVED')}</span>
                 </div>
               )}
 
               {status === 'REJECTED' && (
                 <div className="flex items-center justify-center gap-2 text-red-600 bg-red-50 py-4 rounded-xl">
                   <AlertCircle className="w-6 h-6" />
-                  <span className="font-semibold">{_t('REQUEST_REJECTED') || 'Request has been rejected'}</span>
+                  <span className="font-semibold">{_t('REQUEST_REJECTED')}</span>
                 </div>
               )}
             </div>

@@ -27,24 +27,40 @@ function usePaginated(data, pageSize = 10) {
 }
 
 function Pagination({ page, totalPages, onPrev, onNext }) {
+  const lang = _getLang();
+  const isRtlLocal = lang === 'ar';
+
+  const pageLabel = `${_t('PAGE') || 'Page'} ${page + 1} ${_t('OF') || 'of'} ${totalPages}`;
+  const prevLabel = _t('PREVIOUS') || 'Previous';
+  const nextLabel = _t('NEXT') || 'Next';
+
+  const PrevButton = (
+    <button
+      onClick={onPrev}
+      disabled={page <= 0}
+      aria-label={prevLabel}
+      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border ${page <= 0 ? 'text-gray-400 border-gray-200 bg-gray-100 cursor-not-allowed' : 'text-gray-700 border-gray-300 hover:bg-gray-100'}`}
+    >
+      <ChevronLeft className="w-4 h-4" /> {prevLabel}
+    </button>
+  );
+
+  const NextButton = (
+    <button
+      onClick={onNext}
+      disabled={page >= totalPages - 1}
+      aria-label={nextLabel}
+      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border ${page >= totalPages - 1 ? 'text-gray-400 border-gray-200 bg-gray-100 cursor-not-allowed' : 'text-gray-700 border-gray-300 hover:bg-gray-100'}`}
+    >
+      {nextLabel} <ChevronRight className="w-4 h-4" />
+    </button>
+  );
+
   return (
     <div className="flex items-center justify-end gap-3 px-4 py-3 border-t border-gray-100 bg-gray-50">
-      <span className="text-sm text-gray-600">{(_t('PAGE') || 'Page')} {page + 1} {(_t('OF') || 'of')} {totalPages}</span>
+      <span className="text-sm text-gray-600">{pageLabel}</span>
       <div className="flex items-center gap-2">
-        <button
-          onClick={onPrev}
-          disabled={page <= 0}
-          className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border ${page <= 0 ? 'text-gray-400 border-gray-200 bg-gray-100 cursor-not-allowed' : 'text-gray-700 border-gray-300 hover:bg-gray-100'}`}
-        >
-          <ChevronLeft className="w-4 h-4" /> {(_t('PREVIOUS') || 'Previous')}
-        </button>
-        <button
-          onClick={onNext}
-          disabled={page >= totalPages - 1}
-          className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border ${page >= totalPages - 1 ? 'text-gray-400 border-gray-200 bg-gray-100 cursor-not-allowed' : 'text-gray-700 border-gray-300 hover:bg-gray-100'}`}
-        >
-          {(_t('NEXT') || 'Next')} <ChevronRight className="w-4 h-4" />
-        </button>
+        {isRtlLocal ? (<>{NextButton}{PrevButton}</>) : (<>{PrevButton}{NextButton}</>)}
       </div>
     </div>
   );
@@ -55,16 +71,16 @@ const getStatusMeta = (raw) => {
   const s = String(raw || '').toUpperCase().trim();
   // Match common variants and typos (e.g. 'APROVED', 'APPROVED', 'accepted')
   if (/AP?PROV|APROV|APPROV|APPROVED|APROVED|ACCEPT/.test(s)) {
-    return { label: 'APPROVED', className: 'bg-green-100 text-green-700' };
+    return { statusKey: 'APPROVED', className: 'bg-green-100 text-green-700' };
   }
   if (/PEND/.test(s)) {
-    return { label: 'PENDING', className: 'bg-yellow-100 text-yellow-800' };
+    return { statusKey: 'PENDING', className: 'bg-yellow-100 text-yellow-800' };
   }
   if (/REJ|REJECT/.test(s)) {
-    return { label: 'REJECTED', className: 'bg-red-100 text-red-800' };
+    return { statusKey: 'REJECTED', className: 'bg-red-100 text-red-800' };
   }
   // fallback: show trimmed original (or dash) with neutral styling
-  return { label: s || '-', className: 'bg-gray-100 text-gray-700' };
+  return { statusKey: s || '-', className: 'bg-gray-100 text-gray-700' };
 };
 
 export default function RequestsLogs() {
@@ -193,7 +209,7 @@ export default function RequestsLogs() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {vacItems.map((request) => {
-                    const { label, className: statusClass } = getStatusMeta(request.requestStatus);
+                    const { statusKey, className: statusClass } = getStatusMeta(request.requestStatus);
                     return (
                       <tr
                         key={request.requestId}
@@ -223,7 +239,7 @@ export default function RequestsLogs() {
                         <td className="py-4 px-4 text-gray-600">{request.endDate}</td>
                         <td className="py-4 px-4">
                           <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusClass}`}>
-                            {label}
+                            {_t(statusKey) || statusKey}
                           </span>
                         </td>
                         <td className="py-4 px-4 text-gray-600">{request.comment}</td>
@@ -276,7 +292,7 @@ export default function RequestsLogs() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {advItems.map((req) => {
-                    const { label, className: statusClass } = getStatusMeta(req.requestStatus);
+                    const { statusKey, className: statusClass } = getStatusMeta(req.requestStatus);
                     return (
                       <tr
                         key={req.requestId}
@@ -306,7 +322,7 @@ export default function RequestsLogs() {
                         <td className="py-4 px-4 text-gray-600">{req.paymentDate || '-'}</td>
                         <td className="py-4 px-4">
                           <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusClass}`}>
-                            {label}
+                            {_t(statusKey) || statusKey}
                           </span>
                         </td>
                         <td className="py-4 px-4 text-gray-600">{req.comment}</td>
@@ -358,7 +374,7 @@ export default function RequestsLogs() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {ovtItems.map((req) => {
-                    const { label, className: statusClass } = getStatusMeta(req.requestStatus);
+                    const { statusKey, className: statusClass } = getStatusMeta(req.requestStatus);
                     return (
                       <tr
                         key={req.requestId}
@@ -387,7 +403,7 @@ export default function RequestsLogs() {
                         <td className="py-4 px-4 text-gray-600">{req.hours ?? req.overtimeHours ?? '-'}</td>
                         <td className="py-4 px-4">
                           <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusClass}`}>
-                            {label}
+                            {_t(statusKey) || statusKey}
                           </span>
                         </td>
                         <td className="py-4 px-4 text-gray-600">{req.comment || '-'}</td>
