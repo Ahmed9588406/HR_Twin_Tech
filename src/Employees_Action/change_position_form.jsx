@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { User, X } from 'lucide-react';
-import { fetchJobPositions, changeEmployeePositions } from './emp_actions_api';
+import { fetchJobPositions } from './emp_actions_api';
 import { t as _t } from '../i18n/i18n';
 
 export default function ChangePositionForm({ selectedActions = [], onClose = () => {}, onSuccess = () => {} }) {
@@ -103,14 +103,40 @@ export default function ChangePositionForm({ selectedActions = [], onClose = () 
 
     setSubmitting(true);
     try {
-      const result = await changeEmployeePositions(selectedActions, parseInt(newPositionId));
+      const empCodes = (selectedActions || []).map((code) => Number(code)).filter((v) => !Number.isNaN(v));
+      const jobPositionId = Number(newPositionId);
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Auth token not found');
+      }
+
+      const response = await fetch('https://api.shl-hr.com/api/v1/employees/change-positions', {
+        method: 'PUT',
+        headers: {
+          'ngrok-skip-browser-warning': 'true',
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          empCodes,
+          jobPositionId
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to change positions: ${response.status}`);
+      }
+
+      const result = await response.json();
       console.log('Position change result:', result);
 
-      alert(`Position changed for ${selectedActions.length} employee(s).`);
+      alert(`Position changed for ${empCodes.length} employee(s).`);
       onSuccess();
     } catch (err) {
       console.error('Position change failed:', err);
-      setError(_t('FAILED_CHANGE_POSITION'));
+      setError(err.message || _t('FAILED_CHANGE_POSITION'));
     } finally {
       setSubmitting(false);
     }

@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../ui/Sidebar';
 import AddNewTeam from './add_new_team';
 import AddNewMembers from './add_new_members';
-import { Search, Eye, Edit2, X, Users, User, Calendar, Plus } from 'lucide-react';
+import { Eye, Edit2, X, Users, User, Calendar, Plus } from 'lucide-react';
 import { fetchTeams, deleteTeam } from './api/work_teams_api'; // Import the delete API function
 import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
@@ -15,7 +15,6 @@ export default function EmployeeManager() {
   useEffect(() => _subscribe(setLang), []);
 
   const [departments, setDepartments] = useState([]); // Start with empty array
-  const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false); // State for members modal visibility
   const [editingTeam, setEditingTeam] = useState(null); // State for the team being edited
@@ -162,10 +161,8 @@ export default function EmployeeManager() {
     setIsModalOpen(false);
   };
 
-  const filteredDepartments = departments.filter(dept =>
-    dept.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    dept.managers.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // show full list (no client-side search filter)
+  const filteredDepartments = departments;
 
   const handleAdd = () => {
     setEditingTeam(null); // Clear editing team
@@ -259,25 +256,7 @@ export default function EmployeeManager() {
             {activeTab === 'Work Teams' && (
               <div>
                 <div className="mb-6 flex items-center justify-between">
-                  <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="text"
-                      placeholder={_t('SEARCH')}
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="2"/>
-                      <line x1="16" y1="2" x2="16" y2="6" strokeWidth="2"/>
-                      <line x1="8" y1="2" x2="8" y2="6" strokeWidth="2"/>
-                      <line x1="3" y1="10" x2="21" y2="10" strokeWidth="2"/>
-                    </svg>
-                    <span className="text-gray-600">{_t('SELECT_WORK_TIMING')}</span>
-                  </div>
+                  <div className="flex-1" />
                 </div>
 
                 {/* Table */}
@@ -318,18 +297,21 @@ export default function EmployeeManager() {
                               <button
                                 onClick={() => handleViewMembers(dept)}
                                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                title={_t('VIEW_ALL')}
                               >
                                 <Eye className="w-5 h-5 text-gray-600" />
                               </button>
                               <button
                                 onClick={() => handleEdit(dept)}
                                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                title={_t('EDIT')}
                               >
                                 <Edit2 className="w-5 h-5 text-green-600" />
                               </button>
                               <button
                                 onClick={() => handleDelete(dept.id)}
                                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                title={_t('DELETE')}
                               >
                                 <X className="w-5 h-5 text-red-600" />
                               </button>
@@ -353,7 +335,6 @@ export default function EmployeeManager() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">{_t('EMPLOYEES_ACTION')}</h2>
                 <p className="text-gray-600">{_t('EMPLOYEES_ACTION_SUBTITLE')}</p>
-                <p className="text-gray-600">Employee actions content goes here...</p>
               </div>
             )}
           </div>

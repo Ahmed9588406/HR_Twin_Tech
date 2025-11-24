@@ -81,7 +81,7 @@ export default function ActionDashboard() {
   );
 
   const handleEmployeeClick = (employee) => {
-    navigate('/employee-profile', { state: { employee } });
+    navigate('/employee-portal', { state: { employee } });
   };
 
   useEffect(() => {
@@ -97,8 +97,9 @@ export default function ActionDashboard() {
           position: user.jobPositionName,
           manager: user.managerName || '-',
           employee: {
+            code: user.code,
             name: user.name,
-            role: user.jobPositionName,
+            jobPositionName: user.jobPositionName,
             department: user.departmentName,
             avatar: 'https://i.pravatar.cc/150?img=12', // placeholder
             status: 'present', // placeholder
@@ -202,8 +203,17 @@ export default function ActionDashboard() {
                   {/* Table Body */}
                   <div className="divide-y divide-gray-100">
                     {filteredActions.map((action) => (
-                      <div key={action.id} className={`grid grid-cols-10 gap-4 px-6 py-4 items-center transition-colors ${selectedActions.includes(action.id) ? 'bg-green-50' : 'hover:bg-gray-50'}`}>
-                        <div className="col-span-1 flex items-center">
+                      <div 
+                        key={action.id} 
+                        className={`grid grid-cols-10 gap-4 px-6 py-4 items-center transition-colors cursor-pointer ${selectedActions.includes(action.id) ? 'bg-green-50' : 'hover:bg-gray-50'}`}
+                        onClick={(e) => {
+                          // Don't navigate if clicking checkbox
+                          if (e.target.type !== 'checkbox') {
+                            handleEmployeeClick(action.employee);
+                          }
+                        }}
+                      >
+                        <div className="col-span-1 flex items-center" onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
                             className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
@@ -211,7 +221,7 @@ export default function ActionDashboard() {
                             onChange={() => handleSelectOne(action.id)}
                           />
                         </div>
-                        <div className="col-span-3 text-gray-800 cursor-pointer hover:text-blue-600" onClick={() => handleEmployeeClick(action.employee)}>{action.name}</div>
+                        <div className="col-span-3 text-gray-800 font-medium">{action.name}</div>
                         <div className="col-span-2 text-gray-600">{action.department}</div>
                         <div className="col-span-2 text-gray-600">{action.position}</div>
                         <div className="col-span-2 text-gray-600">{action.manager}</div>

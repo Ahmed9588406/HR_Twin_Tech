@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Search, Filter, X, MapPin, Building } from "lucide-react";
+import { Search, Filter, X, MapPin, Building, ChevronLeft, ChevronRight } from "lucide-react";
 import EmployeeCard from "./EmployeeCard";
 import CreateNewEmployee from "../../Employee_page/Create_new_Employee"; // Import the modal
 import { fetchEmployeeById } from "../../Settings/api/employees_api"; // Import the API function
 import { useNavigate } from "react-router-dom";
 import { fetchEmployees, deleteEmployee, lockEmployee } from '../../Employee_page/api/emplyee_api'; // Added lockEmployee import
 import { fetchBranches, fetchDepartments } from '../../Settings/api/settings_api' // fetch lists for filters
-import { getLang as _getLang, subscribe as _subscribe } from '../../../i18n/i18n';
+import { getLang as _getLang, subscribe as _subscribe, t as _t } from '../../../i18n/i18n';
 
 const TEXT = {
   en: {
@@ -89,21 +89,30 @@ export default function EmployeeListView() {
   const [selectedLocation, setSelectedLocation] = useState('all');
   const [departments, setDepartments] = useState([]) // will hold {id,name}
   const [branches, setBranches] = useState([]) // will hold {id,name}
-  const [employees, setEmployees] = useState([]);
+  
+  // Store ALL employees (no server pagination)
+  const [allEmployees, setAllEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // State for edit modal
   const [editEmployeeData, setEditEmployeeData] = useState(null); // State for edit employee data
   const [lang, setLang] = useState(_getLang());
   const navigate = useNavigate();
 
+  // Client-side pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 10; // items per page
+
+  // Fetch ALL employees on mount (no pagination params)
   useEffect(() => {
-    const loadEmployees = async () => {
+    const loadAllEmployees = async () => {
       try {
         setLoading(true);
-        const data = await fetchEmployees();
-        console.log('Fetched employees data:', data); // Log the fetched data to debug the issue
-        setEmployees(data || []);
+        // Fetch without page/size to get all employees (or fetch multiple pages until all are loaded)
+        const result = await fetchEmployees(0, 9999); // large size to get all
+        console.log('Fetched all employees:', result);
+        setAllEmployees(result.items || []);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -111,9 +120,9 @@ export default function EmployeeListView() {
       }
     };
 
-    loadEmployees();
+    loadAllEmployees();
   }, []);
-  
+
   // fetch branches & departments for the filter selects
   useEffect(() => {
     let mounted = true
@@ -135,6 +144,11 @@ export default function EmployeeListView() {
     return () => { mounted = false }
   }, [])
 
+  // Reset to page 0 when filters change
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [searchQuery, selectedDepartment, selectedLocation]);
+
   // derive selected names (for display) if needed
   const selectedDepartmentName = useMemo(() => {
     if (selectedDepartment === 'all') return null
@@ -148,8 +162,9 @@ export default function EmployeeListView() {
     return b ? b.name : selectedLocation
   }, [selectedLocation, branches])
 
+  // CLIENT-SIDE FILTER: apply search & department & location filters
   const filteredEmployees = useMemo(() => {
-    return employees.filter(employee => {
+    return allEmployees.filter(employee => {
       const matchesSearch = employee.name.toLowerCase().includes(searchQuery.toLowerCase());
       // department match: accept when selected 'all' or when employee matches by id or by name/string
       const matchesDepartment = (() => {
@@ -176,7 +191,24 @@ export default function EmployeeListView() {
       
       return matchesSearch && matchesDepartment && matchesLocation;
     });
-  }, [searchQuery, selectedDepartment, selectedLocation, employees, selectedDepartmentName, selectedLocationName]);
+  }, [searchQuery, selectedDepartment, selectedLocation, allEmployees, selectedDepartmentName, selectedLocationName]);
+
+  // STATISTICS: compute from filteredEmployees
+  const stats = useMemo(() => {
+    const total = filteredEmployees.length;
+    const present = filteredEmployees.filter(e => e.status === "Present").length;
+    const onLeave = filteredEmployees.filter(e => e.status === "On Leave").length;
+    const absent = filteredEmployees.filter(e => e.status === "Absent").length;
+    return { total, present, onLeave, absent };
+  }, [filteredEmployees]);
+
+  // CLIENT-SIDE PAGINATION: slice filteredEmployees
+  const totalPages = Math.max(1, Math.ceil(filteredEmployees.length / pageSize));
+  const paginatedEmployees = useMemo(() => {
+    const start = currentPage * pageSize;
+    const end = start + pageSize;
+    return filteredEmployees.slice(start, end);
+  }, [filteredEmployees, currentPage, pageSize]);
 
   const handleEdit = async (employee) => {
     try {
@@ -203,7 +235,7 @@ export default function EmployeeListView() {
     try {
       await deleteEmployee(employee.code); // Use employee.code as the ID
       // Remove the employee from the list
-      setEmployees(prev => prev.filter(emp => emp.code !== employee.code));
+      setAllEmployees(prev => prev.filter(emp => emp.code !== employee.code));
       alert(copy.deleteSuccess);
     } catch (error) {
       console.error('Error deleting employee:', error);
@@ -268,7 +300,7 @@ export default function EmployeeListView() {
           nextLocked = !currentlyLocked;
         }
       }
-      setEmployees(prev =>
+      setAllEmployees(prev =>
         prev.map(emp =>
           emp.code === employee.code ? { ...emp, locked: nextLocked } : emp
         )
@@ -308,6 +340,15 @@ export default function EmployeeListView() {
   // navigate to Employee_profile.jsx (route: /employee-portal)
   const handleCardClick = (employee) => {
     navigate('/employee-portal', { state: { employee } }); // Pass the full employee object
+  };
+
+  // Pagination handlers
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(0, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1));
   };
 
   useEffect(() => {
@@ -472,13 +513,13 @@ export default function EmployeeListView() {
           )}
         </div>
 
-        {/* Stats */}
+        {/* Stats - now computed from filteredEmployees */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 font-medium">{copy.total}</p>
-                <p className="text-2xl font-bold text-gray-900">{filteredEmployees.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
                 <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -492,9 +533,7 @@ export default function EmployeeListView() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 font-medium">{copy.present}</p>
-                <p className="text-2xl font-bold text-emerald-600">
-                  {filteredEmployees.filter(e => e.status === "Present").length}
-                </p>
+                <p className="text-2xl font-bold text-emerald-600">{stats.present}</p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center">
                 <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -508,9 +547,7 @@ export default function EmployeeListView() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 font-medium">{copy.onLeave}</p>
-                <p className="text-2xl font-bold text-amber-600">
-                  {filteredEmployees.filter(e => e.status === "On Leave").length}
-                </p>
+                <p className="text-2xl font-bold text-amber-600">{stats.onLeave}</p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center">
                 <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -524,9 +561,7 @@ export default function EmployeeListView() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 font-medium">{copy.absent}</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {filteredEmployees.filter(e => e.status === "Absent").length}
-                </p>
+                <p className="text-2xl font-bold text-red-600">{stats.absent}</p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center">
                 <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -537,10 +572,10 @@ export default function EmployeeListView() {
           </div>
         </div>
 
-        {/* Employee Cards Grid */}
+        {/* Employee Cards Grid - render paginatedEmployees */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {filteredEmployees.length > 0 ? (
-            filteredEmployees.map((employee, index) => {
+          {paginatedEmployees.length > 0 ? (
+            paginatedEmployees.map((employee, index) => {
               // Map status to match EmployeeCard config
               const statusMap = {
                 "Present": "Stay here",
@@ -591,6 +626,41 @@ export default function EmployeeListView() {
             </div>
           )}
         </div>
+
+        {/* Pagination Controls - show if more than 1 page */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6 bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+            <div className="text-sm text-gray-600">
+              {_t('PAGINATION_FOOTER', { page: String(currentPage + 1), totalPages: String(totalPages), total: String(filteredEmployees.length) })}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 0}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  currentPage === 0
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-green-500'
+                }`}
+              >
+                <ChevronLeft className="w-4 h-4" />
+                {_t('PREVIOUS')}
+              </button>
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage >= totalPages - 1}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  currentPage >= totalPages - 1
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-green-500'
+                }`}
+              >
+                {_t('NEXT')}
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Edit Employee Modal */}

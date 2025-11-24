@@ -50,3 +50,8 @@ export function t(key, params = {}) {
   });
   return text;
 }
+
+export function getMonths() {
+  const langData = translations[currentLang] || translations.en;
+  return langData.MONTHS || ['january','february','march','april','may','june','july','august','september','october','november','december'];
+}

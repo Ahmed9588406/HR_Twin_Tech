@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, Clock, Award, Minus } from 'lucide-react';
 import { fetchEmployeeSalary } from './employee_role_api';
-import { getLang as _getLang, subscribe as _subscribe } from '../i18n/i18n';
+import { getLang as _getLang, subscribe as _subscribe, t as _t } from '../i18n/i18n';
 
 // Constants for hard-coded values
 const TEXT = {
@@ -123,7 +123,9 @@ export default function EmployeeSalary({ empCode }) {
             <span className="text-sm font-medium text-slate-700">{copy.labels.TOTAL_SALARY}</span>
           </div>
           <div className="text-2xl font-bold text-green-600">
-            ${salaryData.totalSalary?.toFixed(2) || copy.naValue}
+            {salaryData?.totalSalary != null
+              ? `${Number(salaryData.totalSalary).toFixed(2)} ${_t('CURRENCY')}`
+              : copy.naValue}
           </div>
         </div>
 
@@ -133,7 +135,9 @@ export default function EmployeeSalary({ empCode }) {
             <span className="text-sm font-medium text-slate-700">{copy.labels.FIXED_SALARY}</span>
           </div>
           <div className="text-2xl font-bold text-blue-600">
-            ${salaryData.fixedSalary?.toFixed(2) || copy.naValue}
+            {salaryData?.fixedSalary != null
+              ? `${Number(salaryData.fixedSalary).toFixed(2)} ${_t('CURRENCY')}`
+              : copy.naValue}
           </div>
         </div>
 

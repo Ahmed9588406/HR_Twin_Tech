@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getLang as _getLang, subscribe as _subscribe } from '../i18n/i18n';
+import { getLang as _getLang, subscribe as _subscribe, t as _t } from '../i18n/i18n';
 
 const TEXT = {
   en: {
@@ -182,7 +182,7 @@ const EmployeeShiftDept = () => {
                 </div>
                 <div className="flex-1">
                   <p className="text-xs font-medium text-red-600 uppercase tracking-wide mb-1">{copy.warnings}</p>
-                  <p className="text-sm text-gray-800">You have {data.noticeNumber} warning(s).</p>
+                  <p className="text-sm text-gray-800">{_t('TERMINATION_WARNINGS', { n: String(data.noticeNumber) })}</p>
                 </div>
               </div>
             </div>

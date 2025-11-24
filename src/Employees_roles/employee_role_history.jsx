@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, CheckCircle, XCircle } from 'lucide-react';
-import { getLang as _getLang, subscribe as _subscribe } from '../i18n/i18n';
+import { getLang as _getLang, subscribe as _subscribe, t as _t, getMonths } from '../i18n/i18n';
 
 // API function
 const fetchAttendanceRecords = async (empCode, options = {}) => {
@@ -109,13 +109,38 @@ const normalizeStatus = (raw) => {
   return s || 'OTHER';
 };
 
-const DISPLAY_STATUS = {
-  ABSENT: 'Absent',
-  PRESENT: 'Present',
-  WEEKEND: 'Weekend',
-  DAY_OFF: 'Day Off - Holiday',
-  ON_LEAVE: 'On Leave',
-  OTHER: 'Status'
+const getDisplayStatus = (status) => {
+  const norm = normalizeStatus(status);
+  if (norm === 'ABSENT') return _t('ABSENT');
+  if (norm === 'PRESENT') return _t('PRESENT');
+  if (norm === 'WEEKEND') return _t('WEEKEND');
+  if (norm === 'DAY_OFF') return _t('DAY_OFF');
+  if (norm === 'ON_LEAVE') return _t('ON_LEAVE');
+  return status;
+};
+
+// Add helper function for formatting dates
+const formatDate = (dateStr, lang) => {
+  const d = new Date(dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00`);
+  
+  if (lang === 'ar') {
+    const arabicDays = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const arabicMonths = ['يناير', 'فبراير', 'مارس', 'إبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+    
+    const dayName = arabicDays[d.getDay()];
+    const monthName = arabicMonths[d.getMonth()];
+    const day = d.getDate();
+    const year = d.getFullYear();
+    
+    return `${dayName}، ${day} ${monthName} ${year}`;
+  } else {
+    return d.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  }
 };
 
 export default function EmployeeAttendanceHistory({ empCode }) {
@@ -248,29 +273,18 @@ export default function EmployeeAttendanceHistory({ empCode }) {
               const isOnLeave = normStatus === 'ON_LEAVE';
               const isSpecialStatus = isAbsent || isDayOff || isWeekend || isOnLeave;
 
-              console.log('Record status:', record.status, 'isAbsent:', isAbsent, 'isSpecialStatus:', isSpecialStatus);
-
               return (
                 <tr key={record.attendanceId || index} className={`border-b border-slate-100 transition-colors ${
                   isSpecialStatus ? (isAbsent ? 'bg-red-50' : 'bg-green-50') : 'hover:bg-slate-50'
                 }`}>
                   <td className="py-4 px-4 text-slate-800 font-medium">
-                    {(() => {
-                      const dayStr = record.day || '';
-                      const d = new Date(dayStr.includes('T') ? dayStr : `${dayStr}T00:00:00`);
-                      return d.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', {
-                        weekday: 'short',
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      });
-                    })()}
+                    {formatDate(record.day || '', lang)}
                   </td>
 
                   {isSpecialStatus ? (
                     <td colSpan={4} className="py-4 px-4 text-center">
                       <div className={`text-xl font-semibold ${isAbsent ? 'text-red-600' : 'text-green-600'}`}>
-                        {DISPLAY_STATUS[normStatus] || String(record.status || '').trim()}
+                        {getDisplayStatus(record.status)}
                       </div>
                     </td>
                   ) : (
@@ -293,7 +307,7 @@ export default function EmployeeAttendanceHistory({ empCode }) {
                       <td className="py-4 px-4">
                         <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(record.status)}`}>
                           {getStatusIcon(record.status)}
-                          {DISPLAY_STATUS[normalizeStatus(record.status)] || record.status}
+                          {getDisplayStatus(record.status)}
                         </div>
                       </td>
                     </>

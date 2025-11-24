@@ -126,7 +126,7 @@ export const createEmployee = async (employeeData) => {
   }
 };
 
-// Fetch employees
+// Fetch employees with pagination
 const toBoolean = (value) => {
   if (typeof value === 'boolean') return value;
   if (typeof value === 'number') return value !== 0;
@@ -134,14 +134,16 @@ const toBoolean = (value) => {
   return false;
 };
 
-export const fetchEmployees = async () => {
+export const fetchEmployees = async (page = 0, size = 10) => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const response = await fetch(`${BASE_URL}/employees`, {
+    const url = `${BASE_URL}/employees?page=${page}&size=${size}`;
+
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'ngrok-skip-browser-warning': 'true',
@@ -154,14 +156,47 @@ export const fetchEmployees = async () => {
     }
 
     const data = await response.json();
-    return Array.isArray(data)
-      ? data.map(emp => ({
+    console.log('Employees API response:', data);
+    
+    // Handle both array and paginated response formats
+    if (Array.isArray(data)) {
+      // Old format: direct array
+      return {
+        items: data.map(emp => ({
           ...emp,
           locked: toBoolean(
             emp.locked ?? emp.isLocked ?? emp.lockedEmployee ?? emp.is_locked
           )
-        }))
-      : [];
+        })),
+        totalPages: 1,
+        totalElements: data.length,
+        currentPage: 0,
+        size: data.length
+      };
+    } else if (data.content && Array.isArray(data.content)) {
+      // Paginated format
+      return {
+        items: data.content.map(emp => ({
+          ...emp,
+          locked: toBoolean(
+            emp.locked ?? emp.isLocked ?? emp.lockedEmployee ?? emp.is_locked
+          )
+        })),
+        totalPages: data.totalPages ?? 1,
+        totalElements: data.totalElements ?? data.content.length,
+        currentPage: data.number ?? page,
+        size: data.size ?? size
+      };
+    } else {
+      // Fallback
+      return {
+        items: [],
+        totalPages: 1,
+        totalElements: 0,
+        currentPage: 0,
+        size: size
+      };
+    }
   } catch (error) {
     console.error('Error fetching employees:', error);
     throw error;

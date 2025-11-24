@@ -128,6 +128,7 @@ const translations = {
     // added keys:
     DELAY_HOUR: 'Delay Hour',
     TERMINATION_NOTICE_LIMIT: 'Termination Notice Limit',
+    TERMINATION_WARNINGS: 'You have {{n}} Termination warning(s).',
     HOURS: 'hours',
     OVERTIME_MINS: 'Overtime Minutes',
     DISCOUNT_PERCENT: 'Discount %',
@@ -251,8 +252,9 @@ const translations = {
     JUST_NOW: 'Just now',
     AGO_MINUTES: '{{n}}m ago',
     AGO_HOURS: '{{n}}h ago',
-    AGO_DAYS: '{{n}}d ago'
-    ,
+    AGO_DAYS: '{{n}}d ago',
+    // month names (index 0 = January, 11 = December)
+    MONTHS: ['january','february','march','april','may','june','july','august','september','october','november','december'],
     // Filters & Lists
     ALL_STATUS: 'All',
     STATUS_PRESENT: 'Present',
@@ -362,6 +364,7 @@ const translations = {
     PAGE: 'Page',
     OF: 'of',
     PREVIOUS: 'Previous',
+    PAGINATION_FOOTER: 'Showing page {{page}} of {{totalPages}} ({{total}} total employees)',
 
     // Work Teams
     WORK_TEAMS_DASHBOARD: 'Work Teams Dashboard',
@@ -542,6 +545,35 @@ const translations = {
 
     // Requests - Vacation (ensure explicit Arabic for "no vacation requests")
     , NO_VACATION_REQUESTS: 'No vacation requests'
+    
+    // Work Teams - Add/Edit Team
+    , EDIT_TEAM: 'Edit Team'
+    , CREATE_NEW_TEAM: 'Create New Team'
+    , CREATE_TEAM: 'Create Team'
+    , UPDATE_TEAM: 'Update Team'
+    , TEAM_NAME_REQUIRED: 'Team name is required'
+    , MANAGER_NAME_REQUIRED: 'Manager name is required'
+    
+    // Work Teams Members
+    , TEAM_MANAGEMENT: 'Team Management'
+    , TEAM_MEMBERS: 'Team Members'
+    , NO_CURRENT_MEMBERS: 'No current members'
+    , START_ADDING_MEMBERS: 'Start adding members'
+    , IMAGE: 'Image'
+    , DEPARTMENT: 'Department'
+    , POSITION: 'Position'
+    , ACTIONS: 'Actions'
+    , ADD_NEW_MEMBER: 'Add New Member'
+    , CHOOSE_EMPLOYEE: 'Choose Employee'
+    , SEARCH_EMPLOYEES: 'Search employees'
+    , NO_EMPLOYEES_FOUND: 'No employees found'
+    , TRY_DIFFERENT_SEARCH: 'Try a different search'
+    , NOT_SPECIFIED: 'Not specified'
+    , ADD_MEMBER: 'Add Member'
+    , ADDING: 'Adding'
+    , CONFIRM_REMOVE_MEMBER: 'Confirm remove member'
+    , FAILED_ADD_MEMBER: 'Failed to add member'
+    , ERROR_REMOVING_MEMBER: 'Error removing member'
   },
   ar: {
     // General
@@ -672,6 +704,7 @@ const translations = {
     // added keys (Arabic):
     DELAY_HOUR: 'ساعة التأخير',
     TERMINATION_NOTICE_LIMIT: 'حد إشعارات الفصل',
+    TERMINATION_WARNINGS: 'لديك {{n}} تحذير/تحذيرات إنهاء',
     HOURS: 'ساعة',
     OVERTIME_MINS: 'دقائق العمل الإضافي',
     DISCOUNT_PERCENT: 'نسبة الخصم',
@@ -795,8 +828,9 @@ const translations = {
     JUST_NOW: 'الآن',
     AGO_MINUTES: 'منذ {{n}} دقيقة',
     AGO_HOURS: 'منذ {{n}} ساعة',
-    AGO_DAYS: 'منذ {{n}} يوم'
-    ,
+    AGO_DAYS: 'منذ {{n}} يوم',
+    // month names in Arabic (index 0 = January, 11 = December)
+    MONTHS: ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','اكتوبر','نوفمبر','ديسمبر'],
     // Filters & Lists
     ALL_STATUS: 'الكل',
     STATUS_PRESENT: 'حاضر',
@@ -906,6 +940,17 @@ const translations = {
     PAGE: 'صفحة',
     OF: 'من',
     PREVIOUS: 'السابق',
+    PAGINATION_FOOTER: 'عرض الصفحة {{page}} من {{totalPages}} ({{total}} موظف إجمالي)',
+
+    // Work Teams
+    WORK_TEAMS_DASHBOARD: 'لوحة فرق العمل',
+    WORK_TEAMS_SUBTITLE: 'إدارة ومراقبة معلومات فرق العمل',
+    SELECT_WORK_TIMING: 'اختر توقيت العمل',
+    NO_DEPARTMENTS_FOUND: 'No departments found',
+    ADD_NEW_TEAM: 'Add New Team',
+    MANAGERS: 'المديرون',
+    NUM_OF_EMPLOYEES: 'عدد الموظفين',
+    SEARCH: 'Search',
 
     // Employee Actions
     EMP_ACTION_DASHBOARD: 'لوحة إجراءات الموظفين',
@@ -1076,6 +1121,35 @@ const translations = {
 
     // Requests - Vacation (ensure explicit Arabic for "no vacation requests")
     , NO_VACATION_REQUESTS: 'لا توجد طلبات إجازة'
+    
+    // Work Teams - Add/Edit Team (Arabic)
+    , EDIT_TEAM: 'تعديل الفريق'
+    , CREATE_NEW_TEAM: 'إنشاء فريق جديد'
+    , CREATE_TEAM: 'إنشاء فريق'
+    , UPDATE_TEAM: 'تحديث الفريق'
+    , TEAM_NAME_REQUIRED: 'اسم الفريق مطلوب'
+    , MANAGER_NAME_REQUIRED: 'اسم المدير مطلوب'
+    
+    // Work Teams Members (Arabic)
+    , TEAM_MANAGEMENT: 'إدارة الفريق'
+    , TEAM_MEMBERS: 'أعضاء الفريق'
+    , NO_CURRENT_MEMBERS: 'لا يوجد أعضاء حاليون'
+    , START_ADDING_MEMBERS: 'ابدأ في إضافة الأعضاء'
+    , IMAGE: 'الصورة'
+    , DEPARTMENT: 'القسم'
+    , POSITION: 'المنصب'
+    , ACTIONS: 'الإجراءات'
+    , ADD_NEW_MEMBER: 'إضافة عضو جديد'
+    , CHOOSE_EMPLOYEE: 'اختر موظف'
+    , SEARCH_EMPLOYEES: 'البحث عن الموظفين'
+    , NO_EMPLOYEES_FOUND: 'لم يتم العثور على موظفين'
+    , TRY_DIFFERENT_SEARCH: 'جرب بحث مختلف'
+    , NOT_SPECIFIED: 'غير محدد'
+    , ADD_MEMBER: 'إضافة عضو'
+    , ADDING: 'جاري الإضافة'
+    , CONFIRM_REMOVE_MEMBER: 'تأكيد إزالة العضو'
+    , FAILED_ADD_MEMBER: 'فشل في إضافة العضو'
+    , ERROR_REMOVING_MEMBER: 'خطأ في إزالة العضو'
   }
 };
 

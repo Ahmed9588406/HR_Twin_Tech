@@ -29,6 +29,30 @@ const TEXT = {
   }
 };
 
+// Add helper function for formatting dates
+const formatDate = (dateStr, lang) => {
+  const d = new Date(dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00`);
+  
+  if (lang === 'ar') {
+    const arabicDays = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const arabicMonths = ['يناير', 'فبراير', 'مارس', 'إبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+    
+    const dayName = arabicDays[d.getDay()];
+    const monthName = arabicMonths[d.getMonth()];
+    const day = d.getDate();
+    const year = d.getFullYear();
+    
+    return `${dayName}، ${day} ${monthName} ${year}`;
+  } else {
+    return d.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  }
+};
+
 export default function EmployeeAttendanceHistory({ historyData }) {
   const [lang, setLang] = useState(_getLang());
   useEffect(() => _subscribe(setLang), []);
@@ -115,11 +139,7 @@ export default function EmployeeAttendanceHistory({ historyData }) {
                   isSpecialStatus ? (normStatus === 'ABSENT' ? 'bg-red-50' : 'bg-green-50') : 'hover:bg-slate-50'
                 }`}>
                   <td className="py-4 px-4 text-slate-800 font-medium">
-                    {(() => {
-                      const dayStr = record.day || '';
-                      const d = new Date(dayStr.includes('T') ? dayStr : `${dayStr}T00:00:00`);
-                      return d.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
-                    })()}
+                    {formatDate(record.day || '', lang)}
                   </td>
 
                   {isSpecialStatus ? (
