@@ -110,10 +110,31 @@ export default function Sidebar() {
         }
         
         const data = await response.json();
+        console.log('Admin API response:', data); // Debug log
+        
+        // Handle image data - check if it's base64 or URL
+        let imageUrl = adminLogo;
+        if (data.data) {
+          // If data.data is already a full data URL (starts with data:image)
+          if (data.data.startsWith('data:image')) {
+            imageUrl = data.data;
+          } 
+          // If it's a regular URL (starts with http)
+          else if (data.data.startsWith('http')) {
+            imageUrl = data.data;
+          }
+          // If it's base64 without prefix, add the prefix
+          else {
+            // Assume it's base64 and add the data URL prefix
+            const contentType = data.contentType || 'image/jpeg';
+            imageUrl = `data:${contentType};base64,${data.data}`;
+          }
+        }
+        
         setAdminData({
           name: data.name || 'Admin',
           email: data.email || '',
-          image: data.data ? data.data : adminLogo
+          image: imageUrl
         });
       } catch (error) {
         console.error('Error fetching admin data:', error);
@@ -317,7 +338,11 @@ export default function Sidebar() {
             <img
               src={adminData.image}
               alt="Admin"
-              className="relative w-11 h-11 rounded-full ring-2 ring-white/50 shadow-lg"
+              className="relative w-11 h-11 rounded-full ring-2 ring-white/50 shadow-lg object-cover"
+              onError={(e) => {
+                console.error('Failed to load admin image, using fallback');
+                e.target.src = adminLogo;
+              }}
             />
             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></div>
           </div>

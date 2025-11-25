@@ -5,7 +5,7 @@ import CreateNewEmployee from "../../Employee_page/Create_new_Employee"; // Impo
 import { fetchEmployeeById } from "../../Settings/api/employees_api"; // Import the API function
 import { useNavigate } from "react-router-dom";
 import { fetchEmployees, deleteEmployee, lockEmployee } from '../../Employee_page/api/emplyee_api'; // Added lockEmployee import
-import { fetchBranches, fetchDepartments } from '../../Settings/api/settings_api' // fetch lists for filters
+import { fetchDepartments } from '../../Settings/api/department_api' // fetch departments which contain branch info
 import { getLang as _getLang, subscribe as _subscribe, t as _t } from '../../../i18n/i18n';
 
 const TEXT = {
@@ -86,9 +86,7 @@ const TEXT = {
 export default function EmployeeListView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('all');
-  const [selectedLocation, setSelectedLocation] = useState('all');
   const [departments, setDepartments] = useState([]) // will hold {id,name}
-  const [branches, setBranches] = useState([]) // will hold {id,name}
   
   // Store ALL employees (no server pagination)
   const [allEmployees, setAllEmployees] = useState([]);
@@ -112,6 +110,7 @@ export default function EmployeeListView() {
         // Fetch without page/size to get all employees (or fetch multiple pages until all are loaded)
         const result = await fetchEmployees(0, 9999); // large size to get all
         console.log('Fetched all employees:', result);
+        console.log('First employee sample:', result.items?.[0]);
         setAllEmployees(result.items || []);
       } catch (err) {
         setError(err.message);
@@ -123,22 +122,24 @@ export default function EmployeeListView() {
     loadAllEmployees();
   }, []);
 
-  // fetch branches & departments for the filter selects
+  // fetch departments for the filter
   useEffect(() => {
     let mounted = true
     ;(async () => {
       try {
-        const [b, d] = await Promise.all([
-          fetchBranches().catch(err => { console.error('fetchBranches', err); return [] }),
-          fetchDepartments().catch(err => { console.error('fetchDepartments', err); return [] })
-        ])
+        const d = await fetchDepartments().catch(err => { 
+          console.error('fetchDepartments error:', err); 
+          return [] 
+        })
         if (!mounted) return
-        setBranches(Array.isArray(b) ? b.map(x => ({ id: x.id, name: x.name })) : [])
-        setDepartments(Array.isArray(d) ? d.map(x => ({ id: x.id, name: x.name })) : [])
+        
+        const deptList = Array.isArray(d) ? d.map(x => ({ id: x.id, name: x.name })) : [];
+        console.log('Loaded departments for filter:', deptList);
+        setDepartments(deptList);
       } catch (err) {
         console.error('Error loading filter lists:', err)
         if (!mounted) return
-        setBranches([]); setDepartments([])
+        setDepartments([])
       }
     })()
     return () => { mounted = false }
@@ -147,7 +148,7 @@ export default function EmployeeListView() {
   // Reset to page 0 when filters change
   useEffect(() => {
     setCurrentPage(0);
-  }, [searchQuery, selectedDepartment, selectedLocation]);
+  }, [searchQuery, selectedDepartment]);
 
   // derive selected names (for display) if needed
   const selectedDepartmentName = useMemo(() => {
@@ -156,50 +157,82 @@ export default function EmployeeListView() {
     return d ? d.name : selectedDepartment
   }, [selectedDepartment, departments])
 
-  const selectedLocationName = useMemo(() => {
-    if (selectedLocation === 'all') return null
-    const b = branches.find(bb => String(bb.id) === String(selectedLocation))
-    return b ? b.name : selectedLocation
-  }, [selectedLocation, branches])
-
   // CLIENT-SIDE FILTER: apply search & department & location filters
   const filteredEmployees = useMemo(() => {
     return allEmployees.filter(employee => {
-      const matchesSearch = employee.name.toLowerCase().includes(searchQuery.toLowerCase());
-      // department match: accept when selected 'all' or when employee matches by id or by name/string
+      // Search filter - match by name or code
+      const matchesSearch = (() => {
+        if (!searchQuery || searchQuery.trim() === '') return true;
+        const query = searchQuery.toLowerCase().trim();
+        const empName = String(employee?.name || '').toLowerCase();
+        const empCode = String(employee?.code || '').toLowerCase();
+        return empName.includes(query) || empCode.includes(query);
+      })();
+
+      // Department filter - match by ID or name
       const matchesDepartment = (() => {
-        if (selectedDepartment === 'all') return true
-        if (!employee) return false
-        // compare against common possible fields
-        if (String(employee.departmentId) === String(selectedDepartment)) return true
-        if (String(employee.department) === String(selectedDepartment)) return true
-        if (String(employee.departmentName) === String(selectedDepartment)) return true
-        // if we have department name from list, compare by name
-        if (selectedDepartmentName && (employee.departmentName === selectedDepartmentName || employee.department === selectedDepartmentName)) return true
-        return false
-      })()
+        if (selectedDepartment === 'all') return true;
+        if (!employee) return false;
+        
+        // Get employee's department ID and name
+        const empDeptId = String(employee?.departmentId || employee?.deptId || '').trim();
+        const empDeptName = String(employee?.departmentName || employee?.department || '').trim().toLowerCase();
+        
+        // Get selected department ID and name
+        const selectedDeptId = String(selectedDepartment).trim();
+        const selectedDeptNameLower = String(selectedDepartmentName || '').trim().toLowerCase();
+        
+        // Match by ID first (most reliable)
+        if (empDeptId && selectedDeptId && empDeptId === selectedDeptId) return true;
+        
+        // Match by name
+        if (empDeptName && selectedDeptNameLower && empDeptName === selectedDeptNameLower) return true;
+        
+        // Fallback: match selected value directly against name
+        if (empDeptName && empDeptName === selectedDeptId.toLowerCase()) return true;
+        
+        return false;
+      })();
 
-      const matchesLocation = (() => {
-        if (selectedLocation === 'all') return true
-        if (!employee) return false
-        if (String(employee.branchId) === String(selectedLocation)) return true
-        if (String(employee.location) === String(selectedLocation)) return true
-        if (String(employee.branchName) === String(selectedLocation)) return true
-        if (selectedLocationName && (employee.branchName === selectedLocationName || employee.location === selectedLocationName)) return true
-        return false
-      })()
-      
-      return matchesSearch && matchesDepartment && matchesLocation;
+      return matchesSearch && matchesDepartment;
     });
-  }, [searchQuery, selectedDepartment, selectedLocation, allEmployees, selectedDepartmentName, selectedLocationName]);
+  }, [searchQuery, selectedDepartment, allEmployees, selectedDepartmentName]);
 
-  // STATISTICS: compute from filteredEmployees
+  // STATISTICS: compute from filteredEmployees with all status variations
   const stats = useMemo(() => {
     const total = filteredEmployees.length;
-    const present = filteredEmployees.filter(e => e.status === "Present").length;
-    const onLeave = filteredEmployees.filter(e => e.status === "On Leave").length;
-    const absent = filteredEmployees.filter(e => e.status === "Absent").length;
-    return { total, present, onLeave, absent };
+    
+    // Count Present (including variations)
+    const present = filteredEmployees.filter(e => {
+      const status = String(e?.status || '').toLowerCase().trim();
+      return status === 'present' || status === 'here' || status === 'checked in';
+    }).length;
+    
+    // Count On Leave (including variations)
+    const onLeave = filteredEmployees.filter(e => {
+      const status = String(e?.status || '').toLowerCase().trim();
+      return status === 'on leave' || status === 'onleave' || status === 'leave';
+    }).length;
+    
+    // Count Absent (including variations)
+    const absent = filteredEmployees.filter(e => {
+      const status = String(e?.status || '').toLowerCase().trim();
+      return status === 'absent' || status === 'missing';
+    }).length;
+    
+    // Count Left (including variations)
+    const left = filteredEmployees.filter(e => {
+      const status = String(e?.status || '').toLowerCase().trim();
+      return status === 'left' || status === 'gone' || status === 'departed';
+    }).length;
+    
+    // Count Working From Home (including variations)
+    const workingFromHome = filteredEmployees.filter(e => {
+      const status = String(e?.status || '').toLowerCase().trim();
+      return status === 'working from home' || status === 'workingfromhome' || status === 'wfh' || status === 'remote';
+    }).length;
+    
+    return { total, present, onLeave, absent, left, workingFromHome };
   }, [filteredEmployees]);
 
   // CLIENT-SIDE PAGINATION: slice filteredEmployees
@@ -332,10 +365,9 @@ export default function EmployeeListView() {
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedDepartment('all');
-    setSelectedLocation('all');
   };
 
-  const hasActiveFilters = searchQuery || selectedDepartment !== 'all' || selectedLocation !== 'all';
+  const hasActiveFilters = searchQuery || selectedDepartment !== 'all';
 
   // navigate to Employee_profile.jsx (route: /employee-portal)
   const handleCardClick = (employee) => {
@@ -401,7 +433,7 @@ export default function EmployeeListView() {
             <h3 className="text-lg font-semibold text-gray-900">{copy.filterEmployees}</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Search by Name */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -444,24 +476,6 @@ export default function EmployeeListView() {
                 ))}
               </select>
             </div>
-
-            {/* Location Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <MapPin className="w-4 h-4 inline mr-1" />
-                {copy.officeLocation}
-              </label>
-              <select
-                value={selectedLocation}
-                onChange={(e) => setSelectedLocation(e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 hover:border-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg text-sm outline-none transition-all appearance-none cursor-pointer"
-              >
-                <option value="all">{copy.allLocations}</option>
-                {branches.map((br) => (
-                  <option key={br.id ?? br.name} value={br.id ?? br.name}>{br.name}</option>
-                ))}
-              </select>
-            </div>
           </div>
 
           {/* Active Filters & Clear Button */}
@@ -491,17 +505,6 @@ export default function EmployeeListView() {
                     </button>
                   </span>
                 )}
-                {selectedLocation !== 'all' && (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-purple-50 text-purple-700 rounded-full border border-purple-200">
-                    {selectedLocationName ?? selectedLocation}
-                    <button
-                      onClick={() => setSelectedLocation('all')}
-                      className="hover:bg-purple-100 rounded-full p-0.5"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
               </div>
               <button
                 onClick={clearFilters}
@@ -513,58 +516,80 @@ export default function EmployeeListView() {
           )}
         </div>
 
-        {/* Stats - now computed from filteredEmployees */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 font-medium">{copy.total}</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        {/* Stats - now computed from filteredEmployees with all 5 statuses */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+          {/* Total */}
+          <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-200">
+            <div className="flex flex-col">
+              <p className="text-xs text-gray-500 font-medium mb-1">{copy.total}</p>
+              <p className="text-xl font-bold text-gray-900">{stats.total}</p>
+              <div className="mt-2 w-8 h-8 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 font-medium">{copy.present}</p>
-                <p className="text-2xl font-bold text-emerald-600">{stats.present}</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          {/* Present */}
+          <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-200">
+            <div className="flex flex-col">
+              <p className="text-xs text-gray-500 font-medium mb-1">{copy.present}</p>
+              <p className="text-xl font-bold text-emerald-600">{stats.present}</p>
+              <div className="mt-2 w-8 h-8 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 font-medium">{copy.onLeave}</p>
-                <p className="text-2xl font-bold text-amber-600">{stats.onLeave}</p>
+          {/* Left */}
+          <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-200">
+            <div className="flex flex-col">
+              <p className="text-xs text-gray-500 font-medium mb-1">{_t('LEFT')}</p>
+              <p className="text-xl font-bold text-blue-600">{stats.left}</p>
+              <div className="mt-2 w-8 h-8 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            </div>
+          </div>
+
+          {/* On Leave */}
+          <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-200">
+            <div className="flex flex-col">
+              <p className="text-xs text-gray-500 font-medium mb-1">{copy.onLeave}</p>
+              <p className="text-xl font-bold text-amber-600">{stats.onLeave}</p>
+              <div className="mt-2 w-8 h-8 bg-gradient-to-br from-amber-100 to-amber-200 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 font-medium">{copy.absent}</p>
-                <p className="text-2xl font-bold text-red-600">{stats.absent}</p>
+          {/* Working From Home */}
+          <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-200">
+            <div className="flex flex-col">
+              <p className="text-xs text-gray-500 font-medium mb-1">{_t('WORKING_FROM_HOME')}</p>
+              <p className="text-xl font-bold text-purple-600">{stats.workingFromHome}</p>
+              <div className="mt-2 w-8 h-8 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            </div>
+          </div>
+
+          {/* Absent */}
+          <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-200">
+            <div className="flex flex-col">
+              <p className="text-xs text-gray-500 font-medium mb-1">{copy.absent}</p>
+              <p className="text-xl font-bold text-red-600">{stats.absent}</p>
+              <div className="mt-2 w-8 h-8 bg-gradient-to-br from-red-100 to-red-200 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -576,14 +601,8 @@ export default function EmployeeListView() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {paginatedEmployees.length > 0 ? (
             paginatedEmployees.map((employee, index) => {
-              // Map status to match EmployeeCard config
-              const statusMap = {
-                "Present": "Stay here",
-                "On Leave": "On Leave",
-                "Late": "On break",
-                "Absent": "Absent"
-              };
-              const mappedStatus = statusMap[employee.status] || "Stay here";
+              // Keep the original status from API (no mapping needed now)
+              const employeeStatus = employee.status || "Present";
               
               return (
                 <EmployeeCard

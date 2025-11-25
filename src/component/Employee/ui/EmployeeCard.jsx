@@ -44,27 +44,71 @@ export default function EmployeeCard({
 
   const avatarSrc = getAvatarSrc();
 
-  // Status configurations
+  // Status configurations for all 5 statuses
   const statusConfig = {
     "Present": {
+      label: _t('STATUS_PRESENT') || 'Present',
+      icon: "✓",
       color: "text-white",
       bgColor: "bg-gradient-to-r from-emerald-500 to-green-500",
-      hoverColor: "hover:from-emerald-600 hover:to-green-600"
+      ringColor: "ring-emerald-200",
+      dotColor: "bg-emerald-400"
     },
-    "Absent": {
+    "Left": {
+      label: _t('LEFT') || 'Left',
+      icon: "→",
       color: "text-white",
-      bgColor: "bg-gradient-to-r from-red-500 to-rose-500",
-      hoverColor: "hover:from-red-600 hover:to-rose-600"
+      bgColor: "bg-gradient-to-r from-blue-500 to-cyan-500",
+      ringColor: "ring-blue-200",
+      dotColor: "bg-blue-400"
     },
     "On Leave": {
+      label: _t('STATUS_ON_LEAVE') || 'On Leave',
+      icon: "☼",
       color: "text-white",
       bgColor: "bg-gradient-to-r from-amber-500 to-orange-500",
-      hoverColor: "hover:from-amber-600 hover:to-orange-600"
+      ringColor: "ring-amber-200",
+      dotColor: "bg-amber-400"
+    },
+    "OnLeave": {
+      label: _t('STATUS_ON_LEAVE') || 'On Leave',
+      icon: "☼",
+      color: "text-white",
+      bgColor: "bg-gradient-to-r from-amber-500 to-orange-500",
+      ringColor: "ring-amber-200",
+      dotColor: "bg-amber-400"
+    },
+    "Working From Home": {
+      label: _t('WORKING_FROM_HOME') || 'Working From Home',
+      icon: "⌂",
+      color: "text-white",
+      bgColor: "bg-gradient-to-r from-purple-500 to-indigo-500",
+      ringColor: "ring-purple-200",
+      dotColor: "bg-purple-400"
+    },
+    "WorkingFromHome": {
+      label: _t('WORKING_FROM_HOME') || 'Working From Home',
+      icon: "⌂",
+      color: "text-white",
+      bgColor: "bg-gradient-to-r from-purple-500 to-indigo-500",
+      ringColor: "ring-purple-200",
+      dotColor: "bg-purple-400"
+    },
+    "Absent": {
+      label: _t('STATUS_ABSENT') || 'Absent',
+      icon: "✕",
+      color: "text-white",
+      bgColor: "bg-gradient-to-r from-red-500 to-rose-500",
+      ringColor: "ring-red-200",
+      dotColor: "bg-red-400"
     },
     "Late": {
+      label: _t('LATE') || 'Late',
+      icon: "⏱",
       color: "text-white",
       bgColor: "bg-gradient-to-r from-yellow-500 to-amber-500",
-      hoverColor: "hover:from-yellow-600 hover:to-amber-600"
+      ringColor: "ring-yellow-200",
+      dotColor: "bg-yellow-400"
     }
   };
 
@@ -152,18 +196,20 @@ export default function EmployeeCard({
         <div className="flex items-center gap-3">
           {/* Avatar with status indicator */}
           <div className="relative flex-shrink-0">
-            <div className="w-14 h-14 rounded-full ring-2 ring-gray-100 group-hover:ring-emerald-200 transition-all duration-300 overflow-hidden">
+            <div className={`w-14 h-14 rounded-full ring-2 ${currentStatus.ringColor} group-hover:ring-emerald-200 transition-all duration-300 overflow-hidden`}>
               <img 
                 src={avatarSrc}
                 alt={`${emp.name} image`}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
               />
             </div>
+            {/* Status dot indicator */}
+            <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 ${currentStatus.dotColor} rounded-full border-2 border-white shadow-sm animate-pulse`}></div>
           </div>
 
           {/* Employee Info */}
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-900 text-sm truncate group-hover:text-emerald-700 transition-colors duration-200">
+            <h3 className="font-semibold text-gray-900 text-sm truncate group-hover:text-emerald-700 transition-colors duration-200 mb-1">
               {emp.name}
             </h3>
             <p className="text-xs text-gray-600 truncate font-medium">
@@ -174,8 +220,8 @@ export default function EmployeeCard({
             </p>
           </div>
 
-          {/* Action icons row (new) */}
-          <div className="mt-3 flex flex-col sm:flex-row items-center justify-end gap-1 sm:gap-2">
+          {/* Action icons row with status badge at the end */}
+          <div className="flex flex-col sm:flex-row items-center justify-end gap-1 sm:gap-2">
             <button
               onClick={(e) => callHandler(e, onPhone)}
               className="p-1.5 sm:p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
@@ -255,6 +301,12 @@ export default function EmployeeCard({
                 <LockOpen className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
               )}
             </button>
+
+            {/* Modern Status Badge - moved to the end */}
+            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold ${currentStatus.bgColor} ${currentStatus.color} shadow-sm whitespace-nowrap`}>
+              <span className="text-xs">{currentStatus.icon}</span>
+              {currentStatus.label}
+            </span>
           </div>
         </div>
       </div>
