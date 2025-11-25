@@ -587,6 +587,16 @@ const translations = {
     , CONFIRM_REMOVE_MEMBER: 'Confirm remove member'
     , FAILED_ADD_MEMBER: 'Failed to add member'
     , ERROR_REMOVING_MEMBER: 'Error removing member'
+    
+    // Days and Hours options
+    , HALF_A_DAY: 'Half a Day'
+    , ONE_DAY: 'One Day'
+    , TWO_DAYS: 'Two Days'
+    , HALF_AN_HOUR: 'Half an Hour'
+    , ONE_HOUR: 'One Hour'
+    , TWO_HOURS: 'Two Hours'
+    , ENTER_AMOUNT: 'Enter amount'
+    , PROVIDE_REASON: 'Provide reason for this action...'
   },
   ar: {
     // General
@@ -1176,6 +1186,16 @@ const translations = {
     , CONFIRM_REMOVE_MEMBER: 'تأكيد إزالة العضو'
     , FAILED_ADD_MEMBER: 'فشل في إضافة العضو'
     , ERROR_REMOVING_MEMBER: 'خطأ في إزالة العضو'
+    
+    // Days and Hours options (Arabic)
+    , HALF_A_DAY: 'نصف يوم'
+    , ONE_DAY: 'يوم واحد'
+    , TWO_DAYS: 'يومان'
+    , HALF_AN_HOUR: 'نصف ساعة'
+    , ONE_HOUR: 'ساعة واحدة'
+    , TWO_HOURS: 'ساعتان'
+    , ENTER_AMOUNT: 'أدخل المبلغ'
+    , PROVIDE_REASON: 'قدم سببًا لهذا الإجراء...'
   }
 };
 

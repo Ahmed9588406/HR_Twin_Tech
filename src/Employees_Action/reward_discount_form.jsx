@@ -2,26 +2,28 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Percent, X } from 'lucide-react';
 import { postDiscountsRewards } from './emp_actions_api';
 import { Award, UserRoundMinus } from 'lucide-react';
-import { t as _t } from '../i18n/i18n';
-
-const ACTION_TYPES = [
-  { value: 'reward', label: _t('REWARD'), icon: <Award /> },
-  { value: 'discount', label: _t('DISCOUNT'), icon: <UserRoundMinus /> }
-];
-
-const DAYS_OPTIONS = [
-  { value: 1, label: _t('HALF_A_DAY') || 'Half a Day' },
-  { value: 2, label: _t('ONE_DAY') || 'One Day' },
-  { value: 3, label: _t('TWO_DAYS') || 'Two Days' },
-];
-
-const HOURS_OPTIONS = [
-  { value: 1, label: _t('HALF_AN_HOUR') || 'Half an Hour' },
-  { value: 2, label: _t('ONE_HOUR') || 'One Hour' },
-  { value: 4, label: _t('TWO_HOURS') || 'Two Hours' },
-];
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../i18n/i18n';
 
 export default function RewardDiscountForm({ selectedActions = [], onClose = () => {}, onSuccess = () => {} }) {
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => _subscribe(setLang), []);
+
+  const ACTION_TYPES = [
+    { value: 'reward', label: _t('REWARD'), icon: <Award /> },
+    { value: 'discount', label: _t('DISCOUNT'), icon: <UserRoundMinus /> }
+  ];
+
+  const DAYS_OPTIONS = [
+    { value: 0.5, label: _t('HALF_A_DAY') },
+    { value: 1, label: _t('ONE_DAY') },
+    { value: 2, label: _t('TWO_DAYS') },
+  ];
+
+  const HOURS_OPTIONS = [
+    { value: 0.5, label: _t('HALF_AN_HOUR') },
+    { value: 1, label: _t('ONE_HOUR') },
+    { value: 2, label: _t('TWO_HOURS') },
+  ];
   const [actionType, setActionType] = useState('');
   const [amountType, setAmountType] = useState(''); // 'AMOUNT', 'NUMOFDAYS', 'NUMOFHOURS'
   const [amount, setAmount] = useState('');
@@ -324,7 +326,7 @@ export default function RewardDiscountForm({ selectedActions = [], onClose = () 
                 step="0.01"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder={_t('ENTER_AMOUNT') || 'Enter amount'}
+                placeholder={_t('ENTER_AMOUNT')}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 required
               />
@@ -394,7 +396,7 @@ export default function RewardDiscountForm({ selectedActions = [], onClose = () 
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder={_t('PROVIDE_REASON') || 'Provide reason for this action...'}
+              placeholder={_t('PROVIDE_REASON')}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
               rows={3}
             />
