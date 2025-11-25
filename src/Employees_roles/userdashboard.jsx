@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell } from 'lucide-react';
-import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../i18n/i18n';
+import { Bell, LogOut } from 'lucide-react';
+import { t as _t, getLang as _getLang, subscribe as _subscribe, setLang as _setLang } from '../i18n/i18n';
 import { fetchEmployeeProfile } from './employee_role_api';
 import UserProfile from './userprofile';
 import EmployeeAttendanceHistory from './employee_role_history';
@@ -23,18 +23,10 @@ const LOCAL_STORAGE_KEYS = {
   CODE: 'code',
   USER_DATA: 'userData'
 };
-const UI_TEXT = {
-  MY_PROFILE: 'My Profile',
-  ACTIVE_STATUS: 'Active',
-  LOADING_MESSAGE: 'Loading profile...',
-  ERROR_MESSAGE: 'Failed to load detailed profile. Showing basic info.',
-  TODAY_PREFIX: 'Today, ',
-  NA_VALUE: 'N/A'
-};
 const DATE_FORMAT_OPTIONS = {
-  TIME: { hour: '2-digit', minute: '2-digit' },
-  SHORT_DATE: { weekday: 'short', month: 'short', day: 'numeric' },
-  FULL_DATE: {}
+  TIME: { hour: 'numeric', minute: 'numeric', hour12: true },
+  SHORT_DATE: { month: 'short', day: 'numeric' },
+  FULL_DATE: { year: 'numeric', month: 'long', day: 'numeric' }
 };
 
 export default function UserProfileView() {
@@ -46,6 +38,7 @@ export default function UserProfileView() {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showAdvanceModal, setShowAdvanceModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const notificationButtonRef = useRef(null);
 
   // Language subscription
@@ -54,6 +47,11 @@ export default function UserProfileView() {
     const unsub = _subscribe((l) => setLang(l));
     return () => unsub();
   }, []);
+
+  const toggleLanguage = () => {
+    const next = lang === 'en' ? 'ar' : 'en';
+    _setLang(next);
+  };
 
   useEffect(() => {
     const role = localStorage.getItem(LOCAL_STORAGE_KEYS.ROLE) || DEFAULT_ROLE;
@@ -84,7 +82,7 @@ export default function UserProfileView() {
           setProfileData(profile);
         } catch (profileErr) {
           console.error('Failed to load profile:', profileErr);
-          setError(UI_TEXT.ERROR_MESSAGE);
+          setError(_t('PROFILE_LOAD_ERROR_FALLBACK'));
         }
       } finally {
         setLoading(false);
@@ -100,9 +98,9 @@ export default function UserProfileView() {
       .then((payload) => {
         console.log('Foreground notification received:', payload);
         showBrowserNotification(
-          payload.notification?.title || 'New Notification',
+          payload.notification?.title || _t('DEFAULT_NOTIFICATION_TITLE'),
           {
-            body: payload.notification?.body || 'You have a new notification',
+            body: payload.notification?.body || _t('DEFAULT_NOTIFICATION_BODY'),
             tag: payload.data?.id || 'notification',
             data: payload.data
           }
@@ -111,9 +109,20 @@ export default function UserProfileView() {
       .catch((err) => console.error('Failed to receive foreground message:', err));
   }, []);
 
-  const handleBack = () => navigate('/user-dashboard');
+
   
   const handleAdvanceRequest = () => setShowAdvanceModal(true);
+
+  const handleLogout = () => {
+    // Clear all localStorage items
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('code');
+    localStorage.removeItem('userData');
+    
+    // Navigate to login page
+    navigate('/');
+  };
 
   const formatLastSignIn = (dateString) => {
     if (!dateString) return { display: _t('NA'), fullDate: _t('NA') };
@@ -146,24 +155,35 @@ export default function UserProfileView() {
       {/* Header */}
       <div className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <button onClick={handleBack} className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-                <ArrowLeft className="w-5 h-5" />
-                <span className="font-medium">{_t('BACK')}</span>
+          <div className="flex items-center justify-end">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={toggleLanguage}
+                className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-colors"
+                aria-label={lang === 'en' ? _t('SWITCH_TO_ARABIC') : _t('SWITCH_TO_ENGLISH')}
+              >
+                {lang === 'en' ? 'EN' : 'ع'}
               </button>
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-500 bg-clip-text text-transparent">
-              {_t('MY_PROFILE')}
-            </h1>
-            <div className="flex items-center gap-4">
               <button
                 ref={notificationButtonRef}
                 onClick={() => setShowNotificationModal(true)}
                 className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
-                aria-label="Notifications"
+                aria-label={_t('NOTIFICATIONS')}
               >
                 <Bell className="w-6 h-6" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                aria-label={_t('LOGOUT')}
+              >
+                <LogOut className="w-5 h-5" />
+                <span className="font-medium hidden sm:inline">{_t('LOGOUT')}</span>
               </button>
               <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">{_t('ACTIVE_STATUS')}</span>
             </div>
@@ -224,6 +244,7 @@ export default function UserProfileView() {
         onClose={() => setShowNotificationModal(false)}
         buttonRef={notificationButtonRef}
         receiverCode={user.code}
+        onUnreadCountChange={setUnreadCount}
       />
     </div>
   );

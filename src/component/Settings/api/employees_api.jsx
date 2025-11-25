@@ -89,7 +89,17 @@ export const fetchEmployeeById = async (id) => {
       salary: data.salary,
       username: data.username,
       contentType: data.contentType,
-      image: data.data
+      image: data.data,
+      locked: data.locked,
+      isLocked: data.isLocked,
+      lockedEmployee: data.lockedEmployee,
+      is_locked: data.is_locked,
+      accountLocked: data.accountLocked,
+      lockStatus: data.lockStatus,
+      nonLocked: data.nonLocked,
+      accountNonLocked: data.accountNonLocked,
+      isNonLocked: data.isNonLocked,
+      account_non_locked: data.account_non_locked
     };
   } catch (error) {
     console.error('Error fetching employee by ID:', error);

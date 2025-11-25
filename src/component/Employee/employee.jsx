@@ -4,7 +4,7 @@ import Sidebar from '../ui/Sidebar'
 import EmployeeListView from './ui/EmployeeListView'
 import CreateNewEmployee from '../Employee_page/Create_new_Employee'
 import DeleteEmployeeModal from '../Employee_page/Delete_emp_logs'
-import { Users, Calendar, User, UserMinus, UserRoundPlus } from 'lucide-react'
+import { Users, Calendar, User, UserMinus, UserRoundPlus} from 'lucide-react'
 import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n'
 
 function Employee() {
@@ -56,6 +56,17 @@ function Employee() {
     window.location.reload();
   };
 
+  const handleLogout = () => {
+    // Clear all localStorage items
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('code');
+    localStorage.removeItem('userData');
+    
+    // Navigate to login page
+    navigate('/');
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
@@ -69,24 +80,27 @@ function Employee() {
                   <h1 className="text-3xl font-bold text-gray-900 mb-2">{_t('EMPLOYEE_DASHBOARD')}</h1>
                   <p className="text-gray-600">{_t('MANAGE_EMPLOYEE_INFO')}</p>
                 </div>
-                {activeTab === 'Employees' && (
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <button 
-                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-md transition-all duration-200"
-                      onClick={() => setIsAddModalOpen(true)}
-                    >
-                      <UserRoundPlus className="w-5 h-5" />
-                      {_t('ADD_EMPLOYEE_BTN')}
-                    </button>
-                    <button 
-                      className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-md transition-all duration-200"
-                      onClick={() => setIsDeleteModalOpen(true)}
-                    >
-                      <UserMinus className="w-5 h-5" />
-                      {_t('EMPLOYEE_LOGS')}
-                    </button>
-                  </div>
-                )}
+                <div className="flex flex-col sm:flex-row gap-2 items-center">
+                  {activeTab === 'Employees' && (
+                    <>
+                      <button 
+                        className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-md transition-all duration-200"
+                        onClick={() => setIsAddModalOpen(true)}
+                      >
+                        <UserRoundPlus className="w-5 h-5" />
+                        {_t('ADD_EMPLOYEE_BTN')}
+                      </button>
+                      <button 
+                        className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-md transition-all duration-200"
+                        onClick={() => setIsDeleteModalOpen(true)}
+                      >
+                        <UserMinus className="w-5 h-5" />
+                        {_t('EMPLOYEE_LOGS')}
+                      </button>
+                    </>
+                  )}
+                  
+                </div>
               </div>
             </div>
 
@@ -137,14 +151,6 @@ function Employee() {
         {isAddModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="relative">
-              <button
-                onClick={() => setIsAddModalOpen(false)}
-                className="absolute -top-2 -right-2 bg-white rounded-full p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 z-20 shadow-lg"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
               <CreateNewEmployee 
                 onSuccess={handleEmployeeCreated}
                 onClose={() => setIsAddModalOpen(false)}

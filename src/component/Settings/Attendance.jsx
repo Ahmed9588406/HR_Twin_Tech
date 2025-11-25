@@ -18,7 +18,8 @@ export default function Attendance() {
     delayHour: '',
     overTimeMins: '',
     discountPercent: '',
-    overTimePercent: ''
+    overTimePercent: '',
+    terminationNoticeLimit: '' // <-- added
   });
   const [savingCompany, setSavingCompany] = useState(false);
 
@@ -38,7 +39,8 @@ export default function Attendance() {
             delayHour: String(data.delayHour ?? ''),
             overTimeMins: String(data.overTimeMins ?? 0),
             discountPercent: String(data.discountPercent ?? 0),
-            overTimePercent: String(data.overTimePercent ?? 0)
+            overTimePercent: String(data.overTimePercent ?? 0),
+            terminationNoticeLimit: String(data.terminationNoticeLimit ?? 0) // <-- initialize
           });
         } else {
           setCompanyError('No company data returned');
@@ -66,7 +68,8 @@ export default function Attendance() {
         delayHour: Number(companyForm.delayHour) || 0,
         overTimeMins: Number(companyForm.overTimeMins) || 0,
         discountPercent: Number(companyForm.discountPercent) || 0,
-        overTimePercent: Number(companyForm.overTimePercent) || 0
+        overTimePercent: Number(companyForm.overTimePercent) || 0,
+        terminationNoticeLimit: Number(companyForm.terminationNoticeLimit) || 0 // <-- include
       };
 
       const updated = await updateCompanySettings(payload);
@@ -78,6 +81,7 @@ export default function Attendance() {
           overTimeMins: payload.overTimeMins,
           discountPercent: payload.discountPercent,
           overTimePercent: payload.overTimePercent,
+          terminationNoticeLimit: payload.terminationNoticeLimit, // <-- update local state
           ...(updated.id ? { id: updated.id } : {})
         }));
       }
@@ -261,6 +265,24 @@ export default function Attendance() {
               </div>
             </div>
 
+            {/* NEW: Termination Notice Limit (editable) */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 md:col-span-1">
+                <div className="text-sm text-gray-600 mb-2">{_t('TERMINATION_NOTICE_LIMIT') /* add key to translations */}</div>
+                {!isEditingCompany ? (
+                  <div className="text-2xl font-bold text-gray-900">{loadingCompany ? '—' : (companySettings?.terminationNoticeLimit ?? 0)}</div>
+                ) : (
+                  <input
+                    type="number"
+                    min="0"
+                    className="w-full px-3 py-2 rounded border"
+                    value={companyForm.terminationNoticeLimit}
+                    onChange={(e) => setCompanyForm({ ...companyForm, terminationNoticeLimit: e.target.value })}
+                  />
+                )}
+              </div>
+            </div>
+
             {/* Save Actions */}
             {isEditingCompany && (
               <div className="mt-6 flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-200">
@@ -395,6 +417,17 @@ export default function Attendance() {
             <div className="p-6">
               <div className="text-xs text-gray-500">{_t('OVERTIME_PERCENT')}</div>
               <div className="mt-2 text-2xl font-bold text-pink-700">{loadingCompany ? '—' : `${companySettings?.overTimePercent ?? 0}%`}</div>
+            </div>
+          </div>
+
+          {/* NEW: Termination Notice Limit overview card */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <div className="p-4 bg-gradient-to-r from-red-500 to-rose-500">
+              <h3 className="text-white text-sm font-semibold">{_t('TERMINATION_NOTICE_LIMIT')}</h3>
+            </div>
+            <div className="p-6">
+              <div className="text-xs text-gray-500">{_t('LIMIT')}</div>
+              <div className="mt-2 text-2xl font-bold text-red-700">{loadingCompany ? '—' : (companySettings?.terminationNoticeLimit ?? 0)}</div>
             </div>
           </div>
         </div>

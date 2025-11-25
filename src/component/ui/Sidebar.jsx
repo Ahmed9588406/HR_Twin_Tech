@@ -25,7 +25,7 @@ export default function Sidebar() {
   const [expandedItems, setExpandedItems] = useState({});
   const [adminData, setAdminData] = useState({ name: 'Loading...', email: '', image: adminLogo });
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [totalNotificationCount, setTotalNotificationCount] = useState(0);
   const notificationButtonRef = useRef(null);
   
   const menuItems = [
@@ -87,13 +87,54 @@ export default function Sidebar() {
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
-        const response = await fetch('https://api.shl-hr.com/api/v1/setting/admin');
-        if (!response.ok) throw new Error('Failed to fetch admin data');
+        const token = localStorage.getItem('token');
+        if (!token) {
+          // No token, use defaults
+          setAdminData({ name: 'Admin', email: '', image: adminLogo });
+          return;
+        }
+
+        const response = await fetch('https://api.shl-hr.com/api/v1/setting/admin', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'ngrok-skip-browser-warning': 'true',
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          console.warn('Failed to fetch admin data, using defaults');
+          setAdminData({ name: 'Admin', email: '', image: adminLogo });
+          return;
+        }
+        
         const data = await response.json();
+        console.log('Admin API response:', data); // Debug log
+        
+        // Handle image data - check if it's base64 or URL
+        let imageUrl = adminLogo;
+        if (data.data) {
+          // If data.data is already a full data URL (starts with data:image)
+          if (data.data.startsWith('data:image')) {
+            imageUrl = data.data;
+          } 
+          // If it's a regular URL (starts with http)
+          else if (data.data.startsWith('http')) {
+            imageUrl = data.data;
+          }
+          // If it's base64 without prefix, add the prefix
+          else {
+            // Assume it's base64 and add the data URL prefix
+            const contentType = data.contentType || 'image/jpeg';
+            imageUrl = `data:${contentType};base64,${data.data}`;
+          }
+        }
+        
         setAdminData({
           name: data.name || 'Admin',
           email: data.email || '',
-          image: data.data ? data.data : adminLogo
+          image: imageUrl
         });
       } catch (error) {
         console.error('Error fetching admin data:', error);
@@ -104,10 +145,10 @@ export default function Sidebar() {
     fetchAdminData();
   }, []);
 
-  // Add language state (import small i18n runtime)
+  // Add language state (use same key as i18n and initialize to i18nLang)
   const [language, setLanguage] = useState(() => {
     try {
-      return localStorage.getItem('app_lang') || 'en';
+      return localStorage.getItem('i18nLang') || 'en';
     } catch {
       return 'en';
     }
@@ -117,6 +158,7 @@ export default function Sidebar() {
     // Lazy import to avoid cyclic or server issues
     let unsub;
     import('../../i18n/i18n').then(i18n => {
+      // initialize from i18n and subscribe for changes
       setLanguage(i18n.getLang());
       unsub = i18n.subscribe((lang) => setLanguage(lang));
     }).catch(() => {});
@@ -125,12 +167,25 @@ export default function Sidebar() {
     };
   }, []);
 
-  const toggleLanguage = async () => {
-    const i18n = await import('../../i18n/i18n');
-    const current = i18n.getLang();
-    i18n.setLang(current === 'en' ? 'ar' : 'en');
-    // local state will be updated by subscriber
+  const toggleLanguage = () => {
+    import('../../i18n/i18n').then(i18n => {
+      const newLang = language === 'en' ? 'ar' : 'en';
+      i18n.setLang(newLang); // setLang will update localStorage, notify subscribers and dispatch window event
+    }).catch(() => {});
   };
+
+  useEffect(() => {
+    const handleLanguageChange = (e) => {
+      if (e.detail && e.detail.lang) {
+        setLanguage(e.detail.lang);
+      }
+    };
+    
+    window.addEventListener('languageChange', handleLanguageChange);
+    return () => {
+      window.removeEventListener('languageChange', handleLanguageChange);
+    };
+  }, []);
 
   return (
     <div 
@@ -283,7 +338,11 @@ export default function Sidebar() {
             <img
               src={adminData.image}
               alt="Admin"
-              className="relative w-11 h-11 rounded-full ring-2 ring-white/50 shadow-lg"
+              className="relative w-11 h-11 rounded-full ring-2 ring-white/50 shadow-lg object-cover"
+              onError={(e) => {
+                console.error('Failed to load admin image, using fallback');
+                e.target.src = adminLogo;
+              }}
             />
             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></div>
           </div>
@@ -300,9 +359,9 @@ export default function Sidebar() {
                     aria-label={_t('TOOLTIP_NOTIFICATIONS')}
                   >
                     <Bell size={15} />
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center animate-pulse">
-                        {unreadCount > 9 ? '9' : unreadCount}
+                    {totalNotificationCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[14px] px-1 h-3.5 flex items-center justify-center animate-pulse">
+                        {totalNotificationCount}
                       </span>
                     )}
                   </button>
@@ -339,6 +398,7 @@ export default function Sidebar() {
         onClose={() => setIsNotificationOpen(false)}
         buttonRef={notificationButtonRef}
         receiverCode={localStorage.getItem('code')}
+        onUnreadCountChange={setTotalNotificationCount}
       />
     </div>
   );

@@ -314,7 +314,15 @@ export const postDiscountsRewards = async (payload) => {
       throw new Error(errorMessage);
     }
 
-    const data = responseText ? JSON.parse(responseText) : null;
+    // Try to parse as JSON, if it fails, return the text as a success message
+    let data;
+    try {
+      data = responseText ? JSON.parse(responseText) : null;
+    } catch (e) {
+      // If parsing fails, it's likely a plain text success message
+      console.log('Response is plain text, not JSON');
+      data = { message: responseText, success: true };
+    }
     console.log('Post discounts/rewards success:', data);
     return data;
   } catch (error) {
@@ -373,8 +381,15 @@ export const postVacations = async (payload) => {
       throw new Error(errorMessage);
     }
 
-    // Parse success body
-    const data = responseText ? JSON.parse(responseText) : null;
+    // Try to parse as JSON, if it fails, return the text as a success message
+    let data;
+    try {
+      data = responseText ? JSON.parse(responseText) : null;
+    } catch (e) {
+      // If parsing fails, it's likely a plain text success message
+      console.log('Response is plain text, not JSON');
+      data = { message: responseText, success: true };
+    }
     console.log('Post vacations success:', data);
     return data;
   } catch (error) {

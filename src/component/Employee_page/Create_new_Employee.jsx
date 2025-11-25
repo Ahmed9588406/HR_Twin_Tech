@@ -193,18 +193,19 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
   if (employeeData) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="w-full max-w-7xl bg-transparent rounded-3xl shadow-2xl p-8 md:p-12 max-h-[90vh] relative">
+        {/* make modal narrower on small screens, reduce padding and ensure we don't exceed viewport height */}
+        <div className="w-full max-w-screen-sm md:max-w-7xl bg-transparent rounded-3xl shadow-2xl p-4 md:p-12 max-h-[90vh] relative">
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute top-2 right-2 md:top-4 md:right-4 z-50 text-gray-600 hover:text-gray-800 transition-colors bg-white rounded-full p-2 shadow-lg hover:shadow-xl"
             aria-label="Close"
           >
             <X size={24} />
           </button>
 
-          {/* Form Content */}
-          <div className="max-w-7xl w-full bg-transparent backdrop-blur-sm rounded-3xl shadow-xl p-8 md:p-12">
+          {/* Form Content: make content scrollable while close button stays visible */}
+          <div className="max-w-7xl w-full bg-transparent backdrop-blur-sm rounded-3xl shadow-xl p-4 md:p-12 overflow-y-auto max-h-[80vh]">
             {/* Progress Steps */}
             <div className="mb-12">
               <div className="flex items-center justify-between relative">
@@ -430,7 +431,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                   <div className="border border-gray-200 rounded-3xl p-8">
                     <div className="grid md:grid-cols-2 gap-8">
                       <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">{_t('SALARY')} *</label>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">{_t('SALARY')} ({_t('CURRENCY')}) *</label>
                         <input
                           type="number"
                           name="salary"
@@ -525,7 +526,17 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
 
   // Default form rendering for creating new employee
   return (
-    <div className="max-w-7xl w-full bg-transparent backdrop-blur-sm rounded-3xl shadow-xl p-8 md:p-12">
+    <div className="max-w-7xl w-full bg-transparent backdrop-blur-sm rounded-3xl shadow-xl p-8 md:p-12 relative">
+      {/* Close Button */}
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="absolute top-8 right-1 z-50 text-gray-500 hover:text-gray-700 transition-colors bg-white rounded-full p-1.5 shadow-md hover:shadow-lg"
+          aria-label="Close"
+        >
+          <X size={18} />
+        </button>
+      )}
       {/* Progress Steps */}
       <div className="mb-12">
         <div className="flex items-center justify-between relative">

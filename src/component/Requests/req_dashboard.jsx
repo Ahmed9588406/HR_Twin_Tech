@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import Sidebar from '../ui/Sidebar';
-import { Calendar, DollarSign, Clock } from 'lucide-react';
+import { Calendar, DollarSign, Clock, List } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import VacationRequestsTable from './vecation_request'; // Add this import
 import AdvanceRequestsTable from './advance_vecation'; // NEW: use advance requests component
 import OvertimeRequestsTable from './overtime'; // NEW: use overtime component
+import RequestsLogs from './logs';
 import { t as _t } from '../../i18n/i18n';
 import { getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
@@ -17,7 +18,8 @@ export default function ReqDashboard() {
   const tabs = [
     { id: 'Vacation Request', label: _t('REQUESTS_VACATION') || 'Vacation Request', icon: Calendar },
     { id: 'Advance Request', label: _t('REQUESTS_ADVANCE') || 'Advance Request', icon: DollarSign },
-    { id: 'Over Time', label: _t('REQUESTS_OVERTIME') || 'Over Time', icon: Clock }
+    { id: 'Over Time', label: _t('REQUESTS_OVERTIME') || 'Over Time', icon: Clock },
+    { id: 'Logs', label: _t('REQUESTS_LOGS') || 'Logs', icon: List }
   ];
 
   // Sample data for each tab with employee details
@@ -65,6 +67,8 @@ export default function ReqDashboard() {
       return <AdvanceRequestsTable />;
     } else if (activeTab === 'Over Time') {
       return <OvertimeRequestsTable />;
+    } else if (activeTab === 'Logs') {
+      return <RequestsLogs />;
     }
   };
 
@@ -108,7 +112,7 @@ export default function ReqDashboard() {
           <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
             {renderTable()}
 
-            {getFilteredData().length === 0 && (
+            {activeTab !== 'Logs' && getFilteredData().length === 0 && (
               <div className="px-6 py-12 text-center text-gray-500">
                 {_t('NO_DATA_FOUND')}
               </div>

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { fetchAdvanceRequests } from './requests_api';
 import { t as _t } from '../../i18n/i18n';
@@ -9,7 +8,6 @@ export default function AdvanceRequestsTable() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const load = async () => {
@@ -26,11 +24,6 @@ export default function AdvanceRequestsTable() {
     };
     load();
   }, []);
-
-  const filtered = requests.filter(r =>
-    (r.empDetails?.empName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (String(r.requestId) || '').includes(searchTerm)
-  );
 
   if (loading) {
     return (
@@ -53,34 +46,21 @@ export default function AdvanceRequestsTable() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl p-4 shadow-sm">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            type="text"
-            placeholder={_t('SEARCH_ADVANCE_REQUESTS')}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-        </div>
-      </div>
-
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">{_t('EMPLOYEE_COL')}</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('REQUEST_DATE')}</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('AMOUNT')}</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('PAYMENT_DATE')}</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('STATUS')}</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('COMMENT')}</th>
+                <th className="text-center py-4 px-6 text-sm font-semibold text-gray-700">{_t('EMPLOYEE_COL')}</th>
+                <th className="text-center py-4 px-4 text-sm font-semibold text-gray-700">{_t('REQUEST_DATE')}</th>
+                <th className="text-center py-4 px-4 text-sm font-semibold text-gray-700">{_t('AMOUNT')}</th>
+                <th className="text-center py-4 px-4 text-sm font-semibold text-gray-700">{_t('PAYMENT_DATE')}</th>
+                <th className="text-center py-4 px-4 text-sm font-semibold text-gray-700">{_t('STATUS')}</th>
+                <th className="text-center py-4 px-4 text-sm font-semibold text-gray-700">{_t('COMMENT')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filtered.map((req) => (
+              {requests.map((req) => (
                 <tr
                   key={req.requestId}
                   role="button"
@@ -108,10 +88,10 @@ export default function AdvanceRequestsTable() {
                       <span className="font-medium text-gray-900">{req.empDetails?.empName}</span>
                     </div>
                   </td>
-                  <td className="py-4 px-4 text-gray-600">{req.requestDate}</td>
-                  <td className="py-4 px-4 text-gray-600">{req.advanceAmount?.toFixed?.(2) ?? req.advanceAmount} EGP</td>
-                  <td className="py-4 px-4 text-gray-600">{req.paymentDate || '-'}</td>
-                  <td className="py-4 px-4">
+                  <td className="py-4 px-4 text-center text-gray-600">{req.requestDate}</td>
+                  <td className="py-4 px-4 text-center text-gray-600">{req.advanceAmount?.toFixed?.(2) ?? req.advanceAmount} EGP</td>
+                  <td className="py-4 px-4 text-center text-gray-600">{req.paymentDate || '-'}</td>
+                  <td className="py-4 px-4 text-center">
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-medium ${
                         req.requestStatus === 'APPROVED'
@@ -124,16 +104,18 @@ export default function AdvanceRequestsTable() {
                       {req.requestStatus === 'APPROVED' ? _t('APPROVED') : req.requestStatus === 'PENDING' ? _t('PENDING') : _t('REJECTED')}
                     </span>
                   </td>
-                  <td className="py-4 px-4 text-gray-600">{req.comment}</td>
+                  <td className="py-4 px-4 text-center text-gray-600">{req.comment}</td>
                 </tr>
               ))}
-            </tbody>
 
-            {filtered.length === 0 && (
-              <div className="px-6 py-12 text-center text-gray-500">
-                {_t('NO_ADVANCE_REQUESTS')}
-              </div>
-            )}
+              {requests.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    {_t('NO_ADVANCE_REQUESTS')}
+                  </td>
+                </tr>
+              )}
+            </tbody>
           </table>
         </div>
       </div>

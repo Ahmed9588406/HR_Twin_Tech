@@ -1,6 +1,56 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Calendar, UploadCloud, X } from 'lucide-react';
-import { postVacationRequest } from './employee_role_api'; // <--- new import
+import { postVacationRequest } from './employee_role_api';
+import { getLang as _getLang, subscribe as _subscribe } from '../i18n/i18n';
+
+const TEXT = {
+  en: {
+    modalTitle: 'Request Details',
+    modalSubtitle: 'Provide the dates and type for your leave.',
+    closeLabel: 'Close',
+    requestDateLabel: 'Request date',
+    leaveStartLabel: 'Leave start date',
+    leaveEndLabel: 'Leave end date',
+    leaveTypeLabel: 'Leave Type',
+    annualLeave: 'Annual leave',
+    sickLeave: 'Sick leave',
+    uploadLabel: 'Upload File',
+    noFile: 'No file chosen',
+    commentsLabel: 'Comments',
+    commentsPlaceholder: 'Write here...',
+    cancel: 'Cancel',
+    submit: 'Leave Request',
+    submitting: 'Submitting...',
+    validationMissingDates: 'Please provide both start and end dates.',
+    validationInvalidRange: 'Start date cannot be after end date.',
+    submitSuccess: 'Leave request submitted successfully.',
+    submitFailureFallback: 'Failed to submit leave request. Please try again.',
+    failurePrefix: 'Leave request failed:'
+  },
+  ar: {
+    modalTitle: 'تفاصيل الطلب',
+    modalSubtitle: 'يرجى إدخال تواريخ ونوع الإجازة.',
+    closeLabel: 'إغلاق',
+    requestDateLabel: 'تاريخ الطلب',
+    leaveStartLabel: 'تاريخ بداية الإجازة',
+    leaveEndLabel: 'تاريخ نهاية الإجازة',
+    leaveTypeLabel: 'نوع الإجازة',
+    annualLeave: 'إجازة سنوية',
+    sickLeave: 'إجازة مرضية',
+    uploadLabel: 'رفع ملف',
+    noFile: 'لم يتم اختيار ملف',
+    commentsLabel: 'ملاحظات',
+    commentsPlaceholder: 'اكتب هنا...',
+    cancel: 'إلغاء',
+    submit: 'إرسال الطلب',
+    submitting: 'جارٍ الإرسال...',
+    validationMissingDates: 'يرجى إدخال تاريخي البداية والنهاية.',
+    validationInvalidRange: 'لا يمكن أن يكون تاريخ البداية بعد تاريخ النهاية.',
+    submitSuccess: 'تم إرسال طلب الإجازة بنجاح.',
+    submitFailureFallback: 'تعذر إرسال طلب الإجازة. حاول مرة أخرى.',
+    failurePrefix: 'فشل طلب الإجازة:'
+  }
+};
 
 export default function VacationRequest({ employee = {}, onClose = () => {}, onSuccess = () => {} }) {
   const [startDate, setStartDate] = useState('');
@@ -44,13 +94,21 @@ export default function VacationRequest({ employee = {}, onClose = () => {}, onS
     if (f) setFile(f);
   };
 
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => {
+    const unsub = _subscribe((l) => setLang(l));
+    return () => unsub();
+  }, []);
+  const copy = TEXT[lang] || TEXT.en;
+  const dir = lang === 'ar' ? 'rtl' : 'ltr';
+
   const validate = () => {
     if (!startDate || !endDate) {
-      alert('Please provide both start and end dates.');
+      alert(copy.validationMissingDates);
       return false;
     }
     if (new Date(startDate) > new Date(endDate)) {
-      alert('Start date cannot be after end date.');
+      alert(copy.validationInvalidRange);
       return false;
     }
     return true;
@@ -65,28 +123,33 @@ export default function VacationRequest({ employee = {}, onClose = () => {}, onS
         requestDate,
         startDate,
         endDate,
-        leaveType,
+        leaveType, // Should be 'ANNUAL' or 'SICK'
         comment: comments
       };
 
-      // call helper: will send multipart if file exists, JSON otherwise
+      console.log('Submitting vacation request with payload:', payload);
+      console.log('Employee code:', employee.code);
+      console.log('File:', file ? file.name : 'No file');
+
+      // Call helper: will send multipart FormData
       const result = await postVacationRequest(employee.code, payload, file);
       console.log('Vacation request result:', result);
 
-      alert('Leave request submitted successfully.');
+      alert(copy.submitSuccess);
       resetForm();
       onSuccess();
     } catch (err) {
       console.error('Leave request failed:', err);
-      // extract friendly message if possible
-      let msg = 'Failed to submit leave request. Please try again.';
+      // Extract friendly message if possible
+      let msg = copy.submitFailureFallback;
       try {
         const m = String(err.message || err);
-        const possibleJson = m.trim().startsWith('{') ? JSON.parse(m) : null;
-        if (possibleJson && possibleJson.message) msg = possibleJson.message;
-        else if (m) msg = m;
+        // If the error message is already in Arabic or is a simple string, use it directly
+        if (m && m.trim()) {
+          msg = m;
+        }
       } catch {}
-      alert(`Leave request failed: ${msg}`);
+      alert(`${copy.failurePrefix} ${msg}`);
     } finally {
       setSubmitting(false);
     }
@@ -155,7 +218,7 @@ export default function VacationRequest({ employee = {}, onClose = () => {}, onS
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" dir={dir} lang={lang}>
       {/* container positioned either centered via transform or via absolute left/top */}
       <div
         ref={containerRef}
@@ -174,20 +237,18 @@ export default function VacationRequest({ employee = {}, onClose = () => {}, onS
           onTouchStart={startDrag}
         >
           <div>
-            <h3 className="text-lg font-semibold">Request Details</h3>
-            <p className="text-emerald-100 text-sm mt-1">Provide the dates and type for your leave.</p>
+            <h3 className="text-lg font-semibold">{copy.modalTitle}</h3>
+            <p className="text-emerald-100 text-sm mt-1">{copy.modalSubtitle}</p>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={handleClose} aria-label="Close" className="p-2 rounded-md bg-white/10 hover:bg-white/20">
-              <X className="w-4 h-4 text-white" />
-            </button>
-          </div>
+          <button onClick={handleClose} aria-label={copy.closeLabel} className="p-2 rounded-md bg-white/10 hover:bg-white/20">
+            <X className="w-4 h-4 text-white" />
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <label className="space-y-2">
-              <div className="text-sm text-slate-600 font-medium">Request date</div>
+              <div className="text-sm text-slate-600 font-medium">{copy.requestDateLabel}</div>
               <div className="relative">
                 <input
                   type="date"
@@ -202,7 +263,7 @@ export default function VacationRequest({ employee = {}, onClose = () => {}, onS
             </label>
 
             <label className="space-y-2">
-              <div className="text-sm text-slate-600 font-medium">Leave start date</div>
+              <div className="text-sm text-slate-600 font-medium">{copy.leaveStartLabel}</div>
               <div className="relative">
                 <input
                   type="date"
@@ -217,7 +278,7 @@ export default function VacationRequest({ employee = {}, onClose = () => {}, onS
             </label>
 
             <label className="space-y-2">
-              <div className="text-sm text-slate-600 font-medium">Leave end date</div>
+              <div className="text-sm text-slate-600 font-medium">{copy.leaveEndLabel}</div>
               <div className="relative">
                 <input
                   type="date"
@@ -233,7 +294,7 @@ export default function VacationRequest({ employee = {}, onClose = () => {}, onS
           </div>
 
           <div>
-            <div className="text-sm text-slate-600 font-medium mb-3">Leave Type</div>
+            <div className="text-sm text-slate-600 font-medium mb-3">{copy.leaveTypeLabel}</div>
             <div className="flex items-center gap-6">
               <label className="inline-flex items-center gap-2 text-slate-700">
                 <input
@@ -244,7 +305,7 @@ export default function VacationRequest({ employee = {}, onClose = () => {}, onS
                   onChange={() => setLeaveType('ANNUAL')}
                   className="form-radio text-emerald-600"
                 />
-                <span>Annual leave</span>
+                <span>{copy.annualLeave}</span>
               </label>
 
               <label className="inline-flex items-center gap-2 text-slate-700">
@@ -256,35 +317,28 @@ export default function VacationRequest({ employee = {}, onClose = () => {}, onS
                   onChange={() => setLeaveType('SICK')}
                   className="form-radio text-emerald-600"
                 />
-                <span>Sick leave</span>
+                <span>{copy.sickLeave}</span>
               </label>
 
               <div className="ml-auto flex items-center gap-4">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  className="hidden"
-                  onChange={handleFileChange}
-                  accept="image/*,application/pdf"
-                />
                 <button
                   type="button"
                   onClick={() => fileInputRef.current && fileInputRef.current.click()}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition"
                 >
-                  <UploadCloud className="w-4 h-4" /> Upload File
+                  <UploadCloud className="w-4 h-4" /> {copy.uploadLabel}
                 </button>
-                <div className="text-sm text-slate-500">{file ? file.name : 'No file chosen'}</div>
+                <div className="text-sm text-slate-500">{file ? file.name : copy.noFile}</div>
               </div>
             </div>
           </div>
 
           <div>
-            <div className="text-sm text-slate-600 font-medium mb-2">Comments</div>
+            <div className="text-sm text-slate-600 font-medium mb-2">{copy.commentsLabel}</div>
             <textarea
               value={comments}
               onChange={(e) => setComments(e.target.value)}
-              placeholder="Write here..."
+              placeholder={copy.commentsPlaceholder}
               className="w-full min-h-[140px] border border-slate-200 rounded-md p-4 text-slate-700 resize-vertical"
             />
           </div>
@@ -295,7 +349,7 @@ export default function VacationRequest({ employee = {}, onClose = () => {}, onS
               onClick={() => { resetForm(); onClose(); }}
               className="px-4 py-2 rounded-md border border-slate-200 text-slate-700 hover:bg-slate-50"
             >
-              Cancel
+              {copy.cancel}
             </button>
 
             <button
@@ -303,7 +357,7 @@ export default function VacationRequest({ employee = {}, onClose = () => {}, onS
               disabled={submitting}
               className="px-6 py-2 rounded-md bg-gradient-to-r from-emerald-600 to-green-500 text-white font-medium hover:from-emerald-700 hover:to-green-600 transition shadow-sm"
             >
-              {submitting ? 'Submitting...' : 'Leave Request'}
+              {submitting ? copy.submitting : copy.submit}
             </button>
           </div>
         </form>

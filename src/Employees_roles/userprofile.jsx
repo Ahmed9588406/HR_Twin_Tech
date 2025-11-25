@@ -14,6 +14,43 @@ const formatAvesntWord = (text) => {
 		}
 };
 
+const TEXT = {
+  en: {
+    changePhotoAria: 'Change photo',
+    attendanceMarked: 'Attendance marked successfully!',
+    leaveMarked: 'Leave marked successfully!',
+    attendanceFail: 'Failed to mark attendance:',
+    leaveFail: 'Failed to mark leave:',
+    lastSignInPrefix: 'Last sign in:',
+    naValue: 'N/A',
+    defaultJobPosition: 'Employee',
+    attendance: 'Attendance',
+    leave: 'Leave',
+    statAbsence: 'Absence',
+    statOnLeave: 'On Leave',
+    statDaysLeft: 'Days Left',
+    onLeaveYes: 'Yes',
+    onLeaveNo: 'No'
+  },
+  ar: {
+    changePhotoAria: 'تغيير الصورة',
+    attendanceMarked: 'تم تسجيل الحضور بنجاح!',
+    leaveMarked: 'تم تسجيل الإجازة بنجاح!',
+    attendanceFail: 'فشل في تسجيل الحضور:',
+    leaveFail: 'فشل في تسجيل الإجازة:',
+    lastSignInPrefix: 'آخر تسجيل دخول:',
+    naValue: 'غير متوفر',
+    defaultJobPosition: 'موظف',
+    attendance: 'الحضور',
+    leave: 'الإجازة',
+    statAbsence: 'الغياب',
+    statOnLeave: 'في إجازة',
+    statDaysLeft: 'الأيام المتبقية',
+    onLeaveYes: 'نعم',
+    onLeaveNo: 'لا'
+  }
+};
+
 export default function UserProfile({ 
   profileData, 
   user, 
@@ -32,49 +69,8 @@ export default function UserProfile({
     const unsub = _subscribe((l) => setLang(l));
     return () => unsub();
   }, []);
-
-  // replace constants with t() lookup
-  const DEFAULT_JOB_POSITION = _t('DEFAULT_JOB_POSITION');
-  const LAST_SIGN_IN_PREFIX = _t('LAST_SIGN_IN_PREFIX');
-  const NA_VALUE = _t('NA_VALUE');
-
-  const BUTTON_LABELS = {
-    MARK_ATTENDANCE: _t('BUTTON_MARK_ATTENDANCE'),
-    REQUEST_LEAVE: _t('BUTTON_REQUEST_LEAVE')
-  };
-  const STAT_LABELS = {
-    ABSENCE: _t('STAT_ABSENCE'),
-    ON_LEAVE: _t('STAT_ON_LEAVE'),
-    DAYS_LEFT: _t('STAT_DAYS_LEFT')
-  };
-  const ON_LEAVE_VALUES = {
-    YES: _t('ON_LEAVE_YES'),
-    NO: _t('ON_LEAVE_NO')
-  };
-
-  useEffect(() => {
-    const fetchAndLogToken = async () => {
-      try {
-        console.log('[UserProfile] 🔔 Requesting FCM token...');
-        console.log('[UserProfile] 🌐 Current URL:', window.location.href);
-        console.log('[UserProfile] 🔒 Secure Context:', window.isSecureContext);
-        
-        const token = await requestNotificationPermission();
-        if (token) {
-          console.log('[UserProfile] ✅ Employee FCM Token:', token);
-          console.log('[UserProfile] 📋 Token Length:', token.length);
-        } else {
-          console.log('[UserProfile] ⚠️ FCM Token not available');
-          console.log('[UserProfile] 💡 Check the detailed logs above for the reason');
-        }
-      } catch (error) {
-        console.warn('[UserProfile] ❌ Error fetching FCM token:', error);
-      }
-    };
-
-    // Don't await - run in background
-    fetchAndLogToken();
-  }, []);
+  const copy = TEXT[lang] || TEXT.en;
+  const dir = lang === 'ar' ? 'rtl' : 'ltr';
 
   // Function to get current location
   const getCurrentLocation = () => {
@@ -121,12 +117,12 @@ export default function UserProfile({
       const result = await markAttendance(location.latitude, location.longitude);
       console.log('Attendance marked successfully:', result);
       // Show success message instead of opening modal
-      alert('Attendance marked successfully!');
+      alert(copy.attendanceMarked);
       // Optionally reload to refresh attendance history
       window.location.reload();
     } catch (error) {
       console.error('Failed to get location or mark attendance:', error.message);
-      alert(`Failed to mark attendance: ${error.message}`);
+      alert(`${copy.attendanceFail} ${error.message}`);
     }
   };
 
@@ -138,12 +134,12 @@ export default function UserProfile({
       const result = await markLeave(location.latitude, location.longitude);
       console.log('Leave marked successfully:', result);
       // Show success message
-      alert('Leave marked successfully!');
+      alert(copy.leaveMarked);
       // Optionally reload to refresh data
       window.location.reload();
     } catch (error) {
       console.error('Failed to get location or mark leave:', error.message);
-      alert(`Failed to mark leave: ${error.message}`);
+      alert(`${copy.leaveFail} ${error.message}`);
     }
   };
 
@@ -167,10 +163,16 @@ export default function UserProfile({
     try {
       await uploadEmployeePhoto(user.code, file);
       // On success, refresh the photoSrc (assuming the API updates the profile)
-      // For simplicity, you can reload the page or update photoSrc with a new URL if provided
       window.location.reload(); // Or update photoSrc dynamically if the response includes new URL
     } catch (error) {
-      setUploadError(error.message);
+      // Log full server error for debugging
+      console.error('Upload failed (detailed):', error);
+
+      // Present a friendly localized message to the user and keep the server message in console
+      const friendly = _t('FAILED_UPLOAD_PHOTO') || copy.attendanceFail || 'Failed to upload photo';
+      setUploadError(`${friendly}: ${error.message ? error.message : ''}`);
+      // Optionally also show alert
+      alert(`${friendly}.`);
     } finally {
       setUploading(false);
     }
@@ -180,7 +182,7 @@ export default function UserProfile({
   console.log('UserProfile profileData (endpoint return):', profileData);
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-200">
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-200" dir={dir} lang={lang}>
       <div className="h-32 bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400" />
       <div className="px-6 pb-6">
         <div className="flex flex-col items-center -mt-16">
@@ -193,7 +195,7 @@ export default function UserProfile({
             <button
               onClick={handleIconClick}
               className="absolute bottom-2 right-2 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600 transition-colors"
-              aria-label={_t('CHANGE_PHOTO_ARIA')}
+              aria-label={copy.changePhotoAria}
               disabled={uploading}
             >
               {uploading ? (
@@ -218,30 +220,30 @@ export default function UserProfile({
           <h2 className="mt-4 text-2xl font-bold text-slate-800">
             {formatAvesntWord(profileData?.empName || user.username)}
           </h2>
-          <p className="text-green-600 font-medium mt-1">{formatAvesntWord(profileData?.jobPosition || DEFAULT_JOB_POSITION)}</p>
+          <p className="text-green-600 font-medium mt-1">{formatAvesntWord(profileData?.jobPosition || copy.defaultJobPosition)}</p>
 
           <div className="flex items-center gap-2 mt-3 text-sm text-slate-600">
             <Clock className="w-4 h-4" />
             <span>
-              {LAST_SIGN_IN_PREFIX}<strong>
-                {profileData?.lastSignIn ? formatLastSignIn(profileData.lastSignIn).display : NA_VALUE}
+              {copy.lastSignInPrefix}<strong>
+                {profileData?.lastSignIn ? formatLastSignIn(profileData.lastSignIn).display : copy.naValue}
               </strong>
             </span>
           </div>
 
           {/* Attendance / Leave buttons */}
-          <div className="flex gap-2 mt-6 w-full">
+          <div className="flex gap-3 mt-6 w-full">
             <button 
-              onClick={handleMarkAttendance} // Use the new handler
-              className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+              onClick={handleMarkAttendance}
+              className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:scale-105"
             >
-              <UserCheck className="w-4 h-4" /> {BUTTON_LABELS.MARK_ATTENDANCE}
+              <UserCheck className="w-5 h-5" /> {copy.attendance}
             </button>
             <button 
               onClick={handleMarkLeave}
-              className="flex-1 px-4 py-2.5 bg-orange-600 text-white rounded-xl font-medium hover:bg-orange-700 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-red-600 transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:scale-105"
             >
-              <LogOut className="w-4 h-4" /> {BUTTON_LABELS.REQUEST_LEAVE}
+              <LogOut className="w-5 h-5" /> {copy.leave}
             </button>
           </div>
 
@@ -251,19 +253,19 @@ export default function UserProfile({
               <div className="text-2xl font-bold text-slate-800">
                 {profileData?.absencesCount ?? 0}
               </div>
-              <div className="text-xs text-slate-600 mt-1">{STAT_LABELS.ABSENCE}</div>
+              <div className="text-xs text-slate-600 mt-1">{copy.statAbsence}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-indigo-600">
-                {profileData?.onLeave ? ON_LEAVE_VALUES.YES : ON_LEAVE_VALUES.NO}
+                {profileData?.onLeave ? copy.onLeaveYes : copy.onLeaveNo}
               </div>
-              <div className="text-xs text-slate-600 mt-1">{STAT_LABELS.ON_LEAVE}</div>
+              <div className="text-xs text-slate-600 mt-1">{copy.statOnLeave}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-slate-800">
                 {profileData?.daysLeftInVacation ?? 0}
               </div>
-              <div className="text-xs text-slate-600 mt-1">{STAT_LABELS.DAYS_LEFT}</div>
+              <div className="text-xs text-slate-600 mt-1">{copy.statDaysLeft}</div>
             </div>
           </div>
         </div>

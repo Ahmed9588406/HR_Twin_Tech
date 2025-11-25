@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Building2, X } from 'lucide-react';
 import { updateBranch } from './api/settings_api';
-import PinModal from './pinmodal'; // <- added import for map pin picker
+import PinModal from './pinmodal';
+import { t } from '../../i18n/i18n'; // added import
 
 export default function EditModal({ workplace, onClose }) {
   const [name, setName] = useState('');
@@ -18,6 +19,32 @@ export default function EditModal({ workplace, onClose }) {
       setLatitude(workplace.lat ?? workplace.latitude ?? '');
       setLongitude(workplace.lng ?? workplace.longitude ?? '');
     }
+  }, [workplace]);
+
+  // New useEffect to get current location on mount
+  useEffect(() => {
+    const fetchCurrentLocation = () => {
+      if (!navigator.geolocation) {
+        console.warn(t('GEO_NOT_SUPPORTED'));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setLatitude(latitude.toString());
+          setLongitude(longitude.toString());
+        },
+        (error) => {
+          console.warn(t('UNABLE_RETRIEVE_LOCATION') + ': ' + error.message);
+          // Fall back to workplace if available
+          if (workplace) {
+            setLatitude(workplace.lat ?? workplace.latitude ?? '');
+            setLongitude(workplace.lng ?? workplace.longitude ?? '');
+          }
+        }
+      );
+    };
+    fetchCurrentLocation();
   }, [workplace]);
 
   const openPinPicker = () => {
@@ -43,20 +70,38 @@ export default function EditModal({ workplace, onClose }) {
     }
   };
 
+  // New function to get current location
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert(t('GEO_NOT_SUPPORTED'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setLatitude(latitude.toString());
+        setLongitude(longitude.toString());
+      },
+      (error) => {
+        alert(t('UNABLE_RETRIEVE_LOCATION') + ': ' + error.message);
+      }
+    );
+  };
+
   const handleCancel = () => {
     onClose && onClose(null);
   };
 
   const handleSave = async () => {
     if (!workplace || !workplace.id) {
-      alert('No workplace to update.');
+      alert(t('NO_WORKPLACE_TO_UPDATE'));
       return;
     }
 
     const lat = parseFloat(latitude);
     const lng = parseFloat(longitude);
     if (Number.isNaN(lat) || Number.isNaN(lng)) {
-      alert('Latitude and longitude must be valid numbers.');
+      alert(t('INVALID_LAT_LNG'));
       return;
     }
 
@@ -69,8 +114,8 @@ export default function EditModal({ workplace, onClose }) {
       // map response to local shape for parent
       onClose && onClose(updated);
     } catch (err) {
-      console.error('Failed to update branch:', err);
-      alert('Failed to update branch: ' + (err.message || err));
+      console.error(t('FAILED_UPDATE_BRANCH') + ':', err);
+      alert(t('FAILED_UPDATE_BRANCH') + ': ' + (err.message || err));
     }
   };
 
@@ -81,7 +126,7 @@ export default function EditModal({ workplace, onClose }) {
         <button
           onClick={handleCancel}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-          aria-label="Close"
+          aria-label={t('CLOSE')}
         >
           <X size={24} />
         </button>
@@ -96,14 +141,14 @@ export default function EditModal({ workplace, onClose }) {
         {/* Name Input */}
         <div className="mb-6">
           <label className="block text-gray-500 text-sm font-medium mb-2">
-            Name
+            {t('NAME')}
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full px-4 py-3 border-b-2 border-gray-200 focus:border-green-400 focus:outline-none text-lg transition-colors"
-            placeholder="Branch name"
+            placeholder={t('BRANCH_NAME_PLACEHOLDER')}
           />
         </div>
 
@@ -111,7 +156,7 @@ export default function EditModal({ workplace, onClose }) {
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div>
             <label className="block text-gray-500 text-sm font-medium mb-2">
-              Latitude
+              {t('LATITUDE')}
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -120,11 +165,11 @@ export default function EditModal({ workplace, onClose }) {
                 value={latitude}
                 onChange={(e) => setLatitude(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Latitude"
+                placeholder={t('LATITUDE')}
               />
               <button
                 onClick={openPinPicker}
-                title="Pick on map"
+                title={t('PICK_ON_MAP')}
                 className="text-gray-500 hover:text-green-600 transition-colors p-2"
               >
                 <MapPin size={18} />
@@ -133,16 +178,26 @@ export default function EditModal({ workplace, onClose }) {
           </div>
           <div>
             <label className="block text-gray-500 text-sm font-medium mb-2">
-              Longitude
+              {t('LONGITUDE')}
             </label>
-            <input
-              type="number"
-              step="any"
-              value={longitude}
-              onChange={(e) => setLongitude(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="Longitude"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                step="any"
+                value={longitude}
+                onChange={(e) => setLongitude(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder={t('LONGITUDE')}
+              />
+              {/* New Get Current Location Button */}
+              <button
+                onClick={getCurrentLocation}
+                title={t('GET_CURRENT_LOCATION')}
+                className="text-gray-500 hover:text-green-600 transition-colors p-2"
+              >
+                <MapPin size={18} />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -152,13 +207,13 @@ export default function EditModal({ workplace, onClose }) {
             onClick={handleCancel}
             className="px-4 py-2 rounded bg-gray-100"
           >
-            Cancel
+            {t('CANCEL')}
           </button>
           <button
             onClick={handleSave}
             className="px-4 py-2 rounded bg-green-500 text-white"
           >
-            Save
+            {t('SAVE')}
           </button>
         </div>
       </div>

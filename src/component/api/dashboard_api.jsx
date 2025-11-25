@@ -6,15 +6,22 @@ const getHeaders = () => ({
   'Content-Type': 'application/json',
 });
 
-// Fetch attendance statistics
-export const fetchAttendanceStatistics = async () => {
+// Fetch attendance statistics (optionally filtered)
+export const fetchAttendanceStatistics = async (params = {}) => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
       throw new Error('Auth token not found; please log in again.');
     }
 
-    const response = await fetch(`${BASE_URL}/dashboard/attendance`, {
+    const { date, department } = params || {};
+    let url = `${BASE_URL}/dashboard/attendance`;
+    const qs = [];
+    if (date) qs.push(`date=${encodeURIComponent(date)}`);
+    if (department && department !== 'all') qs.push(`department=${encodeURIComponent(department)}`);
+    if (qs.length) url += `?${qs.join('&')}`;
+
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'ngrok-skip-browser-warning': 'true',

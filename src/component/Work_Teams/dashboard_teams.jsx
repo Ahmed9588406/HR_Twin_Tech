@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../ui/Sidebar';
 import AddNewTeam from './add_new_team';
 import AddNewMembers from './add_new_members';
-import { Search, Eye, Edit2, X, Users, User, Calendar, Plus } from 'lucide-react';
+import { Eye, Edit2, X, Users, User, Calendar, Plus } from 'lucide-react';
 import { fetchTeams, deleteTeam } from './api/work_teams_api'; // Import the delete API function
 import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
@@ -15,12 +15,12 @@ export default function EmployeeManager() {
   useEffect(() => _subscribe(setLang), []);
 
   const [departments, setDepartments] = useState([]); // Start with empty array
-  const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false); // State for members modal visibility
   const [editingTeam, setEditingTeam] = useState(null); // State for the team being edited
   const [selectedTeam, setSelectedTeam] = useState(null); // State for the selected team in members modal
   const [attendanceStats, setAttendanceStats] = useState([]); // State for attendance statistics
+  const [isLoading, setIsLoading] = useState(true); // Add loading state
 
   const tabs = [
     { id: 'Employees', label: _t('EMPLOYEES'), icon: User, path: '/employees' },
@@ -51,6 +51,7 @@ export default function EmployeeManager() {
   const handleDelete = async (id) => {
     if (window.confirm(_t('CONFIRM_DELETE_TEAM'))) {
       try {
+        setIsLoading(true);
         await deleteTeam(id);
         // Reload teams after deletion
         const loadTeams = async () => {
@@ -60,18 +61,21 @@ export default function EmployeeManager() {
               id: team.id,
               name: team.name,
               managers: team.managerName,
-              employeeCount: team.employeeCount || 0,
+              employeeCount: team.numberOfEmployees || 0,
               members: team.members || []
             }));
             setDepartments(mappedTeams);
           } catch (error) {
             console.error('Error reloading teams:', error);
+          } finally {
+            setIsLoading(false);
           }
         };
         await loadTeams();
       } catch (error) {
         console.error('Error deleting team:', error);
         alert(`${_t('FAILED_TO_DELETE_TEAM')}: ${error.message}`);
+        setIsLoading(false);
       }
     }
   };
@@ -90,17 +94,20 @@ export default function EmployeeManager() {
     // Reload teams when members change
     const loadTeams = async () => {
       try {
+        setIsLoading(true);
         const fetchedTeams = await fetchTeams();
         const mappedTeams = fetchedTeams.map(team => ({
           id: team.id,
           name: team.name,
           managers: team.managerName,
-          employeeCount: team.employeeCount || 0,
+          employeeCount: team.numberOfEmployees || 0,
           members: team.members || []
         }));
         setDepartments(mappedTeams);
       } catch (error) {
         console.error('Error reloading teams:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     loadTeams();
@@ -115,17 +122,20 @@ export default function EmployeeManager() {
     // Reload teams to update employee counts if needed
     const loadTeams = async () => {
       try {
+        setIsLoading(true);
         const fetchedTeams = await fetchTeams();
         const mappedTeams = fetchedTeams.map(team => ({
           id: team.id,
           name: team.name,
           managers: team.managerName,
-          employeeCount: team.employeeCount || 0,
+          employeeCount: team.numberOfEmployees || 0,
           members: team.members || []
         }));
         setDepartments(mappedTeams);
       } catch (error) {
         console.error('Error reloading teams:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     loadTeams();
@@ -151,10 +161,8 @@ export default function EmployeeManager() {
     setIsModalOpen(false);
   };
 
-  const filteredDepartments = departments.filter(dept =>
-    dept.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    dept.managers.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // show full list (no client-side search filter)
+  const filteredDepartments = departments;
 
   const handleAdd = () => {
     setEditingTeam(null); // Clear editing team
@@ -164,19 +172,22 @@ export default function EmployeeManager() {
   useEffect(() => {
     const loadTeams = async () => {
       try {
+        setIsLoading(true);
         const fetchedTeams = await fetchTeams();
         // Assuming the API returns an array of teams with id, name, managerName, etc.
         const mappedTeams = fetchedTeams.map(team => ({
           id: team.id,
           name: team.name,
           managers: team.managerName,
-          employeeCount: team.employeeCount || 0, // Adjust based on API response
+          employeeCount: team.numberOfEmployees || 0, // Adjust based on API response
           members: team.members || []
         }));
         setDepartments(mappedTeams);
       } catch (error) {
         console.error('Error loading teams:', error);
         // alert('Failed to load teams');
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -245,25 +256,7 @@ export default function EmployeeManager() {
             {activeTab === 'Work Teams' && (
               <div>
                 <div className="mb-6 flex items-center justify-between">
-                  <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="text"
-                      placeholder={_t('SEARCH')}
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeWidth="2"/>
-                      <line x1="16" y1="2" x2="16" y2="6" strokeWidth="2"/>
-                      <line x1="8" y1="2" x2="8" y2="6" strokeWidth="2"/>
-                      <line x1="3" y1="10" x2="21" y2="10" strokeWidth="2"/>
-                    </svg>
-                    <span className="text-gray-600">{_t('SELECT_WORK_TIMING')}</span>
-                  </div>
+                  <div className="flex-1" />
                 </div>
 
                 {/* Table */}
@@ -286,41 +279,53 @@ export default function EmployeeManager() {
                     </div>
                   </div>
 
-                  {/* Table Body */}
-                  <div className="divide-y divide-gray-100">
-                    {filteredDepartments.map((dept) => (
-                      <div key={dept.id} className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
-                        <div className="col-span-3 text-gray-800">{dept.name}</div>
-                        <div className="col-span-3 text-gray-600">{dept.managers}</div>
-                        <div className="col-span-5 text-gray-600">{dept.employeeCount}</div>
-                        <div className="col-span-1 flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleViewMembers(dept)}
-                            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                          >
-                            <Eye className="w-5 h-5 text-gray-600" />
-                          </button>
-                          <button
-                            onClick={() => handleEdit(dept)}
-                            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                          >
-                            <Edit2 className="w-5 h-5 text-green-600" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(dept.id)}
-                            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                          >
-                            <X className="w-5 h-5 text-red-600" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {filteredDepartments.length === 0 && (
-                    <div className="px-6 py-12 text-center text-gray-500">
-                      {_t('NO_DEPARTMENTS_FOUND')}
+                  {/* Loading State */}
+                  {isLoading ? (
+                    <div className="px-6 py-12 flex justify-center items-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
                     </div>
+                  ) : (
+                    <>
+                      {/* Table Body */}
+                      <div className="divide-y divide-gray-100">
+                        {filteredDepartments.map((dept) => (
+                          <div key={dept.id} className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
+                            <div className="col-span-3 text-gray-800">{dept.name}</div>
+                            <div className="col-span-3 text-gray-600">{dept.managers}</div>
+                            <div className="col-span-5 text-gray-600">{dept.employeeCount}</div>
+                            <div className="col-span-1 flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleViewMembers(dept)}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                title={_t('VIEW_ALL')}
+                              >
+                                <Eye className="w-5 h-5 text-gray-600" />
+                              </button>
+                              <button
+                                onClick={() => handleEdit(dept)}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                title={_t('EDIT')}
+                              >
+                                <Edit2 className="w-5 h-5 text-green-600" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(dept.id)}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                title={_t('DELETE')}
+                              >
+                                <X className="w-5 h-5 text-red-600" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {filteredDepartments.length === 0 && (
+                        <div className="px-6 py-12 text-center text-gray-500">
+                          {_t('NO_DEPARTMENTS_FOUND')}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -330,7 +335,6 @@ export default function EmployeeManager() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">{_t('EMPLOYEES_ACTION')}</h2>
                 <p className="text-gray-600">{_t('EMPLOYEES_ACTION_SUBTITLE')}</p>
-                <p className="text-gray-600">Employee actions content goes here...</p>
               </div>
             )}
           </div>

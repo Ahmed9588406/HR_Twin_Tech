@@ -329,3 +329,45 @@ export const fetchTeamMembers = async (teamId) => {
     throw error;
   }
 };
+
+// Fetch team by id (returns team with teamMembers array)
+export const fetchTeamById = async (teamId) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Auth token not found; please log in again.');
+    }
+
+    const response = await fetch(`${BASE_URL}/employees/teams/${teamId}`, {
+      method: 'GET',
+      headers: {
+        ...getHeaders(),
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let err = 'Failed to fetch team';
+      try {
+        const errJson = await response.json();
+        err = errJson.message || `${response.status} - ${response.statusText}`;
+      } catch {
+        err = `${response.status} - ${response.statusText}`;
+      }
+      throw new Error(err);
+    }
+
+    const data = await response.json();
+    // Ensure consistent shape
+    return {
+      id: data.id,
+      name: data.name,
+      managerName: data.managerName,
+      numberOfEmployees: data.numberOfEmployees ?? (Array.isArray(data.teamMembers) ? data.teamMembers.length : 0),
+      teamMembers: Array.isArray(data.teamMembers) ? data.teamMembers : []
+    };
+  } catch (error) {
+    console.error('Error fetching team by id:', error);
+    throw error;
+  }
+};

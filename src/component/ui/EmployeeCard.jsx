@@ -46,9 +46,25 @@ export default function EmployeeCard({
     return `${hour12}:${minutes} ${ampm}`;
   };
 
+  // Normalize status to English key for config lookup
+  const normalizeStatus = (status) => {
+    // Check if status is already translated (matches translation values)
+    if (status === _t('STAY_HERE')) return 'Stay here';
+    if (status === _t('LEFT')) return 'Left';
+    if (status === _t('CHECKED_OUT')) return 'Checked out';
+    if (status === _t('ON_BREAK')) return 'On break';
+    if (status === _t('IN_MEETING')) return 'In meeting';
+    if (status === _t('ABSENT')) return 'Absent';
+    if (status === _t('ON_LEAVE')) return 'On Leave';
+    
+    // Return as-is if already in English
+    return status;
+  };
+
   // Translate status
   const getStatusText = (status) => {
     if (status === 'Stay here' || status === 'Present') return _t('STAY_HERE');
+    if (status === 'Left') return _t('LEFT');
     if (status === 'Checked out') return _t('CHECKED_OUT');
     if (status === 'On break') return _t('ON_BREAK');
     if (status === 'In meeting') return _t('IN_MEETING');
@@ -76,16 +92,18 @@ export default function EmployeeCard({
   };
 
   // Status configurations
+  const clockIcon = (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+
   const statusConfig = {
     "Stay here": {
       color: "text-emerald-600",
       bgColor: "bg-emerald-50",
       dotColor: "bg-emerald-500",
-      icon: (
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
+      icon: clockIcon
     },
     "Checked out": {
       color: "text-gray-500",
@@ -111,11 +129,7 @@ export default function EmployeeCard({
       color: "text-yellow-600",
       bgColor: "bg-yellow-50",
       dotColor: "bg-yellow-500",
-      icon: (
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
+      icon: clockIcon
     },
     "On break": {
       color: "text-amber-600",
@@ -140,7 +154,9 @@ export default function EmployeeCard({
     }
   };
 
-  const currentStatus = statusConfig[emp.status] || statusConfig["Stay here"];
+  // Normalize the status before looking up config
+  const normalizedStatus = normalizeStatus(emp.status);
+  const currentStatus = statusConfig[normalizedStatus] || statusConfig["Stay here"];
 
   // Helper to call action handlers without triggering card click
   const callHandler = (e, handler) => {

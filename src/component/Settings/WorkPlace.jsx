@@ -21,20 +21,29 @@ export default function WorkPlace() {
     const unsub = _subscribe((l) => setLang(l));
     return () => unsub();
   }, []);
+  const isRtl = lang === 'ar';
 
   useEffect(() => {
+    let mounted = true;
     const loadBranches = async () => {
       // Only load if workplaces is empty to avoid redundant fetches
-      if (workplaces.length === 0 && !loading) {
+      if (workplaces.length === 0) {
         setLoading(true);
-        const data = await fetchBranches();
-        console.log('Setting workplaces:', data);
-        updateWorkplaces(data);
-        setLoading(false);
+        try {
+          const data = await fetchBranches();
+          if (mounted) {
+            updateWorkplaces(data || []);
+          }
+        } catch (err) {
+          console.error('Failed to fetch branches:', err);
+        } finally {
+          if (mounted) setLoading(false);
+        }
       }
     };
     loadBranches();
-  }, []); // Remove updateWorkplaces from dependencies
+    return () => { mounted = false; };
+  }, []); // keep deps minimal to avoid repeated fetches
 
   const handleAdd = () => {
     setIsAdding(true);
@@ -166,35 +175,51 @@ export default function WorkPlace() {
   return (
     <div className="relative">
       <div className="overflow-x-auto rounded-2xl border border-green-200 shadow-sm">
-        <table className="min-w-full text-left">
+        <table className={`min-w-full ${isRtl ? 'text-right' : 'text-left'}`}>
           <thead>
             <tr className="bg-green-50">
               <th className="px-6 py-4 text-green-600 font-semibold">{_t('NAME')}</th>
               <th className="px-6 py-4 text-green-600 font-semibold">{_t('TYPE')}</th>
               <th className="px-6 py-4 text-green-600 font-semibold">{_t('COMPANY')}</th>
-              <th className="px-6 py-4 text-green-600 font-semibold">{_t('ACTIONS')}</th>
+              <th className="px-6 py-4 text-green-600 font-semibold text-center">{_t('ACTIONS')}</th>
             </tr>
           </thead>
           <tbody>
-            {workplaces.map((wp) => (
-              <tr
-                key={wp.id}
-                className="border-t border-green-200 hover:bg-green-50 transition-colors"
-              >
-                <td className="px-6 py-4 font-medium text-green-600">
-                  {wp.name}
+            {loading ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-8 text-center">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mb-3" />
+                    <div className="text-gray-600">{_t('LOADING_WORKPLACES')}</div>
+                  </div>
                 </td>
-                <td className="px-6 py-4 text-gray-500">{wp.type}</td>
-                <td className="px-6 py-4 text-gray-500">{wp.company}</td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => handlePin(wp)}
-                      className="text-gray-500 hover:text-green-600 transition-colors"
-                      title={_t('PLACE_PIN_ON_MAP')}
-                    >
-                      <MapPin size={18} />
-                    </button>
+              </tr>
+            ) : workplaces.length === 0 && !isAdding ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
+                  {_t('NO_WORKPLACES') || 'No workplaces'}
+                </td>
+              </tr>
+            ) : (
+              workplaces.map((wp) => (
+                <tr
+                  key={wp.id}
+                  className="border-t border-green-200 hover:bg-green-50 transition-colors"
+                >
+                  <td className="px-6 py-4 font-medium text-green-600">
+                    {wp.name}
+                  </td>
+                  <td className="px-6 py-4 text-gray-500">{wp.type}</td>
+                  <td className="px-6 py-4 text-gray-500">{wp.company}</td>
+                  <td className="px-6 py-4 text-center">
+                   <div className="flex items-center justify-center gap-4">
+                     <button
+                       onClick={() => handlePin(wp)}
+                       className="text-gray-500 hover:text-green-600 transition-colors"
+                       title={_t('PLACE_PIN_ON_MAP')}
+                     >
+                       <MapPin size={18} />
+                     </button>
                     <button
                       onClick={() => handleEdit(wp)}
                       className="text-green-400 hover:text-green-600 transition-colors"
@@ -211,9 +236,10 @@ export default function WorkPlace() {
                     </button>
                   </div>
                 </td>
-              </tr>
-            ))}
-            {/* New row for adding */}
+                </tr>
+              ))
+            )}
+
             {isAdding && (
               <tr className="border-t border-green-200 bg-green-50">
                 <td className="px-6 py-4">
@@ -225,7 +251,6 @@ export default function WorkPlace() {
                     placeholder={_t('NAME')}
                   />
                 </td>
-
                 <td className="px-6 py-4">
                   <input
                     type="text"
@@ -235,7 +260,6 @@ export default function WorkPlace() {
                     placeholder={_t('TYPE')}
                   />
                 </td>
-
                 <td className="px-6 py-4">
                   <div className="flex flex-col gap-2">
                     <input
@@ -245,7 +269,6 @@ export default function WorkPlace() {
                       className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
                       placeholder={_t('COMPANY')}
                     />
-
                     <div className="flex gap-2 items-center">
                       <input
                         type="number"
@@ -263,8 +286,6 @@ export default function WorkPlace() {
                         className="w-1/2 px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
                         placeholder={_t('LONGITUDE')}
                       />
-
-                      {/* Set Pin button for add-row */}
                       <button
                         onClick={handlePinForNew}
                         title={_t('PICK_ON_MAP')}
@@ -275,28 +296,19 @@ export default function WorkPlace() {
                     </div>
                   </div>
                 </td>
-
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleSaveNew}
-                      className="text-green-600 hover:text-green-800 transition-colors"
-                      title={_t('SAVE')}
-                    >
+                    <button onClick={handleSaveNew} className="text-green-600 hover:text-green-800 transition-colors" title={_t('SAVE')}>
                       <Check size={18} />
                     </button>
-                    <button
-                      onClick={handleCancelAdd}
-                      className="text-red-500 hover:text-red-700 transition-colors"
-                      title={_t('CANCEL')}
-                    >
+                    <button onClick={handleCancelAdd} className="text-red-500 hover:text-red-700 transition-colors" title={_t('CANCEL')}>
                       <X size={18} />
                     </button>
                   </div>
                 </td>
               </tr>
             )}
-            {/* Empty row for floating button */}
+
             {!isAdding && (
               <tr>
                 <td colSpan={4} className="relative py-6">
@@ -316,21 +328,8 @@ export default function WorkPlace() {
         </table>
       </div>
 
-      {/* Modal */}
-      {isModalOpen && (
-        <EditModal 
-          workplace={selectedWorkplace} 
-          onClose={handleCloseModal} 
-        />
-      )}
-
-      {/* Pin Modal */}
-      {isPinModalOpen && (
-        <PinModal 
-          workplace={selectedWorkplace} 
-          onClose={handleClosePinModal} 
-        />
-      )}
+      {isModalOpen && <EditModal workplace={selectedWorkplace} onClose={handleCloseModal} />}
+      {isPinModalOpen && <PinModal workplace={selectedWorkplace} onClose={handleClosePinModal} />}
     </div>
   );
 }

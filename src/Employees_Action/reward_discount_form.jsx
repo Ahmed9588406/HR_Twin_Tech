@@ -1,28 +1,29 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Percent, X } from 'lucide-react';
 import { postDiscountsRewards } from './emp_actions_api';
-import { Award,UserRoundMinus  } from 'lucide-react';
-
-const ACTION_TYPES = [
-  { value: 'reward', label: 'Reward', icon:<Award/> },
-  { value: 'discount', label: 'Discount', icon: <UserRoundMinus/> }
-];
-
-const DAYS_OPTIONS = [
-  { value: 1, label: 'Half a Day' },
-  { value: 2, label: 'One Day' },
-  { value: 3, label: 'Two Days' },
-  
-];
-
-const HOURS_OPTIONS = [
-  { value: 1, label: 'Half an Hour' },
-  { value: 2, label: 'One Hour' },
-  { value: 4, label: 'Two Hours' },
-  
-];
+import { Award, UserRoundMinus } from 'lucide-react';
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../i18n/i18n';
 
 export default function RewardDiscountForm({ selectedActions = [], onClose = () => {}, onSuccess = () => {} }) {
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => _subscribe(setLang), []);
+
+  const ACTION_TYPES = [
+    { value: 'reward', label: _t('REWARD'), icon: <Award /> },
+    { value: 'discount', label: _t('DISCOUNT'), icon: <UserRoundMinus /> }
+  ];
+
+  const DAYS_OPTIONS = [
+    { value: 0.5, label: _t('HALF_A_DAY') },
+    { value: 1, label: _t('ONE_DAY') },
+    { value: 2, label: _t('TWO_DAYS') },
+  ];
+
+  const HOURS_OPTIONS = [
+    { value: 0.5, label: _t('HALF_AN_HOUR') },
+    { value: 1, label: _t('ONE_HOUR') },
+    { value: 2, label: _t('TWO_HOURS') },
+  ];
   const [actionType, setActionType] = useState('');
   const [amountType, setAmountType] = useState(''); // 'AMOUNT', 'NUMOFDAYS', 'NUMOFHOURS'
   const [amount, setAmount] = useState('');
@@ -125,23 +126,23 @@ export default function RewardDiscountForm({ selectedActions = [], onClose = () 
 
   const validate = () => {
     if (!actionType) {
-      setError('Please select an action type.');
+      setError(_t('SELECT_ACTION_TYPE'));
       return false;
     }
     if (!amountType) {
-      setError('Please select amount type (Amount, Days, or Hours).');
+      setError(_t('SELECT_AMOUNT_TYPE_ERROR'));
       return false;
     }
     if (amountType === 'AMOUNT' && (!amount || Number(amount) <= 0)) {
-      setError('Please enter a valid amount.');
+      setError(_t('ENTER_VALID_AMOUNT'));
       return false;
     }
     if (amountType === 'NUMOFDAYS' && selectedDays.length === 0) {
-      setError('Please select at least one day option.');
+      setError(_t('SELECT_AT_LEAST_ONE_DAY'));
       return false;
     }
     if (amountType === 'NUMOFHOURS' && selectedHours.length === 0) {
-      setError('Please select at least one hour option.');
+      setError(_t('SELECT_AT_LEAST_ONE_HOUR'));
       return false;
     }
     return true;
@@ -188,7 +189,7 @@ export default function RewardDiscountForm({ selectedActions = [], onClose = () 
       onSuccess();
     } catch (err) {
       console.error('Discounts/Rewards failed:', err);
-      setError(err.message || 'Failed to apply reward/discount. Please try again.');
+      setError(_t('FAILED_APPLY_REWARD_DISCOUNT'));
     } finally {
       setSubmitting(false);
     }
@@ -217,7 +218,7 @@ export default function RewardDiscountForm({ selectedActions = [], onClose = () 
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
                 <Percent className="w-5 h-5 text-white" />
               </div>
-              Add Reward or Discount
+              {_t('ADD_REWARD_DISCOUNT')}
             </h2>
             <button
               onClick={onClose}
@@ -232,7 +233,7 @@ export default function RewardDiscountForm({ selectedActions = [], onClose = () 
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
           {/* Action Type */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">Action Type</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-3">{_t('ACTION_TYPE')}</label>
             <div className="grid grid-cols-2 gap-3">
               {ACTION_TYPES.map((type) => (
                 <label
@@ -260,7 +261,7 @@ export default function RewardDiscountForm({ selectedActions = [], onClose = () 
 
           {/* Amount Type Selection */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">Select Amount Type</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-3">{_t('SELECT_AMOUNT_TYPE')}</label>
             <div className="grid grid-cols-3 gap-3">
               <label
                 className={`flex items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-all ${
@@ -277,7 +278,7 @@ export default function RewardDiscountForm({ selectedActions = [], onClose = () 
                   onChange={(e) => handleAmountTypeChange(e.target.value)}
                   className="sr-only"
                 />
-                <span className="font-medium">Amount</span>
+                <span className="font-medium">{_t('AMOUNT')}</span>
               </label>
               <label
                 className={`flex items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-all ${
@@ -294,7 +295,7 @@ export default function RewardDiscountForm({ selectedActions = [], onClose = () 
                   onChange={(e) => handleAmountTypeChange(e.target.value)}
                   className="sr-only"
                 />
-                <span className="font-medium">Days</span>
+                <span className="font-medium">{_t('DAYS')}</span>
               </label>
               <label
                 className={`flex items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-all ${
@@ -311,7 +312,7 @@ export default function RewardDiscountForm({ selectedActions = [], onClose = () 
                   onChange={(e) => handleAmountTypeChange(e.target.value)}
                   className="sr-only"
                 />
-                <span className="font-medium">Hours</span>
+                <span className="font-medium">{_t('HOURS')}</span>
               </label>
             </div>
           </div>
@@ -319,13 +320,13 @@ export default function RewardDiscountForm({ selectedActions = [], onClose = () 
           {/* Amount Input */}
           {amountType === 'AMOUNT' && (
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Amount</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">{_t('AMOUNT')}</label>
               <input
                 type="number"
                 step="0.01"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="Enter amount"
+                placeholder={_t('ENTER_AMOUNT')}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 required
               />
@@ -336,7 +337,7 @@ export default function RewardDiscountForm({ selectedActions = [], onClose = () 
           {amountType === 'NUMOFDAYS' && (
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Select Days (Total: {selectedDays.reduce((a, b) => a + b, 0)} days)
+                {_t('SELECT_DAYS_TOTAL').replace('{{total}}', selectedDays.reduce((a, b) => a + b, 0))}
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {DAYS_OPTIONS.map((day) => (
@@ -365,7 +366,7 @@ export default function RewardDiscountForm({ selectedActions = [], onClose = () 
           {amountType === 'NUMOFHOURS' && (
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Select Hours (Total: {selectedHours.reduce((a, b) => a + b, 0)} hours)
+                {_t('SELECT_HOURS_TOTAL').replace('{{total}}', selectedHours.reduce((a, b) => a + b, 0))}
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {HOURS_OPTIONS.map((hour) => (
@@ -391,11 +392,11 @@ export default function RewardDiscountForm({ selectedActions = [], onClose = () 
           )}
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Reason (Optional)</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">{_t('REASON_OPTIONAL')}</label>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Provide reason for this action..."
+              placeholder={_t('PROVIDE_REASON')}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
               rows={3}
             />
@@ -404,7 +405,7 @@ export default function RewardDiscountForm({ selectedActions = [], onClose = () 
           {/* Affected Employees */}
           <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
             <p className="text-sm text-emerald-700">
-              <strong>{selectedActions.length}</strong> employee(s) will be affected by this change.
+              {_t('AFFECTED_EMPLOYEES').replace('{{count}}', selectedActions.length)}
             </p>
           </div>
 
@@ -422,14 +423,14 @@ export default function RewardDiscountForm({ selectedActions = [], onClose = () 
               onClick={onClose}
               className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
             >
-              Cancel
+              {_t('CANCEL')}
             </button>
             <button
               type="submit"
               disabled={submitting}
               className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-500 text-white rounded-lg hover:from-emerald-700 hover:to-green-600 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {submitting ? 'Applying...' : `Apply ${actionType || 'Action'} (${selectedActions.length})`}
+              {submitting ? _t('APPLYING') : _t('APPLY_ACTION').replace('{{action}}', actionType || 'Action').replace('{{count}}', selectedActions.length)}
             </button>
           </div>
         </form>

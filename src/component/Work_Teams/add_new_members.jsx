@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X, UserCircle, Search, Users, Plus, Trash2, Sparkles, Loader2 } from 'lucide-react';
-import { addEmployeeToTeam, removeEmployeeFromTeam, fetchTeamMembers } from './api/work_teams_api';
+import { addEmployeeToTeam, removeEmployeeFromTeam, fetchTeamById } from './api/work_teams_api';
 import { fetchEmployees as fetchSettingsEmployees } from '../Settings/api/employees_api';
+import { getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
+import { t as _t } from '../../i18n/i18n';
 
 export default function AddNewMembers({ team, onClose, onMembersChange }) {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
@@ -11,13 +13,15 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [teamData, setTeamData] = useState(null);
+  const [lang, setLang] = useState(_getLang());
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [employeesRes, membersRes] = await Promise.allSettled([
+        const [employeesRes, teamRes] = await Promise.allSettled([
           fetchSettingsEmployees(),
-          fetchTeamMembers(team.id)
+          fetchTeamById(team.id)
         ]);
 
         const rawEmployees = employeesRes.status === 'fulfilled' ? employeesRes.value : [];
@@ -30,8 +34,8 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
           deptartment: e.department ?? e.dept
         }));
 
-        const rawMembers = membersRes.status === 'fulfilled' ? membersRes.value : [];
-        const memberList = (Array.isArray(rawMembers) ? rawMembers : (rawMembers.content || rawMembers.data || [])).map(m => ({
+        const rawTeam = teamRes.status === 'fulfilled' ? teamRes.value : {};
+        const memberList = (Array.isArray(rawTeam.teamMembers) ? rawTeam.teamMembers : []).map(m => ({
           empCode: m.id,
           empName: m.name,
           jobPosition: m.jobTitle,
@@ -42,10 +46,12 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
 
         setEmployees(empList);
         setMembers(memberList);
+        setTeamData(rawTeam);
       } catch (error) {
         console.error('Unexpected error loading data:', error);
         setEmployees([]);
         setMembers([]);
+        setTeamData(null);
       } finally {
         setInitialLoading(false);
       }
@@ -53,6 +59,11 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
 
     loadData();
   }, [team.id]);
+
+  useEffect(() => {
+    const unsub = _subscribe((l) => setLang(l));
+    return () => unsub();
+  }, []);
 
   const handleSelectEmployee = (employee) => {
     setSelectedEmployeeId(employee.empCode);
@@ -66,8 +77,8 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
       try {
         const result = await addEmployeeToTeam(team.id, selectedEmployeeId);
         if (result.success) {
-          const updatedMembers = await fetchTeamMembers(team.id);
-          const memberList = (Array.isArray(updatedMembers) ? updatedMembers : (updatedMembers.content || updatedMembers.data || [])).map(m => ({
+          const updatedTeam = await fetchTeamById(team.id);
+          const memberList = (Array.isArray(updatedTeam.teamMembers) ? updatedTeam.teamMembers : []).map(m => ({
             empCode: m.id,
             empName: m.name,
             jobPosition: m.jobTitle,
@@ -76,12 +87,13 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
             deptartment: m.department
           }));
           setMembers(memberList);
+          setTeamData(updatedTeam);
           setSelectedEmployeeId('');
           if (onMembersChange) onMembersChange();
         } else {
           alert(result.message);
-          const updatedMembers = await fetchTeamMembers(team.id);
-          const memberList = (Array.isArray(updatedMembers) ? updatedMembers : (updatedMembers.content || updatedMembers.data || [])).map(m => ({
+          const updatedTeam = await fetchTeamById(team.id);
+          const memberList = (Array.isArray(updatedTeam.teamMembers) ? updatedTeam.teamMembers : []).map(m => ({
             empCode: m.id,
             empName: m.name,
             jobPosition: m.jobTitle,
@@ -90,11 +102,12 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
             deptartment: m.department
           }));
           setMembers(memberList);
+          setTeamData(updatedTeam);
           if (onMembersChange) onMembersChange();
         }
       } catch (error) {
         console.error('Error adding member:', error);
-        alert(`Failed to add member: ${error.message}`);
+        alert(_t('FAILED_ADD_MEMBER', { error: error.message }));
       } finally {
         setLoading(false);
       }
@@ -102,11 +115,11 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
   };
 
   const handleRemoveMember = async (employeeId) => {
-    if (window.confirm('Are you sure you want to remove this member?')) {
+    if (window.confirm(_t('CONFIRM_REMOVE_MEMBER'))) {
       try {
         await removeEmployeeFromTeam(team.id, employeeId);
-        const updatedMembers = await fetchTeamMembers(team.id);
-        const memberList = (Array.isArray(updatedMembers) ? updatedMembers : (updatedMembers.content || updatedMembers.data || [])).map(m => ({
+        const updatedTeam = await fetchTeamById(team.id);
+        const memberList = (Array.isArray(updatedTeam.teamMembers) ? updatedTeam.teamMembers : []).map(m => ({
           empCode: m.id,
           empName: m.name,
           jobPosition: m.jobTitle,
@@ -115,10 +128,11 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
           deptartment: m.department
         }));
         setMembers(memberList);
+        setTeamData(updatedTeam);
         if (onMembersChange) onMembersChange();
       } catch (error) {
         console.error('Error removing member:', error);
-        alert(`Failed to remove member: ${error.message}`);
+        alert(_t('ERROR_REMOVING_MEMBER', { error: error.message }));
       }
     }
   };
@@ -178,7 +192,7 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
               <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
                 {team.name}
               </h1>
-              <p className="text-gray-500 text-sm mt-1">Manage team members</p>
+              <p className="text-gray-500 text-sm mt-1">{_t('TEAM_MANAGEMENT')}</p>
             </div>
           </div>
           <button
@@ -192,9 +206,9 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
         {/* Current Members Section */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">Team Members</h2>
+            <h2 className="text-xl font-semibold text-gray-800">{_t('TEAM_MEMBERS')}</h2>
             <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
-              {members.length}
+              {teamData?.numberOfEmployees ?? members.length}
             </span>
           </div>
 
@@ -205,35 +219,35 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
                   <Users className="w-12 h-12 text-gray-400" />
                 </div>
               </div>
-              <h3 className="text-lg font-medium text-gray-700 mb-2">No members yet</h3>
-              <p className="text-gray-500 text-sm">Start building your team by adding members below</p>
+              <h3 className="text-lg font-medium text-gray-700 mb-2">{_t('NO_CURRENT_MEMBERS')}</h3>
+              <p className="text-gray-500 text-sm">{_t('START_ADDING_MEMBERS')}</p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-lg border border-gray-200">
+            <div className="overflow-x-auto rounded-lg border border-gray-200">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Photo</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Department</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Position</th>
-                    <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Actions</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{_t('IMAGE')}</th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">{_t('NAME')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{_t('DEPARTMENT')}</th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">{_t('POSITION')}</th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">{_t('ACTIONS')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {members.map((member) => (
                     <tr key={member.empCode ?? member.id} className="border-b hover:bg-gray-50 transition">
-                      <td className="py-3">
+                      <td className="px-4 py-3">
                         <img
                           src={getEmployeeImage(member)}
                           alt={member.empName}
                           className="w-8 h-8 rounded-full object-cover"
                         />
                       </td>
-                      <td className="py-3">{member.empName}</td>
-                      <td className="py-3">{member.deptartment || 'N/A'}</td>
-                      <td className="py-3">{member.jobPosition || 'N/A'}</td>
-                      <td className="py-3">
+                      <td className="px-4 py-3 truncate">{member.empName}</td>
+                      <td className="px-4 py-3 truncate">{member.deptartment || 'N/A'}</td>
+                      <td className="px-4 py-3 truncate">{member.jobPosition || _t('NOT_SPECIFIED')}</td>
+                      <td className="px-4 py-3 text-center">
                         <button
                           onClick={() => handleRemoveMember(member.empCode ?? member.id)}
                           className="text-red-500 hover:text-red-700 transition"
@@ -253,7 +267,7 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <div className="flex items-center gap-2 mb-5">
             <Sparkles className="w-5 h-5 text-emerald-500" />
-            <h2 className="text-xl font-semibold text-gray-800">Add New Member</h2>
+            <h2 className="text-xl font-semibold text-gray-800">{_t('ADD_NEW_MEMBER')}</h2>
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4">
@@ -263,7 +277,7 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
                 className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 text-left flex items-center justify-between bg-white hover:border-emerald-300 transition-all group"
               >
                 <span className={selectedEmployeeName ? "text-gray-900 font-medium" : "text-gray-400"}>
-                  {selectedEmployeeName || 'Select an employee'}
+                  {selectedEmployeeName || _t('CHOOSE_EMPLOYEE')}
                 </span>
                 <svg className={`w-5 h-5 text-gray-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -280,7 +294,7 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search employees..."
+                        placeholder={_t('SEARCH_EMPLOYEES')}
                         className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 text-sm"
                       />
                     </div>
@@ -312,7 +326,7 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
                               <div className="font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors truncate">
                                 {employee.empName}
                               </div>
-                              <div className="text-sm text-gray-500 truncate">{employee.jobPosition || 'N/A'}</div>
+                              <div className="text-sm text-gray-500 truncate">{employee.jobPosition || _t('NOT_SPECIFIED')}</div>
                             </div>
                             <Plus className="w-5 h-5 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
@@ -321,8 +335,8 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
                     ) : (
                       <div className="px-4 py-12 text-center">
                         <UserCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500 font-medium">No employees found</p>
-                        <p className="text-gray-400 text-sm mt-1">Try a different search term</p>
+                        <p className="text-gray-500 font-medium">{_t('NO_EMPLOYEES_FOUND')}</p>
+                        <p className="text-gray-400 text-sm mt-1">{_t('TRY_DIFFERENT_SEARCH')}</p>
                       </div>
                     )}
                   </div>
@@ -338,12 +352,12 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Adding...
+                  {_t('ADDING')}
                 </>
               ) : (
                 <>
                   <Plus className="w-5 h-5" />
-                  Add Member
+                  {_t('ADD_MEMBER')}
                 </>
               )}
             </button>

@@ -6,7 +6,7 @@ import EditModalTransaction from './editmodal_transaction';
 import DeleteModalTransaction from './DeleteModalTransaction';
 import { t as _t, getLang as _getLang } from '../../i18n/i18n';
 
-export default function RewardsDashboard() {
+export default function RewardsDashboard({ selectedMonth }) {
   const navigate = useNavigate();
   const [rewards, setRewards] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,23 +15,24 @@ export default function RewardsDashboard() {
   const [error, setError] = useState(null);
   const [editingReward, setEditingReward] = useState(null);
   const [deletingReward, setDeletingReward] = useState(null);
+  const isRtl = _getLang() === 'ar';
 
   useEffect(() => {
     const loadRewards = async () => {
       try {
         setLoading(true);
-        const data = await getReward();
+        const data = await getReward(selectedMonth);
         setRewards(data);
       } catch (err) {
         console.error('Error loading rewards:', err);
-        setError('Failed to load rewards. Please try again later.');
+        setError(_t('FAILED_LOAD_REWARDS'));
       } finally {
         setLoading(false);
       }
     };
 
     loadRewards();
-  }, []);
+  }, [selectedMonth]);
 
   // Filter rewards
   const filteredRewards = rewards.filter((reward) => {
@@ -129,20 +130,20 @@ export default function RewardsDashboard() {
             <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">{_t('APPROVED')}</span>
           </div>
           <h3 className="text-sm font-medium opacity-90 mb-1">{_t('TOTAL_APPROVED')}</h3>
-          <p className="text-3xl font-bold">{totalApproved.toFixed(2)} EGP</p>
+          <p className="text-3xl font-bold">{totalApproved.toFixed(2)} {_t('CURRENCY')}</p>
         </div>
       </div>
 
       {/* Rewards Table */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className={`w-full ${isRtl ? 'direction-rtl' : ''}`}>
             <thead>
               <tr className="bg-green-50 border-b border-green-100">
-                <th className="text-left py-4 px-6 text-sm font-semibold text-green-700">{_t('EMPLOYEE_NAME')}</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-green-700">{_t('REASON_REWARD')}</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-green-700">{_t('AMOUNT')}</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-green-700">{_t('REWARD_DATE')}</th>
+                <th className={`${isRtl ? 'text-right' : 'text-left'} py-4 px-6 text-sm font-semibold text-green-700`}>{_t('EMPLOYEE_NAME')}</th>
+                <th className={`${isRtl ? 'text-right' : 'text-left'} py-4 px-4 text-sm font-semibold text-green-700`}>{_t('REASON_REWARD')}</th>
+                <th className={`${isRtl ? 'text-right' : 'text-left'} py-4 px-4 text-sm font-semibold text-green-700`}>{_t('AMOUNT')}</th>
+                <th className={`${isRtl ? 'text-right' : 'text-left'} py-4 px-4 text-sm font-semibold text-green-700`}>{_t('REWARD_DATE')}</th>
                 <th className="text-center py-4 px-6 text-sm font-semibold text-green-700">{_t('ACTIONS')}</th>
               </tr>
             </thead>
@@ -160,8 +161,10 @@ export default function RewardsDashboard() {
                         <span className="font-medium text-gray-900">{reward.name}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-gray-700">{reward.description}</td>
-                    <td className="py-4 px-4 text-green-600 font-semibold">{reward.amount.toFixed(2)} EGP</td>
+                    <td className="py-4 px-4 text-gray-700">
+                      {_getLang() === 'ar' ? (reward.descriptionAr || reward.description) : reward.description}
+                    </td>
+                    <td className="py-4 px-4 text-green-600 font-semibold">{reward.amount.toFixed(2)} {_t('CURRENCY')}</td>
                     <td className="py-4 px-4 text-gray-600">{new Date(reward.date).toLocaleDateString(_getLang() === 'ar' ? 'ar' : 'en-US')}</td>
                     <td className="py-4 px-6 text-center">
                       <div className="flex justify-center gap-3">
@@ -210,6 +213,7 @@ export default function RewardsDashboard() {
           type="reward"
           onClose={() => setEditingReward(null)}
           onSuccess={handleEditSuccess}
+          nonBlocking={true}
         />
       )}
 
@@ -220,6 +224,7 @@ export default function RewardsDashboard() {
           type="reward"
           onClose={() => setDeletingReward(null)}
           onSuccess={handleDeleteSuccess}
+          nonBlocking={true}
         />
       )}
     </div>

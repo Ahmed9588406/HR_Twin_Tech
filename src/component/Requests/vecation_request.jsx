@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchVacationRequests } from './requests_api';
-import { t as _t } from '../../i18n/i18n';
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 export default function VacationRequestsTable() {
   const navigate = useNavigate();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lang, setLang] = useState(_getLang());
 
   useEffect(() => {
     const loadVacationRequests = async () => {
@@ -24,6 +25,11 @@ export default function VacationRequestsTable() {
     };
 
     loadVacationRequests();
+  }, []);
+
+  useEffect(() => {
+    const unsub = _subscribe(setLang);
+    return () => unsub();
   }, []);
 
   const toProfileEmployee = (request) => ({
@@ -77,12 +83,12 @@ export default function VacationRequestsTable() {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">{_t('EMPLOYEE_COL')}</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('REQUEST_DATE')}</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('START_DATE')}</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('END_DATE')}</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('STATUS')}</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('COMMENT')}</th>
+                <th className="text-center py-4 px-6 text-sm font-semibold text-gray-700">{_t('EMPLOYEE_COL')}</th>
+                <th className="text-center py-4 px-4 text-sm font-semibold text-gray-700">{_t('REQUEST_DATE')}</th>
+                <th className="text-center py-4 px-4 text-sm font-semibold text-gray-700">{_t('START_DATE')}</th>
+                <th className="text-center py-4 px-4 text-sm font-semibold text-gray-700">{_t('END_DATE')}</th>
+                <th className="text-center py-4 px-4 text-sm font-semibold text-gray-700">{_t('STATUS')}</th>
+                <th className="text-center py-4 px-4 text-sm font-semibold text-gray-700">{_t('COMMENT')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -116,10 +122,10 @@ export default function VacationRequestsTable() {
                       <span className="font-medium text-gray-900">{request.empDetails.empName}</span>
                     </div>
                   </td>
-                  <td className="py-4 px-4 text-gray-600">{request.requestDate}</td>
-                  <td className="py-4 px-4 text-gray-600">{request.startDate}</td>
-                  <td className="py-4 px-4 text-gray-600">{request.endDate}</td>
-                  <td className="py-4 px-4">
+                  <td className="py-4 px-4 text-center text-gray-600">{request.requestDate}</td>
+                  <td className="py-4 px-4 text-center text-gray-600">{request.startDate}</td>
+                  <td className="py-4 px-4 text-center text-gray-600">{request.endDate}</td>
+                  <td className="py-4 px-4 text-center">
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-medium ${
                         request.requestStatus === 'APPROVED'
@@ -132,9 +138,19 @@ export default function VacationRequestsTable() {
                       {request.requestStatus === 'APPROVED' ? _t('APPROVED') : request.requestStatus === 'PENDING' ? _t('PENDING') : _t('REJECTED')}
                     </span>
                   </td>
-                  <td className="py-4 px-4 text-gray-600">{request.comment}</td>
+                  <td className="py-4 px-4 text-center text-gray-600">{request.comment}</td>
                 </tr>
               ))}
+
+              {requests.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                    {_t('NO_VACATION_REQUESTS') === 'NO_VACATION_REQUESTS'
+                      ? (lang === 'ar' ? 'لا توجد طلبات إجازة' : 'No vacation requests')
+                      : _t('NO_VACATION_REQUESTS')}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

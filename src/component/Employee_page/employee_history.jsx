@@ -2,9 +2,62 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
+const TEXT = {
+  en: {
+    noHistory: 'No attendance history available.',
+    historyTitle: 'Attendance History',
+    recentRecords: 'Recent attendance records',
+    date: 'Date',
+    checkIn: 'Check In',
+    checkOut: 'Check Out',
+    workingHours: 'Working Hours',
+    status: 'Status',
+    na: 'N/A',
+    showingRecords: 'Showing {n} of {total} records'
+  },
+  ar: {
+    noHistory: 'لا توجد سجلات حضور متاحة.',
+    historyTitle: 'سجل الحضور',
+    recentRecords: 'السجلات الحديثة للحضور',
+    date: 'التاريخ',
+    checkIn: 'وقت الدخول',
+    checkOut: 'وقت الخروج',
+    workingHours: 'ساعات العمل',
+    status: 'الحالة',
+    na: 'غير متوفر',
+    showingRecords: 'عرض {n} من {total} سجل'
+  }
+};
+
+// Add helper function for formatting dates
+const formatDate = (dateStr, lang) => {
+  const d = new Date(dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00`);
+  
+  if (lang === 'ar') {
+    const arabicDays = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const arabicMonths = ['يناير', 'فبراير', 'مارس', 'إبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+    
+    const dayName = arabicDays[d.getDay()];
+    const monthName = arabicMonths[d.getMonth()];
+    const day = d.getDate();
+    const year = d.getFullYear();
+    
+    return `${dayName}، ${day} ${monthName} ${year}`;
+  } else {
+    return d.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  }
+};
+
 export default function EmployeeAttendanceHistory({ historyData }) {
   const [lang, setLang] = useState(_getLang());
   useEffect(() => _subscribe(setLang), []);
+  const copy = TEXT[lang] || TEXT.en;
+  const dir = lang === 'ar' ? 'rtl' : 'ltr';
 
   const normalizeStatus = (raw) => {
     if (!raw) return 'OTHER';
@@ -47,21 +100,21 @@ export default function EmployeeAttendanceHistory({ historyData }) {
 
   if (!historyData || !historyData.content || historyData.content.length === 0) {
     return (
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
-        <div className="text-center text-gray-500">{_t('NO_HISTORY')}</div>
+      <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200" dir={dir} lang={lang}>
+        <div className="text-center text-gray-500">{copy.noHistory}</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
+    <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200" dir={dir} lang={lang}>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-blue-600" />
-            {_t('HISTORY_TITLE')}
+            {copy.historyTitle}
           </h3>
-          <p className="text-sm text-slate-600 mt-1">{_t('RECENT_RECORDS')}</p>
+          <p className="text-sm text-slate-600 mt-1">{copy.recentRecords}</p>
         </div>
       </div>
 
@@ -69,11 +122,11 @@ export default function EmployeeAttendanceHistory({ historyData }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200">
-              <th className="text-left py-3 px-4 font-semibold text-slate-700">{_t('DATE')}</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700">{_t('CHECK_IN')}</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700">{_t('CHECK_OUT')}</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700">{_t('WORKING_HOURS')}</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-700">{_t('STATUS')}</th>
+              <th className="text-left py-3 px-4 font-semibold text-slate-700">{copy.date}</th>
+              <th className="text-left py-3 px-4 font-semibold text-slate-700">{copy.checkIn}</th>
+              <th className="text-left py-3 px-4 font-semibold text-slate-700">{copy.checkOut}</th>
+              <th className="text-left py-3 px-4 font-semibold text-slate-700">{copy.workingHours}</th>
+              <th className="text-left py-3 px-4 font-semibold text-slate-700">{copy.status}</th>
             </tr>
           </thead>
           <tbody>
@@ -86,11 +139,7 @@ export default function EmployeeAttendanceHistory({ historyData }) {
                   isSpecialStatus ? (normStatus === 'ABSENT' ? 'bg-red-50' : 'bg-green-50') : 'hover:bg-slate-50'
                 }`}>
                   <td className="py-4 px-4 text-slate-800 font-medium">
-                    {(() => {
-                      const dayStr = record.day || '';
-                      const d = new Date(dayStr.includes('T') ? dayStr : `${dayStr}T00:00:00`);
-                      return d.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
-                    })()}
+                    {formatDate(record.day || '', lang)}
                   </td>
 
                   {isSpecialStatus ? (
@@ -104,17 +153,17 @@ export default function EmployeeAttendanceHistory({ historyData }) {
                       <td className="py-4 px-4 text-slate-600">
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-blue-500" />
-                          {record.checkIn || _t('NA')}
+                          {record.checkIn || copy.na}
                         </div>
                       </td>
                       <td className="py-4 px-4 text-slate-600">
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-purple-500" />
-                          {record.checkOut || _t('NA')}
+                          {record.checkOut || copy.na}
                         </div>
                       </td>
                       <td className="py-4 px-4 text-slate-600 font-medium">
-                        {record.workingHours || _t('NA')}
+                        {record.workingHours || copy.na}
                       </td>
                       <td className="py-4 px-4">
                         <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(record.status)}`}>
@@ -133,7 +182,7 @@ export default function EmployeeAttendanceHistory({ historyData }) {
 
       {historyData.totalPages > 1 && (
         <div className="mt-4 text-center text-sm text-slate-500">
-          {_t('SHOWING_RECORDS', { n: historyData.numberOfElements, total: historyData.totalElements })}
+          {copy.showingRecords.replace('{n}', historyData.numberOfElements).replace('{total}', historyData.totalElements)}
         </div>
       )}
     </div>
