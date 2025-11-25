@@ -114,10 +114,17 @@ function Dashboard() {
   const getEmpStatusNorm = (emp) => {
     const raw = String(emp.status || emp.empStatus || '').toUpperCase().trim();
     const hasLeave = !!(emp.leaveTime && emp.leaveTime !== 'N/A');
-    if (hasLeave) return 'on-leave';
+    
+    // Check for leave first
+    if (hasLeave || /ON[_ ]?LEAVE|LEFT|LEAVE/.test(raw)) return 'on-leave';
+    
+    // Check for absent (including typos like APSENT)
+    if (/ABSENT|APSENT|APESENT|ABSENTED|MISSING/.test(raw)) return 'absent';
+    
+    // Check for present
     if (/PRESENT|HERE|ON_TIME/.test(raw)) return 'present';
-    if (/ABSENT|MISSING/.test(raw)) return 'absent';
-    if (/ON[_ ]?LEAVE|LEFT|LEAVE/.test(raw)) return 'on-leave';
+    
+    // Default to present if no match (safer assumption)
     return 'present';
   };
 
@@ -126,31 +133,45 @@ function Dashboard() {
     const empDate = empDateRaw ? normalizeDate(String(empDateRaw).split('T')[0]) : null;
     const filterDate = filters.date ? normalizeDate(String(filters.date).split('T')[0]) : null;
 
-    // If a date is selected, require the employee record to match that exact date
-    if (filterDate) {
-      if (!empDate || empDate !== filterDate) return false;
+    // Date filter - must match if a date is selected
+    if (filterDate && empDate !== filterDate) {
+      return false;
     }
 
+    // Department filter
     if (filters.department !== 'all') {
       const empDept = getEmpDepartment(emp).toLowerCase();
       const selDept = String(filters.department).toLowerCase();
-      if (empDept !== selDept) return false;
+      if (empDept !== selDept) {
+        return false;
+      }
     }
 
+    // Status filter
     if (filters.status !== 'all') {
       const empStatus = getEmpStatusNorm(emp);
-      if (empStatus !== filters.status) return false;
+      const filterStatus = String(filters.status).toLowerCase();
+      if (empStatus !== filterStatus) {
+        return false;
+      }
     }
 
+    // Search filter
     if (filters.search) {
       const empName = getEmpName(emp).toLowerCase();
       const empCode = getEmpCode(emp).toLowerCase();
       const term = String(filters.search).toLowerCase();
-      if (!empName.includes(term) && !empCode.includes(term)) return false;
+      if (!empName.includes(term) && !empCode.includes(term)) {
+        return false;
+      }
     }
 
     return true;
   });
+
+  console.log('Filtered employees count:', filteredEmployees.length);
+  console.log('Total attendance data:', attendanceData.length);
+  console.log('Current filters:', filters);
 
   const departments = useMemo(() => {
     const fromDashboard = dashboardData?.deptNumOfEmp?.map(dept => String(dept.name).trim()) || [];

@@ -1,21 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Search, Filter, RefreshCw, X } from 'lucide-react';
-
-// Mock translation functions for demo
-const translations = {
-  FILTERS_TITLE: 'Filters',
-  PRIMARY: 'Primary',
-  ALL_DEPARTMENTS: 'All Departments',
-  ALL_STATUS: 'All Status',
-  STATUS_PRESENT: 'Present',
-  STATUS_ABSENT: 'Absent',
-  STATUS_ON_LEAVE: 'On Leave',
-  RESET: 'Reset',
-  FILTERING_BY: 'Filtering by:',
-  SEARCH_PLACEHOLDER: 'Search by name or ID...'
-};
-
-const _t = (key) => translations[key] || key;
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 /**
  * Attendance History Filter Component - Horizontal Bar
@@ -26,12 +11,30 @@ const _t = (key) => translations[key] || key;
  */
 export default function AttendanceHistoryFilter({ 
   onFilterChange = () => {}, 
-  departments = ['Engineering', 'Sales', 'Marketing', 'HR', 'Finance'] 
+  departments = [] 
 }) {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Language subscription
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => {
+    const unsub = _subscribe((l) => setLang(l));
+    return () => unsub();
+  }, []);
+  const dir = lang === 'ar' ? 'rtl' : 'ltr';
+
+  // Notify parent of initial filters on mount
+  useEffect(() => {
+    onFilterChange({
+      date: selectedDate,
+      department: selectedDepartment,
+      status: selectedStatus,
+      search: searchQuery
+    });
+  }, []);
 
   const statusOptions = [
     { 
@@ -114,8 +117,6 @@ export default function AttendanceHistoryFilter({
     searchQuery !== ''
   ].filter(Boolean).length;
 
-  const currentStatus = statusOptions.find(s => s.value === selectedStatus);
-
   const removeDepartmentFilter = () => {
     setSelectedDepartment('all');
     handleFilterChange({ department: 'all' });
@@ -132,7 +133,7 @@ export default function AttendanceHistoryFilter({
   };
 
   return (
-    <div className="w-full bg-white border border-gray-200 rounded-xl shadow-sm">
+    <div className="w-full bg-white border border-gray-200 rounded-xl shadow-sm" dir={dir} lang={lang}>
       {/* Horizontal Filter Bar */}
       <div className="flex items-center gap-4 p-4 flex-wrap">
         {/* Filter Icon & Title */}
@@ -169,7 +170,7 @@ export default function AttendanceHistoryFilter({
               </option>
             ))}
           </select>
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+          <div className={`absolute ${dir === 'rtl' ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 pointer-events-none`}>
             <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
@@ -195,18 +196,18 @@ export default function AttendanceHistoryFilter({
 
         {/* Search - Inline */}
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className={`absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400`} />
           <input
             type="text"
             value={searchQuery}
-            placeholder={_t('SEARCH_PLACEHOLDER')}
+            placeholder={_t('SEARCH_BY_NAME')}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full pl-9 pr-10 py-2 bg-gray-50 border border-gray-200 hover:border-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg text-sm outline-none transition-all"
+            className={`w-full ${dir === 'rtl' ? 'pr-9 pl-10' : 'pl-9 pr-10'} py-2 bg-gray-50 border border-gray-200 hover:border-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg text-sm outline-none transition-all`}
           />
           {searchQuery && (
             <button
               onClick={removeSearchFilter}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className={`absolute ${dir === 'rtl' ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600`}
             >
               <X className="w-4 h-4" />
             </button>
@@ -234,7 +235,7 @@ export default function AttendanceHistoryFilter({
             {_t('FILTERING_BY')}
           </span>
           <span className="text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded">
-            {new Date(selectedDate).toLocaleDateString('en-US', { 
+            {new Date(selectedDate).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', { 
               month: 'short', 
               day: 'numeric', 
               year: 'numeric' 
