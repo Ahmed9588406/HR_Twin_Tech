@@ -23,7 +23,6 @@ export default function DiscountsDashboard({ selectedMonth }) {
         const data = await getDiscounts(selectedMonth);
         setDiscounts(data);
       } catch (err) {
-        console.error('Error loading discounts:', err);
         setError('Failed to load discounts. Please try again later.');
       } finally {
         setLoading(false);

@@ -35,7 +35,6 @@ export default function TeamDetails({ teamId }) {
         if (!mounted) return;
         setTeam(data);
       } catch (err) {
-        console.error('Failed to load team:', err);
         if (mounted) setError(String(err.message || err));
       } finally {
         if (mounted) setLoading(false);

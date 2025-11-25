@@ -37,7 +37,6 @@ function Dashboard() {
         const dashboard = await fetchDashboardData();
         setDashboardData(dashboard);
       } catch (err) {
-        console.error('Error loading dashboard data:', err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -64,7 +63,6 @@ function Dashboard() {
         const attendance = await fetchAttendanceStatistics(params);
         setAttendanceData(Array.isArray(attendance) ? attendance : []);
       } catch (err) {
-        console.error('Error loading attendance data:', err);
         setError(err.message);
         setAttendanceData([]);
       } finally {

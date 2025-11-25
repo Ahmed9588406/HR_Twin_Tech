@@ -51,7 +51,6 @@ export default function EmployeeDiscounts({ empCode }) {
         if (!mounted) return;
         setDiscountsData(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error('Failed to fetch discounts data:', err);
         if (!mounted) return;
         setError(_t('UNABLE_LOAD_DISCOUNTS'));
       } finally {

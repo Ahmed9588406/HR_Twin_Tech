@@ -82,7 +82,6 @@ export default function ChangeDepartmentForm({ selectedActions = [], onClose = (
         const data = await fetchDepartmentsSimple();
         setDepartments(data || []);
       } catch (err) {
-        console.error('Failed to load departments:', err);
         setError('Failed to load departments.');
       } finally {
         setLoadingDepartments(false);
@@ -107,12 +106,9 @@ export default function ChangeDepartmentForm({ selectedActions = [], onClose = (
     setSubmitting(true);
     try {
       const result = await changeEmployeeDepartments(selectedActions, parseInt(newDepartmentId));
-      console.log('Department change result:', result);
-
       alert(_t('AFFECTED_EMPLOYEES_POSITION', { count: selectedActions.length }));
       onSuccess();
     } catch (err) {
-      console.error('Department change failed:', err);
       setError(_t('FAILED_CHANGE_POSITION'));
     } finally {
       setSubmitting(false);

@@ -103,7 +103,6 @@ export default function RequestsLogs() {
       try {
         setVacLoading(true);
         const res = await fetchVacationLogs(vacPage, PAGE_SIZE);
-        console.log('Vacation logs response:', res);
         if (!mounted) return;
         setVacItems(Array.isArray(res.items) ? res.items : []);
         setVacTotalPages(res.totalPages || 1);
@@ -132,7 +131,6 @@ export default function RequestsLogs() {
       try {
         setAdvLoading(true);
         const res = await fetchAdvanceLogs(advPage, PAGE_SIZE);
-        console.log('Advance logs response:', res);
         if (!mounted) return;
         setAdvItems(Array.isArray(res.items) ? res.items : []);
         setAdvTotalPages(res.totalPages || 1);
@@ -161,7 +159,6 @@ export default function RequestsLogs() {
       try {
         setOvtLoading(true);
         const res = await fetchOvertimeLogs(ovtPage, PAGE_SIZE);
-        console.log('Overtime logs response:', res);
         if (!mounted) return;
         setOvtItems(Array.isArray(res.items) ? res.items : []);
         setOvtTotalPages(res.totalPages || 1);

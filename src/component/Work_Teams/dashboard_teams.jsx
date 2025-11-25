@@ -66,14 +66,13 @@ export default function EmployeeManager() {
             }));
             setDepartments(mappedTeams);
           } catch (error) {
-            console.error('Error reloading teams:', error);
+            console.error('Error loading teams:', error);
           } finally {
             setIsLoading(false);
           }
         };
         await loadTeams();
       } catch (error) {
-        console.error('Error deleting team:', error);
         alert(`${_t('FAILED_TO_DELETE_TEAM')}: ${error.message}`);
         setIsLoading(false);
       }
@@ -105,7 +104,7 @@ export default function EmployeeManager() {
         }));
         setDepartments(mappedTeams);
       } catch (error) {
-        console.error('Error reloading teams:', error);
+        console.error('Error loading teams:', error);
       } finally {
         setIsLoading(false);
       }
@@ -133,7 +132,7 @@ export default function EmployeeManager() {
         }));
         setDepartments(mappedTeams);
       } catch (error) {
-        console.error('Error reloading teams:', error);
+        console.error('Error loading teams:', error);
       } finally {
         setIsLoading(false);
       }
@@ -184,7 +183,6 @@ export default function EmployeeManager() {
         }));
         setDepartments(mappedTeams);
       } catch (error) {
-        console.error('Error loading teams:', error);
         // alert('Failed to load teams');
       } finally {
         setIsLoading(false);
@@ -204,12 +202,10 @@ export default function EmployeeManager() {
           const data = JSON.parse(text);
           setAttendanceStats(data);
         } catch (parseError) {
-          console.error('Error parsing JSON for attendance statistics:', parseError);
-          console.error('Response text (first 500 chars):', text.substring(0, 500));
-          console.error('Response text (around error position):', text.substring(105900, 105950));
+          console.error('Parse error:', text.substring(0, 500));
         }
       } catch (error) {
-        console.error('Error fetching attendance statistics:', error);
+        console.error('Error fetching attendance stats:', error);
       }
     };
     fetchAttendanceStats();

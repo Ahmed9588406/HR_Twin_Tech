@@ -109,8 +109,6 @@ export default function EmployeeListView() {
         setLoading(true);
         // Fetch without page/size to get all employees (or fetch multiple pages until all are loaded)
         const result = await fetchEmployees(0, 9999); // large size to get all
-        console.log('Fetched all employees:', result);
-        console.log('First employee sample:', result.items?.[0]);
         setAllEmployees(result.items || []);
       } catch (err) {
         setError(err.message);
@@ -128,16 +126,13 @@ export default function EmployeeListView() {
     ;(async () => {
       try {
         const d = await fetchDepartments().catch(err => { 
-          console.error('fetchDepartments error:', err); 
           return [] 
         })
         if (!mounted) return
         
         const deptList = Array.isArray(d) ? d.map(x => ({ id: x.id, name: x.name })) : [];
-        console.log('Loaded departments for filter:', deptList);
         setDepartments(deptList);
       } catch (err) {
-        console.error('Error loading filter lists:', err)
         if (!mounted) return
         setDepartments([])
       }
@@ -249,8 +244,7 @@ export default function EmployeeListView() {
       setEditEmployeeData(data); // Set the fetched data
       setIsEditModalOpen(true); // Open the modal
     } catch (error) {
-      console.error("Error fetching employee data:", error);
-    }
+      }
   };
 
   const handleNotify = (employee) => {
@@ -271,7 +265,6 @@ export default function EmployeeListView() {
       setAllEmployees(prev => prev.filter(emp => emp.code !== employee.code));
       alert(copy.deleteSuccess);
     } catch (error) {
-      console.error('Error deleting employee:', error);
       alert(`${TEXT.en.deleteError} ${error.message}`);
     }
   };
@@ -340,7 +333,6 @@ export default function EmployeeListView() {
       );
       alert(`${employee.name} ${TEXT.en.lockSuccess} ${nextLocked ? TEXT.en.lock : TEXT.en.unlock}ed successfully!`);
     } catch (error) {
-      console.error('Error locking/unlocking employee:', error);
       alert(`${TEXT.en.lockError} ${error.message}`);
     }
   };

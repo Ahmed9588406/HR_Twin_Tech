@@ -28,7 +28,6 @@ export const fetchFinancialData = async (month = null) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching financial data:', error);
     throw error;
   }
 };
@@ -63,7 +62,6 @@ export const getCount = async (month = null) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching financial count:', error);
     throw error;
   }
 };
@@ -98,7 +96,6 @@ export const getReward = async (month = null) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching rewards:', error);
     throw error;
   }
 };
@@ -133,7 +130,6 @@ export const getDiscounts = async (month = null) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching discounts:', error);
     throw error;
   }
 };

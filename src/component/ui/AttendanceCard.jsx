@@ -35,8 +35,7 @@ export default function AttendanceCards({ data }) {
       setError(null);
     } catch (err) {
       setError(err.message);
-      console.error('Error fetching dashboard data:', err);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

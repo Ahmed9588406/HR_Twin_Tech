@@ -20,8 +20,6 @@ export const fetchBranches = async () => {
         'ngrok-skip-browser-warning': 'true'
       }
     });
-    console.log('Fetch response status:', response.status);
-
     if (!response.ok) {
       throw new Error('Failed to fetch branches');
     }
@@ -29,13 +27,10 @@ export const fetchBranches = async () => {
     const contentType = response.headers.get('content-type') || '';
     if (!contentType.includes('application/json')) {
       const text = await response.text();
-      console.error('Unexpected non-JSON response:', text);
       throw new Error('Invalid JSON response');
     }
 
     const data = await response.json();
-    console.log('Fetched data:', data);
-
     return data.map(branch => ({
       id: branch.id,
       name: branch.name,
@@ -45,7 +40,6 @@ export const fetchBranches = async () => {
       company: branch.companyName
     }));
   } catch (error) {
-    console.error('Error fetching branches:', error);
     return [];
   }
 };
@@ -66,8 +60,6 @@ export const fetchBranchById = async (id) => {
         'ngrok-skip-browser-warning': 'true'
       }
     });
-    console.log('Fetch response status for branch ID:', id, response.status);
-
     if (!response.ok) {
       throw new Error(`Failed to fetch branch with ID ${id}`);
     }
@@ -75,13 +67,10 @@ export const fetchBranchById = async (id) => {
     const contentType = response.headers.get('content-type') || '';
     if (!contentType.includes('application/json')) {
       const text = await response.text();
-      console.error('Unexpected non-JSON response:', text);
       throw new Error('Invalid JSON response');
     }
 
     const data = await response.json();
-    console.log('Fetched branch data:', data);
-
     return {
       id: data.id,
       name: data.name,
@@ -91,13 +80,11 @@ export const fetchBranchById = async (id) => {
       company: data.companyName
     };
   } catch (error) {
-    console.error('Error fetching branch by ID:', error);
     return null;
   }
 };
 
 export const createBranch = async (branchData) => {
-  console.log('Sending branch data:', branchData);
   const token = localStorage.getItem('token');
   if (!token) {
     throw new Error('Auth token not found; please log in again.');
@@ -123,11 +110,8 @@ export const createBranch = async (branchData) => {
 
   for (const url of candidateUrls) {
     try {
-      console.log('Attempting POST to:', url);
       const res = await fetch(url, { ...opts, body: JSON.stringify(branchData) });
       const text = await res.text();
-      console.log(`Response from ${url}:`, res.status, text);
-
       if (res.ok) {
         try { return JSON.parse(text); } catch { return text; }
       }
@@ -136,13 +120,11 @@ export const createBranch = async (branchData) => {
       lastErrMsg = `Status ${res.status} from ${url}: ${text}`;
       // if 404 try next candidate, otherwise break and surface error
       if (res.status === 404) {
-        console.warn('Received 404, trying next URL if any');
         continue;
       } else {
         throw new Error(lastErrMsg);
       }
     } catch (err) {
-      console.error('Error while POSTing to', url, err);
       lastErrMsg = err.message || String(err);
       // if this attempt failed with something other than 404, stop trying
       if (!lastErrMsg.includes('404')) break;
@@ -154,7 +136,6 @@ export const createBranch = async (branchData) => {
 
 // update branch by id: send {id, name, latitude, longitude} as JSON via PUT (only update, never create)
 export const updateBranch = async (id, branchData) => {
-  console.log('Updating branch id:', id, 'data:', branchData);
   const token = localStorage.getItem('token');
   if (!token) {
     throw new Error('Auth token not found; please log in again.');
@@ -178,8 +159,6 @@ export const updateBranch = async (id, branchData) => {
     'ngrok-skip-browser-warning': 'true'
   };
 
-  console.log('Attempting PUT to', urlBase, 'with payload:', minimalPayload);
-  
   try {
     const res = await fetch(urlBase, {
       method: 'PUT',
@@ -188,8 +167,6 @@ export const updateBranch = async (id, branchData) => {
     });
 
     const text = await res.text();
-    console.log('PUT response:', res.status, text);
-
     if (!res.ok) {
       throw new Error(`Update failed: ${res.status} - ${text}`);
     }
@@ -211,13 +188,11 @@ export const updateBranch = async (id, branchData) => {
       companyName: data.companyName
     };
   } catch (err) {
-    console.error('Error updating branch:', err);
     throw err;
   }
 };
 
 export const deleteBranch = async (id) => {
-  console.log('Deleting branch id:', id);
   const token = localStorage.getItem('token');
   if (!token) {
     throw new Error('Auth token not found; please log in again.');
@@ -238,8 +213,6 @@ export const deleteBranch = async (id) => {
     });
 
     const text = await res.text();
-    console.log('DELETE response:', res.status, text);
-
     if (!res.ok) {
       throw new Error(`Delete failed: ${res.status} - ${text}`);
     }
@@ -247,7 +220,6 @@ export const deleteBranch = async (id) => {
     // Assuming successful delete returns no content or a success message
     return true;
   } catch (err) {
-    console.error('Error deleting branch:', err);
     throw err;
   }
 };
@@ -269,7 +241,6 @@ export const fetchCompanySettings = async () => {
       }
     });
 
-    console.log('Fetch company settings status:', res.status);
     if (!res.ok) {
       const txt = await res.text();
       throw new Error(`Failed to fetch company settings: ${res.status} - ${txt}`);
@@ -282,14 +253,12 @@ export const fetchCompanySettings = async () => {
         // attempt to parse even if header is missing
         return JSON.parse(text);
       } catch {
-        console.error('Unexpected non-JSON response for company settings:', text);
         throw new Error('Invalid JSON response for company settings');
       }
     }
 
     return JSON.parse(text);
   } catch (error) {
-    console.error('Error fetching company settings:', error);
     return null;
   }
 };
@@ -310,8 +279,6 @@ export const updateCompanySettings = async (settings) => {
       terminationNoticeLimit: Number(settings.terminationNoticeLimit) || 0 // <-- added
     };
 
-    console.log('Updating company settings with payload:', payload);
-
     const res = await fetch(COMPANY_API_URL, {
       method: 'PUT',
       headers: {
@@ -324,8 +291,6 @@ export const updateCompanySettings = async (settings) => {
     });
 
     const text = await res.text();
-    console.log('Update company response:', res.status, text);
-
     if (!res.ok) {
       throw new Error(`Failed to update company settings: ${res.status} - ${text}`);
     }
@@ -333,11 +298,9 @@ export const updateCompanySettings = async (settings) => {
     try {
       return JSON.parse(text);
     } catch (err) {
-      console.error('Failed to parse JSON response for company update:', err);
       throw new Error('Invalid JSON response from server');
     }
   } catch (error) {
-    console.error('Error in updateCompanySettings:', error);
     throw error;
   }
 };
@@ -358,11 +321,8 @@ export const fetchShifts = async () => {
         'ngrok-skip-browser-warning': 'true'
       }
     });
-    console.log('Fetch shifts response status:', response.status);
-
     if (!response.ok) {
       const txt = await response.text().catch(() => '');
-      console.error('Failed to fetch shifts:', response.status, txt);
       throw new Error(`Failed to fetch shifts: ${response.status}`);
     }
 
@@ -372,12 +332,10 @@ export const fetchShifts = async () => {
     try {
       data = contentType.includes('application/json') ? JSON.parse(text) : JSON.parse(text);
     } catch (err) {
-      console.error('Invalid JSON response for shifts:', text);
       throw new Error('Invalid JSON response for shifts');
     }
 
     if (!Array.isArray(data)) {
-      console.warn('Shifts endpoint returned non-array, converting to array if possible', data);
       data = Array.isArray(data.items) ? data.items : [];
     }
 
@@ -409,10 +367,8 @@ export const fetchShifts = async () => {
       };
     });
 
-    console.log('Mapped shifts data:', mapped);
     return mapped;
   } catch (error) {
-    console.error('Error fetching shifts:', error);
     return [];
   }
 };
@@ -436,8 +392,6 @@ export const updateShift = async (shiftData) => {
     });
 
     const text = await res.text();
-    console.log('Update shift response:', res.status, text);
-
     if (!res.ok) {
       throw new Error(`Failed to update shift: ${res.status} - ${text}`);
     }
@@ -448,7 +402,6 @@ export const updateShift = async (shiftData) => {
       return text;
     }
   } catch (err) {
-    console.error('Error in updateShift:', err);
     throw err;
   }
 };
@@ -468,8 +421,6 @@ export const createShift = async (shiftData) => {
       timeZone: shiftData.timeZone || 'Africa/Cairo'
     };
 
-    console.log('Creating shift with payload:', payload);
-
     const res = await fetch(SHIFTS_API_URL, {
       method: 'POST',
       headers: {
@@ -486,8 +437,6 @@ export const createShift = async (shiftData) => {
     let json;
     try { json = text ? JSON.parse(text) : null; } catch (err) { json = null; }
 
-    console.log('Create shift response status:', res.status, 'body:', json ?? text);
-
     if (!res.ok) {
       // Prefer structured server error message when available
       const serverMsg = json && (json.message || json.error || (json.data && json.data.message)) ? (json.message || json.error || json.data.message) : text;
@@ -501,7 +450,6 @@ export const createShift = async (shiftData) => {
     // Return parsed JSON (created shift)
     return json;
   } catch (err) {
-    console.error('Error in createShift:', err);
     throw err;
   }
 };
@@ -524,8 +472,6 @@ export const fetchShiftById = async (id) => {
       }
     });
 
-    console.log('Fetch shift by ID response status:', response.status);
-
     if (!response.ok) {
       const text = await response.text();
       throw new Error(`Failed to fetch shift with ID ${id}: ${response.status} - ${text}`);
@@ -537,7 +483,6 @@ export const fetchShiftById = async (id) => {
     try {
       data = contentType.includes('application/json') ? JSON.parse(text) : JSON.parse(text);
     } catch (err) {
-      console.error('Invalid JSON response for shift by ID:', text);
       throw new Error('Invalid JSON response for shift by ID');
     }
 
@@ -553,7 +498,6 @@ export const fetchShiftById = async (id) => {
       companyId: data.companyId
     };
   } catch (error) {
-    console.error('Error fetching shift by ID:', error);
     return null;
   }
 };
@@ -576,8 +520,6 @@ export const deleteShift = async (id) => {
       }
     });
 
-    console.log('Delete shift response status:', response.status);
-
     if (!response.ok) {
       const text = await response.text();
       throw new Error(`Failed to delete shift with ID ${id}: ${response.status} - ${text}`);
@@ -586,7 +528,6 @@ export const deleteShift = async (id) => {
     // Assuming successful delete returns no content or a success message
     return true;
   } catch (error) {
-    console.error('Error deleting shift by ID:', error);
     throw error;
   }
 };
@@ -609,8 +550,6 @@ export const fetchDepartments = async () => {
       }
     });
 
-    console.log('Fetch departments status:', res.status);
-
     if (!res.ok) {
       const txt = await res.text().catch(() => '');
       throw new Error(`Failed to fetch departments: ${res.status} - ${txt}`);
@@ -622,7 +561,6 @@ export const fetchDepartments = async () => {
     try {
       data = contentType.includes('application/json') ? JSON.parse(text) : JSON.parse(text);
     } catch (err) {
-      console.error('Invalid JSON response for departments:', text);
       return [];
     }
 
@@ -633,7 +571,6 @@ export const fetchDepartments = async () => {
       name: d.name ?? d.department_name ?? d.title ?? 'Unknown'
     }));
   } catch (error) {
-    console.error('Error fetching departments:', error);
     return [];
   }
 };

@@ -15,8 +15,6 @@ export const fetchEmpAttendanceHistory = async (empCode, options = {}) => {
 
     const url = `https://api.shl-hr.com/api/v1/emp-dashboard/attendance-history?month=${month}&year=${year}`;
 
-    console.log(`Fetching attendance history for month: ${month}, year: ${year}`);
-
     const res = await fetch(url, {
       method: 'GET',
       headers: {
@@ -30,28 +28,18 @@ export const fetchEmpAttendanceHistory = async (empCode, options = {}) => {
     const text = await res.text().catch(() => '');
     if (!res.ok) {
       const body = text || res.statusText;
-      console.error(`Failed to fetch attendance history: ${res.status} - ${body}`);
-      console.error('Response headers:', Object.fromEntries(res.headers.entries()));
-      console.error('Request URL:', url);
-      console.error('Token present:', !!token);
+      console.error(`Attendance history error: ${res.status} - ${body}`);
       throw new Error(`Failed to fetch attendance history: ${res.status} - ${body}`);
     }
 
-    console.log('Endpoint return:', text);
     const data = text ? JSON.parse(text) : [];
-    console.debug('fetchEmpAttendanceHistory - raw response:', data);
-    
     const records = Array.isArray(data) ? data : (Array.isArray(data?.content) ? data.content : []);
-    console.debug('fetchEmpAttendanceHistory - normalized records:', records);
-    
     if (!Array.isArray(records)) {
       throw new Error('Unexpected response format for attendance history');
     }
 
-    console.log('Attendance history fetched successfully:', records);
     return records;
   } catch (err) {
-    console.error('Error in fetchEmpAttendanceHistory:', err);
     throw err;
   }
 };
@@ -93,7 +81,6 @@ export const fetchEmployeeProfile = async (empCode) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching employee profile:', error);
     throw error;
   }
 };
@@ -136,10 +123,8 @@ export const fetchEmployeeSalary = async (empCode) => {
     }
 
     const data = await response.json();
-    console.log('Employee salary fetched successfully:', data);
     return data;
   } catch (error) {
-    console.error('Error fetching employee salary:', error);
     throw error;
   }
 };
@@ -177,10 +162,8 @@ export const fetchEmployeeRewards = async (empCode) => {
     }
 
     const data = await response.json();
-    console.log('Employee rewards fetched successfully:', data);
     return data;
   } catch (error) {
-    console.error('Error fetching employee rewards:', error);
     throw error;
   }
 };
@@ -218,10 +201,8 @@ export const fetchEmployeeDiscounts = async (empCode) => {
     }
 
     const data = await response.json();
-    console.log('Employee discounts fetched successfully:', data);
     return data;
   } catch (error) {
-    console.error('Error fetching employee discounts:', error);
     throw error;
   }
 };
@@ -266,9 +247,8 @@ export const postVacationRequest = async (empCode, payload = {}, file = null) =>
       form.append('attachments', file);
     }
 
-    console.log('Submitting vacation request with FormData:');
     for (let pair of form.entries()) {
-      console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name : pair[1]));
+      console.log('FormData entry:', pair[0], pair[1]);
     }
 
     const res = await fetch(url, {
@@ -283,13 +263,10 @@ export const postVacationRequest = async (empCode, payload = {}, file = null) =>
       body: form,
     });
 
-    console.log('Response status:', res.status);
-    console.log('Response headers:', Object.fromEntries(res.headers.entries()));
+    console.log('Vacation request response:', res.status);
 
     if (!res.ok) {
       const text = await res.text().catch(() => '');
-      console.error('Error response body:', text);
-      
       let serverMsg = text || `${res.status} ${res.statusText}`;
       try {
         const json = text ? JSON.parse(text) : null;
@@ -297,16 +274,13 @@ export const postVacationRequest = async (empCode, payload = {}, file = null) =>
       } catch {
         /* keep raw text */
       }
-      console.error('postVacationRequest failed:', { status: res.status, body: serverMsg });
       throw new Error(serverMsg);
     }
 
     // Try parse json response, otherwise return null
     const data = await res.json().catch(() => null);
-    console.log('Success response:', data);
     return data;
   } catch (err) {
-    console.error('Error in postVacationRequest:', err);
     throw err;
   }
 };
@@ -337,14 +311,12 @@ export const postAdvanceRequest = async (payload = {}) => {
       } catch {
         /* keep raw text */
       }
-      console.error('postAdvanceRequest failed:', { status: res.status, body: serverMsg });
       throw new Error(serverMsg);
     }
 
     const data = await res.json().catch(() => null);
     return data;
   } catch (err) {
-    console.error('Error in postAdvanceRequest:', err);
     throw err;
   }
 };
@@ -363,8 +335,6 @@ export const uploadEmployeePhoto = async (empCode, file) => {
 
     const lang = (typeof getLang === 'function' ? getLang() : (localStorage.getItem('i18nLang') || 'en')) || 'en';
 
-    console.log('Uploading photo with PUT method:', { url, fileName: file.name, fileSize: file.size, fileType: file.type });
-
     const response = await fetch(url, {
       method: 'PUT', // Changed from POST to PUT to match Postman screenshot
       headers: {
@@ -377,15 +347,13 @@ export const uploadEmployeePhoto = async (empCode, file) => {
       body: formData,
     });
 
-    console.log('Upload response status:', response.status);
-    console.log('Upload response headers:', Object.fromEntries(response.headers.entries()));
+    console.log('Upload photo response:', response.status);
 
     if (!response.ok) {
       // try to read body as JSON or text
       let serverMsg = '';
       try {
         const text = await response.text();
-        console.error('Server error response body:', text);
         try {
           const json = text ? JSON.parse(text) : null;
           serverMsg = json?.message || json?.error || text || `${response.status} ${response.statusText}`;
@@ -396,15 +364,12 @@ export const uploadEmployeePhoto = async (empCode, file) => {
         serverMsg = `${response.status}: ${response.statusText}`;
       }
 
-      console.error('uploadEmployeePhoto failed', { url, status: response.status, serverMsg });
       throw new Error(`${serverMsg} (status ${response.status})`);
     }
 
     const data = await response.json().catch(() => null);
-    console.log('Photo uploaded successfully:', data);
     return data;
   } catch (error) {
-    console.error('Error uploading photo:', error);
     throw error;
   }
 };
@@ -423,10 +388,7 @@ export const markAttendance = async (latitude, longitude) => {
       longitude: longitude.toString(),
     };
 
-    console.log('Marking attendance with URL:', url);
-    console.log('Request body:', JSON.stringify(requestBody));
-    console.log('Token present:', !!token);
-
+    console.log('Marking attendance with:', requestBody);
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -439,29 +401,23 @@ export const markAttendance = async (latitude, longitude) => {
       body: JSON.stringify(requestBody),
     });
 
-    console.log('Response status:', response.status);
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+    console.log('Mark attendance response:', response.status);
 
     if (!response.ok) {
       let errorMessage = 'Failed to mark attendance';
       const responseText = await response.text();
-      console.log('Error response text:', responseText);
-      
       try {
         const errorData = JSON.parse(responseText);
         errorMessage = errorData.message || errorMessage;
-        console.log('Error data:', errorData);
-      } catch (e) {
+        } catch (e) {
         errorMessage = responseText || `${response.status}: ${response.statusText}`;
       }
       throw new Error(errorMessage);
     }
 
     const data = await response.json();
-    console.log('Attendance marked successfully:', data);
     return data;
   } catch (error) {
-    console.error('Error marking attendance:', error);
     throw error;
   }
 };
@@ -480,10 +436,7 @@ export const markLeave = async (latitude, longitude) => {
       longitude: longitude.toString(),
     };
 
-    console.log('Marking leave with URL:', url);
-    console.log('Request body:', JSON.stringify(requestBody));
-    console.log('Token present:', !!token);
-
+    console.log('Marking leave with:', requestBody);
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -496,29 +449,23 @@ export const markLeave = async (latitude, longitude) => {
       body: JSON.stringify(requestBody),
     });
 
-    console.log('Response status:', response.status);
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+    console.log('Mark leave response:', response.status);
 
     if (!response.ok) {
       let errorMessage = 'Failed to mark leave';
       const responseText = await response.text();
-      console.log('Error response text:', responseText);
-      
       try {
         const errorData = JSON.parse(responseText);
         errorMessage = errorData.message || errorMessage;
-        console.log('Error data:', errorData);
-      } catch (e) {
+        } catch (e) {
         errorMessage = responseText || `${response.status}: ${response.statusText}`;
       }
       throw new Error(errorMessage);
     }
 
     const data = await response.json();
-    console.log('Leave marked successfully:', data);
     return data;
   } catch (error) {
-    console.error('Error marking leave:', error);
     throw error;
   }
 };

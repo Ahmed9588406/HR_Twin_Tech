@@ -18,7 +18,7 @@ export const fetchEmployees = async (page = 0, size = 10) => {
       }
     });
 
-    console.log(`Fetch employees (page: ${page}, size: ${size}) response status:`, response.status);
+    console.log(`response status:`, response.status);
 
     if (!response.ok) {
       const text = await response.text();
@@ -26,8 +26,6 @@ export const fetchEmployees = async (page = 0, size = 10) => {
     }
 
     const data = await response.json();
-    console.log('Fetched employees data:', data);
-
     // Normalize the response data to match expected structure
     return data.map((employee) => ({
       id: employee.code, // Use code as the unique identifier
@@ -44,7 +42,6 @@ export const fetchEmployees = async (page = 0, size = 10) => {
       locked: employee.locked
     }));
   } catch (error) {
-    console.error('Error fetching employees:', error);
     return [];
   }
 };
@@ -73,8 +70,6 @@ export const fetchEmployeeById = async (id) => {
     }
 
     const data = await response.json();
-    console.log('Fetched employee data:', data);
-
     return {
       id: data.code,
       name: data.name,
@@ -102,7 +97,6 @@ export const fetchEmployeeById = async (id) => {
       account_non_locked: data.account_non_locked
     };
   } catch (error) {
-    console.error('Error fetching employee by ID:', error);
     throw error;
   }
 };

@@ -24,7 +24,6 @@ export default function RewardsDashboard({ selectedMonth }) {
         const data = await getReward(selectedMonth);
         setRewards(data);
       } catch (err) {
-        console.error('Error loading rewards:', err);
         setError(_t('FAILED_LOAD_REWARDS'));
       } finally {
         setLoading(false);

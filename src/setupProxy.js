@@ -14,7 +14,6 @@ module.exports = function(app) {
 				const token = parsedUrl.query.token;
 				if (token) {
 					proxyReq.setHeader('Authorization', `Bearer ${token}`);
-					console.log('Added Authorization header with token from query param');
 				}
 				// Add ngrok bypass header
 				proxyReq.setHeader('ngrok-skip-browser-warning', 'true');

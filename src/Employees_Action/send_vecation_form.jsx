@@ -106,12 +106,9 @@ export default function SendVacationForm({ selectedActions = [], onClose = () =>
       };
 
       const result = await postVacations(payload);
-      console.log('Vacation post result:', result);
-
       alert(_t('AFFECTED_EMPLOYEES_VACATION', { count: selectedActions.length }));
       onSuccess();
     } catch (err) {
-      console.error('Vacation send failed:', err);
       setError(_t('FAILED_SEND_VACATION'));
     } finally {
       setSubmitting(false);

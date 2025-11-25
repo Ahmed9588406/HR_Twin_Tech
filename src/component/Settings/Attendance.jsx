@@ -47,7 +47,6 @@ export default function Attendance() {
         }
       })
       .catch((err) => {
-        console.error('Failed to load company settings', err);
         if (mounted) setCompanyError(String(err));
       })
       .finally(() => {
@@ -87,7 +86,6 @@ export default function Attendance() {
       }
       setIsEditingCompany(false);
     } catch (err) {
-      console.error('Failed to update company settings:', err);
       setCompanyError(String(err));
     } finally {
       setSavingCompany(false);

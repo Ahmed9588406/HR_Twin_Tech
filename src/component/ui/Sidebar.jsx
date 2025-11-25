@@ -104,13 +104,12 @@ export default function Sidebar() {
         });
         
         if (!response.ok) {
-          console.warn('Failed to fetch admin data, using defaults');
           setAdminData({ name: 'Admin', email: '', image: adminLogo });
           return;
         }
         
         const data = await response.json();
-        console.log('Admin API response:', data); // Debug log
+        // Debug log
         
         // Handle image data - check if it's base64 or URL
         let imageUrl = adminLogo;
@@ -137,7 +136,6 @@ export default function Sidebar() {
           image: imageUrl
         });
       } catch (error) {
-        console.error('Error fetching admin data:', error);
         // Fallback to defaults
         setAdminData({ name: 'Admin', email: '', image: adminLogo });
       }
@@ -340,7 +338,6 @@ export default function Sidebar() {
               alt="Admin"
               className="relative w-11 h-11 rounded-full ring-2 ring-white/50 shadow-lg object-cover"
               onError={(e) => {
-                console.error('Failed to load admin image, using fallback');
                 e.target.src = adminLogo;
               }}
             />

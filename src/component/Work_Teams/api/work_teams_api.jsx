@@ -40,7 +40,6 @@ export const createTeam = async (teamData) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error creating team:', error);
     throw error;
   }
 };
@@ -76,7 +75,6 @@ export const fetchTeams = async () => {
     // Assuming data is array of teams with employeeCount updated
     return data;
   } catch (error) {
-    console.error('Error fetching teams:', error);
     throw error;
   }
 };
@@ -108,7 +106,6 @@ export const fetchAllTeams = async () => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching teams:', error);
     throw error;
   }
 };
@@ -147,7 +144,6 @@ export const updateTeam = async (id, teamData) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error updating team:', error);
     throw error;
   }
 };
@@ -182,7 +178,6 @@ export const deleteTeam = async (id) => {
     // Assuming successful deletion returns no content or a success message
     return true;
   } catch (error) {
-    console.error('Error deleting team:', error);
     throw error;
   }
 };
@@ -217,7 +212,6 @@ export const fetchEmployees = async () => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching employees:', error);
     throw error;
   }
 };
@@ -256,7 +250,6 @@ export const addEmployeeToTeam = async (teamId, employeeId) => {
     const data = await response.json();
     return { success: true, data };
   } catch (error) {
-    console.error('Error adding employee to team:', error);
     throw error;
   }
 };
@@ -290,7 +283,6 @@ export const removeEmployeeFromTeam = async (teamId, employeeId) => {
 
     return true;
   } catch (error) {
-    console.error('Error removing employee from team:', error);
     throw error;
   }
 };
@@ -325,7 +317,6 @@ export const fetchTeamMembers = async (teamId) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching team members:', error);
     throw error;
   }
 };
@@ -367,7 +358,6 @@ export const fetchTeamById = async (teamId) => {
       teamMembers: Array.isArray(data.teamMembers) ? data.teamMembers : []
     };
   } catch (error) {
-    console.error('Error fetching team by id:', error);
     throw error;
   }
 };

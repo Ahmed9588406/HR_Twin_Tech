@@ -36,19 +36,6 @@ export default function RequestDetailsSection({ requestData, downloadFile }) {
     const isAdvance = requestType.includes('advance') || requestType.includes('سلفة');
     const isOvertime = requestType.includes('overtime') || requestType.includes('over_time') || requestType.includes('over time') || requestType.includes('إضافي');
 
-    console.log('RequestDetailsSection Debug:', {
-        fullRequestData: requestData,
-        requestTypeRaw: requestData.requestType,
-        requestTypeNormalized: requestType,
-        advanceAmount: requestData.advanceAmount,
-        amount: requestData.amount,
-        overTimeAmount: requestData.overTimeAmount,
-        overTimeDuration: requestData.overTimeDuration,
-        isVacation: isVacation,
-        isAdvance: isAdvance,
-        isOvertime: isOvertime
-    });
-
     // Get translated request type label
     const getRequestTypeLabel = () => {
         if (isVacation) return _t('VACATION');
@@ -153,15 +140,6 @@ export default function RequestDetailsSection({ requestData, downloadFile }) {
                             const minutes = durationData.minutes || requestData.overtimeMins || 0;
                             const totalHours = hours + (minutes / 60);
                             
-                            console.log('Overtime Duration Debug:', {
-                                overTimeDuration: requestData.overTimeDuration,
-                                parsedHours: durationData.hours,
-                                parsedMinutes: durationData.minutes,
-                                finalHours: hours,
-                                finalMinutes: minutes,
-                                totalHours: totalHours
-                            });
-                            
                             return (
                                 <>
                                     <div className="space-y-2">
@@ -190,12 +168,6 @@ export default function RequestDetailsSection({ requestData, downloadFile }) {
                         {/* Display overtime amount - check both overTimeAmount and overtimeAmount */}
                         {(() => {
                             const amount = requestData.overTimeAmount || requestData.overtimeAmount || 0;
-                            console.log('Overtime Amount Debug:', {
-                                overTimeAmount: requestData.overTimeAmount,
-                                overtimeAmount: requestData.overtimeAmount,
-                                finalAmount: amount
-                            });
-                            
                             return amount > 0 ? (
                                 <div className="space-y-2">
                                     <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{_t('OVERTIME_AMOUNT')}</label>

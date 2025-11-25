@@ -24,10 +24,8 @@ export default function OvertimeRequestsTable() {
       try {
         setLoading(true);
         const data = await fetchOvertimeRequests();
-        console.log('Overtime requests data:', data);
         setRequests(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error('Failed to load overtime requests:', err);
         setError(_t('FAILED_LOAD_OVERTIME_REQUESTS'));
       } finally {
         setLoading(false);

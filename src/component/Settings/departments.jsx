@@ -69,8 +69,7 @@ export default function Departments() {
         setIsAdding(false);
         setNewDepartment({ name: '', manager: '', date: '' });
       } catch (error) {
-        console.error('Error saving new department:', error);
-      } finally {
+        } finally {
         setDepartmentsLoading(false);
       }
     }
@@ -95,7 +94,6 @@ export default function Departments() {
     const current = departments.find(d => d.id === updatedDepartment.id);
     if (!current) {
       // alert('Department not found.');
-      console.error('Department not found.');
       return;
     }
 
@@ -115,7 +113,6 @@ export default function Departments() {
       setIsModalOpen(false);
       setSelectedDepartment(null);
     } catch (error) {
-      console.error('Error updating department:', error);
       // alert(`Failed to update department: ${error.message}`);
     }
   };
@@ -128,8 +125,7 @@ export default function Departments() {
         const fetchedDepartments = await fetchDepartments();
         setDepartments(fetchedDepartments);
       } catch (error) {
-        console.error('Error deleting department:', error);
-      } finally {
+        } finally {
         setDepartmentsLoading(false);
       }
     }

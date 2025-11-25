@@ -24,7 +24,7 @@ export default function PinModal({ workplace, onClose }) {
   useEffect(() => {
     const fetchCurrentLocation = () => {
       if (!navigator.geolocation) {
-        console.warn(t('GEO_NOT_SUPPORTED'));
+        console.warn('Geolocation not supported');
         return;
       }
       navigator.geolocation.getCurrentPosition(
@@ -41,7 +41,7 @@ export default function PinModal({ workplace, onClose }) {
           initialLngRef.current = newLng;
         },
         (error) => {
-          console.warn(t('UNABLE_RETRIEVE_LOCATION') + ': ' + error.message);
+          console.warn('Unable to retrieve location: ' + error.message);
            // Fall back to workplace or defaults
            const fallbackLat = workplace?.lat || 30.0444;
            const fallbackLng = workplace?.lng || 31.2357;

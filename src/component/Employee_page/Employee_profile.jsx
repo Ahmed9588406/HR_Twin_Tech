@@ -74,10 +74,6 @@ export default function EmployeeProfile() {
           fetchEmployeeSalary(employee.code),
           fetchEmployeeAttendanceHistory(employee.code, 0, 5),
         ]);
-        console.log('[Employee_profile] Fetched employee profile data:', profile);
-        console.log('[Employee_profile] Fetched employee salary data:', salary);
-        console.log('[Employee_profile] Fetched employee attendance history:', history);
-        
         setProfileData(profile);
         setSalaryData(salary);
         setHistoryData(history);
@@ -90,7 +86,6 @@ export default function EmployeeProfile() {
           setAttendanceRate(rate);
         }
       } catch (err) {
-        console.error('[Employee_profile] Error loading data:', err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -148,7 +143,6 @@ export default function EmployeeProfile() {
         alert(TEXT[lang].warningError);
       }
     } catch (error) {
-      console.error('Error sending termination notice:', error);
       alert(TEXT[lang].warningError);
     }
   };

@@ -44,7 +44,6 @@ export const fetchAttendanceStatistics = async (params = {}) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching attendance statistics:', error);
     throw error;
   }
 };
@@ -80,7 +79,6 @@ export const fetchDashboardData = async () => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching dashboard data:', error);
     throw error;
   }
 };

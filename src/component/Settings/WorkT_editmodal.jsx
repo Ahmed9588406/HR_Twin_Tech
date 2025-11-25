@@ -136,8 +136,7 @@ export default function WorkTEditModal({ timing, onClose, onSave }) {
         const data = await fetchBranches();
         setBranches(data);
       } catch (err) {
-        console.error('Failed to fetch branches:', err);
-      }
+        }
     };
     loadBranches();
   }, []);
@@ -189,15 +188,12 @@ export default function WorkTEditModal({ timing, onClose, onSave }) {
     };
 
     // Log the outgoing payload so you can inspect it in the console before the API call
-    console.log('Outgoing shift payload:', payload);
-
     setIsSaving(true);
     try {
       const updated = timing?.id ? await updateShift(payload) : await createShift(payload);
       onSave(updated);
       onClose();
     } catch (err) {
-      console.error('Failed to save shift:', err);
       setError(err.message || 'Failed to save shift');
     } finally {
       setIsSaving(false);

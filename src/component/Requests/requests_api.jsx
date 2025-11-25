@@ -21,10 +21,9 @@ const fetchVacationRequests = async () => {
     }
 
     const data = await response.json();
-    console.log('Vacation requests response:', data); // Log the response
+    // Log the response
     return data;
   } catch (error) {
-    console.error('Error fetching vacation requests:', error);
     throw error;
   }
 };
@@ -52,10 +51,9 @@ export const fetchRequestById = async (requestId) => {
     }
 
     const data = await response.json();
-    console.log('Request by ID response:', data); // Log the response
+    // Log the response
     return data;
   } catch (error) {
-    console.error('Error fetching request by ID:', error);
     throw error;
   }
 };
@@ -128,7 +126,6 @@ export const approveVacationRequest = async (requestId, paid = true) => {
   // All methods failed — throw the last captured error with extra context
   const details = lastError ? lastError.message : 'Unknown error';
   const error = new Error(`All methods failed to approve request ${requestId}. Last error: ${details}`);
-  console.error(error);
   throw error;
 };
 
@@ -182,7 +179,6 @@ export const rejectVacationRequest = async (requestId) => {
 
   const details = lastError ? lastError.message : 'Unknown error';
   const error = new Error(`All methods failed to reject request ${requestId}. Last error: ${details}`);
-  console.error(error);
   throw error;
 }
 
@@ -210,10 +206,8 @@ export const fetchAdvanceRequests = async () => {
     }
 
     const data = await response.json();
-    console.log('Advance requests response:', data);
     return data;
   } catch (error) {
-    console.error('Error fetching advance requests:', error);
     throw error;
   }
 };
@@ -242,10 +236,8 @@ export const fetchOvertimeRequests = async () => {
     }
 
     const data = await response.json();
-    console.log('Overtime requests response:', data);
     return data;
   } catch (error) {
-    console.error('Error fetching overtime requests:', error);
     throw error;
   }
 };
@@ -284,7 +276,6 @@ export const fetchVacationLogs = async (page = 0, size = 5) => {
     const number = (typeof data?.number === 'number') ? data.number : page;
     return { items, totalPages, totalElements, number };
   } catch (error) {
-    console.error('Error fetching vacation logs:', error);
     throw error;
   }
 };
@@ -322,7 +313,6 @@ export const fetchAdvanceLogs = async (page = 0, size = 5) => {
     const number = (typeof data?.number === 'number') ? data.number : page;
     return { items, totalPages, totalElements, number };
   } catch (error) {
-    console.error('Error fetching advance logs:', error);
     throw error;
   }
 };
@@ -360,7 +350,6 @@ export const fetchOvertimeLogs = async (page = 0, size = 5) => {
     const number = (typeof data?.number === 'number') ? data.number : page;
     return { items, totalPages, totalElements, number };
   } catch (error) {
-    console.error('Error fetching overtime logs:', error);
     throw error;
   }
 };

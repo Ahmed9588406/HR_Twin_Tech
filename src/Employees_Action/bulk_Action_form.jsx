@@ -118,7 +118,6 @@ export default function BulkActionsModal({ selectedActions = [], onClose = () =>
         setShowSendVacationForm(true);
         break;
       default:
-        console.log(`Applying ${action.label} to ${selectedActions.length} selected employees`);
         onSuccess();
     }
   };

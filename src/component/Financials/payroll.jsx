@@ -25,9 +25,6 @@ export default function PayrollDashboard({ selectedMonth }) {
           fetchFinancialData(selectedMonth), 
           getCount(selectedMonth)
         ]);
-        console.log('Fetched financial data:', data);
-        console.log('Fetched count data:', countData);
-
         setEmployees(data);
 
         // Use count data for totals
@@ -35,8 +32,6 @@ export default function PayrollDashboard({ selectedMonth }) {
         setTotalRewards(countData.totalReward);
         setTotalDiscounts(countData.totalDiscount);
       } catch (err) {
-        console.error('API fetch failed, using fallback data:', err);
-
         // Fallback to hardcoded data if API fails
         const fallbackEmployees = [
           {

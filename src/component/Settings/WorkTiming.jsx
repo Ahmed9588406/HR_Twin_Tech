@@ -36,7 +36,6 @@ export default function WorkTiming() {
       await deleteShift(id);
       setShifts(prev => prev.filter(s => s.id !== id));
     } catch (err) {
-      console.error('Failed to delete shift:', err);
       alert(err.message || 'Failed to delete shift');
     } finally {
       setDeletingId(null);
@@ -61,7 +60,6 @@ export default function WorkTiming() {
   };
 
   const handleSaveTiming = (updatedShift) => {
-    console.log('Received updated shift:', updatedShift);
     if (updatedShift) {
       setShifts(prevShifts => {
         const existingIndex = prevShifts.findIndex(s => s.id === updatedShift.id);

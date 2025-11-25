@@ -118,7 +118,6 @@ export default function DeleteModalTransaction({ transaction, type = 'reward', o
 
       onSuccess(transaction.transactionId);
     } catch (err) {
-      console.error(`Error deleting ${type}:`, err);
       setError(err.message);
     } finally {
       setLoading(false);
