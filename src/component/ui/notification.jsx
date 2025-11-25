@@ -192,7 +192,7 @@ const playNotificationSound = () => {
 };
 
 // Main Notification Modal Component
-export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) => {
+export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode, onUnreadCountChange }) => {
   const empCode = receiverCode || localStorage.getItem('code') || '7';
   
   const [notifications, setNotifications] = useState([]);
@@ -214,6 +214,14 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode }) 
   useEffect(() => {
     isModalOpenRef.current = isOpen;
   }, [isOpen]);
+
+  // Calculate and report total notification count whenever notifications change
+  useEffect(() => {
+    const totalCount = notifications.length;
+    if (onUnreadCountChange) {
+      onUnreadCountChange(totalCount);
+    }
+  }, [notifications, onUnreadCountChange]);
   
   // Handle new notification callback
   const handleNewNotification = useCallback((notification) => {

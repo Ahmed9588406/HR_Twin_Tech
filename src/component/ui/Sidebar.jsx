@@ -25,7 +25,7 @@ export default function Sidebar() {
   const [expandedItems, setExpandedItems] = useState({});
   const [adminData, setAdminData] = useState({ name: 'Loading...', email: '', image: adminLogo });
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [totalNotificationCount, setTotalNotificationCount] = useState(0);
   const notificationButtonRef = useRef(null);
   
   const menuItems = [
@@ -359,9 +359,9 @@ export default function Sidebar() {
                     aria-label={_t('TOOLTIP_NOTIFICATIONS')}
                   >
                     <Bell size={15} />
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center animate-pulse">
-                        {unreadCount > 9 ? '9' : unreadCount}
+                    {totalNotificationCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[14px] px-1 h-3.5 flex items-center justify-center animate-pulse">
+                        {totalNotificationCount}
                       </span>
                     )}
                   </button>
@@ -398,6 +398,7 @@ export default function Sidebar() {
         onClose={() => setIsNotificationOpen(false)}
         buttonRef={notificationButtonRef}
         receiverCode={localStorage.getItem('code')}
+        onUnreadCountChange={setTotalNotificationCount}
       />
     </div>
   );
