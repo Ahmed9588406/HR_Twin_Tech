@@ -3,6 +3,31 @@ import { fetchEmployeeDiscounts } from './employee_role_api';
 import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../i18n/i18n';
 import React, { useState, useEffect } from 'react';
 
+// Helper function for formatting dates (matching employee_role_history.jsx)
+const formatDate = (dateStr, lang) => {
+  const d = new Date(dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00`);
+
+  if (lang === 'ar') {
+    const arabicDays = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const arabicMonths = ['يناير', 'فبراير', 'مارس', 'إبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+
+    const dayName = arabicDays[d.getDay()];
+    const monthName = arabicMonths[d.getMonth()];
+    const day = d.getDate();
+    const year = d.getFullYear();
+
+    return `${dayName}، ${day} ${monthName} ${year}`;
+  } else {
+    return d.toLocaleDateString('en-US', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+};
+
+
 export default function EmployeeDiscounts({ empCode }) {
   const [discountsData, setDiscountsData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,11 +113,7 @@ export default function EmployeeDiscounts({ empCode }) {
                 <div className="font-medium text-slate-800">{discount.description || _t('NA_VALUE')}</div>
                 <div className="text-sm text-slate-600 flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
-                  {discount.transactionDate ? new Date(discount.transactionDate).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  }) : _t('NA_VALUE')}
+                  {discount.transactionDate ? formatDate(discount.transactionDate, lang) : _t('NA_VALUE')}
                 </div>
                 <div className="text-xs text-slate-500 mt-1">
                   {_t('TYPE_LABEL')} {discount.discountType || _t('NA_VALUE')}
