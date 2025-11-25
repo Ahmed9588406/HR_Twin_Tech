@@ -165,7 +165,9 @@ export default function DiscountsDashboard({ selectedMonth }) {
                       </div>
                     </td>
                     <td className="py-4 px-4 text-center">
-                      <span className="text-gray-700 line-clamp-2">{discount.description}</span>
+                      <span className="text-gray-700 line-clamp-2">
+                        {_getLang() === 'ar' ? (discount.descriptionAr || discount.description) : discount.description}
+                      </span>
                     </td>
                     <td className="py-4 px-4 text-center">
                       <span className="text-red-600 font-semibold whitespace-nowrap">

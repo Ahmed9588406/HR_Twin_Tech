@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Phone, AlertCircle, Edit, Send, Trash2, Lock, CheckCircle } from 'lucide-react';
+import { ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
 import { fetchRequestById, approveVacationRequest, rejectVacationRequest } from './requests_api';
 import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 import RequestDetailsSection from './RequestDetailsSection';
@@ -18,6 +18,7 @@ export default function VacationRequestPage() {
   const [error, setError] = useState(null);
   const [approving, setApproving] = useState(false);
   const [rejecting, setRejecting] = useState(false);
+  const [isPaid, setIsPaid] = useState(true);
 
   useEffect(() => {
     const loadRequestData = async () => {
@@ -50,8 +51,8 @@ export default function VacationRequestPage() {
     try {
       setApproving(true);
       setStatus('APPROVING...');
-      // Call approve API with paid=true
-      const result = await approveVacationRequest(requestId, true);
+      // Call approve API with the selected paid status
+      const result = await approveVacationRequest(requestId, isPaid);
       console.log('Approve result:', result);
       setStatus('APPROVED');
       // Refresh request data to reflect server state
@@ -233,33 +234,8 @@ export default function VacationRequestPage() {
 
                   <div className="mt-6 w-full">
                     <div className="border rounded-lg py-3 text-center bg-green-50 border-green-200">
-                      <CheckCircle className="w-6 h-6 mx-auto mb-1 text-green-600" />
                       <span className="font-semibold text-green-700">{_t('ACTIVE_EMPLOYEE')}</span>
                     </div>
-                  </div>
-
-                  <div className="mt-6 flex justify-center gap-4">
-                    <button className="p-3 bg-green-50 hover:bg-green-100 rounded-full transition-colors">
-                      <Phone className="w-5 h-5 text-green-600" />
-                    </button>
-                    <button className="p-3 bg-green-50 hover:bg-green-100 rounded-full transition-colors">
-                      <AlertCircle className="w-5 h-5 text-green-600" />
-                    </button>
-                  </div>
-
-                  <div className="mt-6 flex justify-center gap-3 pt-6 border-t border-gray-200 w-full">
-                    <button className="p-2.5 hover:bg-green-50 rounded-lg transition-colors">
-                      <Edit className="w-5 h-5 text-green-600" />
-                    </button>
-                    <button className="p-2.5 hover:bg-green-50 rounded-lg transition-colors">
-                      <Send className="w-5 h-5 text-green-600" />
-                    </button>
-                    <button className="p-2.5 hover:bg-green-50 rounded-lg transition-colors">
-                      <Trash2 className="w-5 h-5 text-green-600" />
-                    </button>
-                    <button className="p-2.5 hover:bg-green-50 rounded-lg transition-colors">
-                      <Lock className="w-5 h-5 text-green-600" />
-                    </button>
                   </div>
                 </div>
               </div>
@@ -282,21 +258,45 @@ export default function VacationRequestPage() {
               </div>
 
               {status === 'PENDING' && (
-                <div className="flex gap-4">
-                  <button
-                    onClick={handleReject}
-                    disabled={rejecting || approving}
-                    className={`flex-1 ${rejecting || approving ? 'bg-red-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'} text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl`}
-                  >
-                    {rejecting ? _t('REJECTING') || 'Rejecting...' : _t('REJECT') || 'Reject'}
-                  </button>
-                  <button
-                    onClick={handleAccept}
-                    disabled={approving || rejecting}
-                    className={`flex-1 ${approving || rejecting ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl`}
-                  >
-                    {approving ? _t('APPROVING') || 'Approving...' : _t('ACCEPT') || 'Accept'}
-                  </button>
+                <div className="space-y-4">
+                  {/* Paid/Unpaid Toggle */}
+                  <div className="flex items-center justify-center gap-3 p-4 bg-gray-50 rounded-xl">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <span className={`font-medium ${!isPaid ? 'text-gray-900' : 'text-gray-500'}`}>
+                        {_t('UNPAID_VACATION') || 'Unpaid'}
+                      </span>
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          checked={isPaid}
+                          onChange={(e) => setIsPaid(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                      </div>
+                      <span className={`font-medium ${isPaid ? 'text-gray-900' : 'text-gray-500'}`}>
+                        {_t('PAID_VACATION') || 'Paid'}
+                      </span>
+                    </label>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-4">
+                    <button
+                      onClick={handleReject}
+                      disabled={rejecting || approving}
+                      className={`flex-1 ${rejecting || approving ? 'bg-red-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'} text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl`}
+                    >
+                      {rejecting ? _t('REJECTING') || 'Rejecting...' : _t('REJECT') || 'Reject'}
+                    </button>
+                    <button
+                      onClick={handleAccept}
+                      disabled={approving || rejecting}
+                      className={`flex-1 ${approving || rejecting ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl`}
+                    >
+                      {approving ? _t('APPROVING') || 'Approving...' : _t('ACCEPT') || 'Accept'}
+                    </button>
+                  </div>
                 </div>
               )}
 

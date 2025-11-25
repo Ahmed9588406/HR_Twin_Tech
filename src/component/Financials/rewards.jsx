@@ -161,7 +161,9 @@ export default function RewardsDashboard({ selectedMonth }) {
                         <span className="font-medium text-gray-900">{reward.name}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-gray-700">{reward.description}</td>
+                    <td className="py-4 px-4 text-gray-700">
+                      {_getLang() === 'ar' ? (reward.descriptionAr || reward.description) : reward.description}
+                    </td>
                     <td className="py-4 px-4 text-green-600 font-semibold">{reward.amount.toFixed(2)} {_t('CURRENCY')}</td>
                     <td className="py-4 px-4 text-gray-600">{new Date(reward.date).toLocaleDateString(_getLang() === 'ar' ? 'ar' : 'en-US')}</td>
                     <td className="py-4 px-6 text-center">

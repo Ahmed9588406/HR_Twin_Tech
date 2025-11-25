@@ -476,6 +476,8 @@ const translations = {
     , PAID_FROM_COMPANY: 'Paid from company'
     , ACTIVE_EMPLOYEE: 'Active Employee'
     , EMPLOYEES_ACTION_SUBTITLE: 'Manage and monitor employee actions such as promotions, leaves, and warnings'
+    , PAID_VACATION: 'Paid Vacation'
+    , UNPAID_VACATION: 'Unpaid Vacation'
 
     // Bulk Actions modal
     , BULK_ACTIONS_TITLE: 'Bulk Actions'
@@ -1062,6 +1064,8 @@ const translations = {
     , PAID_FROM_COMPANY: 'مدفوع من الشركة'
     , ACTIVE_EMPLOYEE: 'موظف نشط'
     , EMPLOYEES_ACTION_SUBTITLE: 'إدارة ومراقبة إجراءات الموظفين مثل الترقيات والإجازات والإنذارات'
+    , PAID_VACATION: 'إجازة مدفوعة'
+    , UNPAID_VACATION: 'إجازة غير مدفوعة'
 
     // Bulk Actions modal (Arabic)
     , BULK_ACTIONS_TITLE: 'إجراءات مجمعة'
