@@ -213,6 +213,7 @@ export default function RewardsDashboard({ selectedMonth }) {
           type="reward"
           onClose={() => setEditingReward(null)}
           onSuccess={handleEditSuccess}
+          nonBlocking={true}
         />
       )}
 
