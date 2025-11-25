@@ -42,6 +42,7 @@ const translations = {
 
     // Employee Card
     STAY_HERE: 'Stay here',
+    LEFT: 'Left',
     CHECKED_OUT: 'Checked out',
     ON_BREAK: 'On break',
     IN_MEETING: 'In meeting',
@@ -546,6 +547,14 @@ const translations = {
     // Requests - Vacation (ensure explicit Arabic for "no vacation requests")
     , NO_VACATION_REQUESTS: 'No vacation requests'
     
+    // Request Types
+    , VACATION: 'Vacation'
+    , ADVANCE: 'Advance'
+    , OVER_TIME: 'Over Time'
+    , OVERTIME_DATE: 'Overtime Date'
+    , OVERTIME_HOURS: 'Overtime Hours'
+    , REASON: 'Reason'
+    
     // Work Teams - Add/Edit Team
     , EDIT_TEAM: 'Edit Team'
     , CREATE_NEW_TEAM: 'Create New Team'
@@ -618,6 +627,7 @@ const translations = {
 
     // Employee Card
     STAY_HERE: 'متواجد',
+    LEFT: 'غادر',
     CHECKED_OUT: 'غادر',
     ON_BREAK: 'في استراحة',
     IN_MEETING: 'في اجتماع',
@@ -1121,6 +1131,14 @@ const translations = {
 
     // Requests - Vacation (ensure explicit Arabic for "no vacation requests")
     , NO_VACATION_REQUESTS: 'لا توجد طلبات إجازة'
+    
+    // Request Types (Arabic)
+    , VACATION: 'إجازة'
+    , ADVANCE: 'سلفة'
+    , OVER_TIME: 'عمل إضافي'
+    , OVERTIME_DATE: 'تاريخ العمل الإضافي'
+    , OVERTIME_HOURS: 'ساعات العمل الإضافي'
+    , REASON: 'السبب'
     
     // Work Teams - Add/Edit Team (Arabic)
     , EDIT_TEAM: 'تعديل الفريق'

@@ -51,12 +51,12 @@ export default function AdvanceRequestsTable() {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">{_t('EMPLOYEE_COL')}</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('REQUEST_DATE')}</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('AMOUNT')}</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('PAYMENT_DATE')}</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('STATUS')}</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">{_t('COMMENT')}</th>
+                <th className="text-center py-4 px-6 text-sm font-semibold text-gray-700">{_t('EMPLOYEE_COL')}</th>
+                <th className="text-center py-4 px-4 text-sm font-semibold text-gray-700">{_t('REQUEST_DATE')}</th>
+                <th className="text-center py-4 px-4 text-sm font-semibold text-gray-700">{_t('AMOUNT')}</th>
+                <th className="text-center py-4 px-4 text-sm font-semibold text-gray-700">{_t('PAYMENT_DATE')}</th>
+                <th className="text-center py-4 px-4 text-sm font-semibold text-gray-700">{_t('STATUS')}</th>
+                <th className="text-center py-4 px-4 text-sm font-semibold text-gray-700">{_t('COMMENT')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -88,10 +88,10 @@ export default function AdvanceRequestsTable() {
                       <span className="font-medium text-gray-900">{req.empDetails?.empName}</span>
                     </div>
                   </td>
-                  <td className="py-4 px-4 text-gray-600">{req.requestDate}</td>
-                  <td className="py-4 px-4 text-gray-600">{req.advanceAmount?.toFixed?.(2) ?? req.advanceAmount} EGP</td>
-                  <td className="py-4 px-4 text-gray-600">{req.paymentDate || '-'}</td>
-                  <td className="py-4 px-4">
+                  <td className="py-4 px-4 text-center text-gray-600">{req.requestDate}</td>
+                  <td className="py-4 px-4 text-center text-gray-600">{req.advanceAmount?.toFixed?.(2) ?? req.advanceAmount} EGP</td>
+                  <td className="py-4 px-4 text-center text-gray-600">{req.paymentDate || '-'}</td>
+                  <td className="py-4 px-4 text-center">
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-medium ${
                         req.requestStatus === 'APPROVED'
@@ -104,7 +104,7 @@ export default function AdvanceRequestsTable() {
                       {req.requestStatus === 'APPROVED' ? _t('APPROVED') : req.requestStatus === 'PENDING' ? _t('PENDING') : _t('REJECTED')}
                     </span>
                   </td>
-                  <td className="py-4 px-4 text-gray-600">{req.comment}</td>
+                  <td className="py-4 px-4 text-center text-gray-600">{req.comment}</td>
                 </tr>
               ))}
 

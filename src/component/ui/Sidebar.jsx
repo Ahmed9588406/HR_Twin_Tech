@@ -87,8 +87,28 @@ export default function Sidebar() {
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
-        const response = await fetch('https://api.shl-hr.com/api/v1/setting/admin');
-        if (!response.ok) throw new Error('Failed to fetch admin data');
+        const token = localStorage.getItem('token');
+        if (!token) {
+          // No token, use defaults
+          setAdminData({ name: 'Admin', email: '', image: adminLogo });
+          return;
+        }
+
+        const response = await fetch('https://api.shl-hr.com/api/v1/setting/admin', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'ngrok-skip-browser-warning': 'true',
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          console.warn('Failed to fetch admin data, using defaults');
+          setAdminData({ name: 'Admin', email: '', image: adminLogo });
+          return;
+        }
+        
         const data = await response.json();
         setAdminData({
           name: data.name || 'Admin',

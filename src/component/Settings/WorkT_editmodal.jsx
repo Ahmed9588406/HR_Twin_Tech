@@ -108,6 +108,28 @@ export default function WorkTEditModal({ timing, onClose, onSave }) {
     value: d.value
   }));
 
+  // Convert time from API format (HH:MM:SS) to input format (HH:MM)
+  const timeToInput = (t) => {
+    if (!t) return '';
+    const s = String(t).trim();
+    const match = s.match(/^(\d{1,2}):(\d{2})/);
+    if (match) {
+      return `${match[1].padStart(2, '0')}:${match[2]}`;
+    }
+    return '';
+  };
+
+  // Convert time from input format (HH:MM) to API format (HH:MM:SS)
+  const inputToTime = (t) => {
+    if (!t) return '';
+    const s = String(t).trim();
+    const match = s.match(/^(\d{1,2}):(\d{2})$/);
+    if (match) {
+      return `${match[1].padStart(2, '0')}:${match[2]}:00`;
+    }
+    return t;
+  };
+
   useEffect(() => {
     const loadBranches = async () => {
       try {
@@ -124,8 +146,9 @@ export default function WorkTEditModal({ timing, onClose, onSave }) {
     if (!timing) return;
     setName(timing.name ?? '');
     setBranchId(timing.branchId ?? null);
-    setStart(timing.start ? String(timing.start) : '');
-    setEnd(timing.end ? String(timing.end) : '');
+    // Convert API time format to input format (HH:MM)
+    setStart(timeToInput(timing.start));
+    setEnd(timeToInput(timing.end));
     setTimeZone(timing.timeZone ?? 'Africa/Cairo');
     
     // Convert API days to internal format (0-6)
@@ -144,23 +167,6 @@ export default function WorkTEditModal({ timing, onClose, onSave }) {
     );
   };
 
-  const normalizeTime = (t) => {
-    if (!t && t !== 0) return '';
-    const s = String(t).trim();
-    const m = s.match(/^(\d{1,2}):(\d{2})$/);
-    if (m) return `${m[1].padStart(2,'0')}:${m[2]}:00`;
-    const m2 = s.match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
-    if (m2) return `${m2[1].padStart(2,'0')}:${m2[2]}:${m2[3]}`;
-    const d = new Date(s);
-    if (!isNaN(d.getTime())) {
-      const hh = String(d.getHours()).padStart(2,'0');
-      const mm = String(d.getMinutes()).padStart(2,'0');
-      const ss = String(d.getSeconds()).padStart(2,'0');
-      return `${hh}:${mm}:${ss}`;
-    }
-    return s;
-  };
-
   const handleSave = async () => {
     setError(null);
     if (!name) return setError(_t('NAME') + ' ' + _t('CANCEL')); // minimal feedback - reused keys
@@ -176,8 +182,8 @@ export default function WorkTEditModal({ timing, onClose, onSave }) {
       ...(timing?.id ? { id: timing.id } : {}),
       branchId: Number(branchId),
       name: String(name),
-      start: normalizeTime(start),
-      end: normalizeTime(end),
+      start: inputToTime(start), // Convert HH:MM to HH:MM:SS
+      end: inputToTime(end), // Convert HH:MM to HH:MM:SS
       selectedDays: apiSelectedDays, // mapped for API (Sunday -> 7)
       timeZone: timeZone || 'Africa/Cairo'
     };
@@ -246,20 +252,22 @@ export default function WorkTEditModal({ timing, onClose, onSave }) {
           <div>
             <label className="text-sm text-gray-600">{_t('START_TIME')}</label>
             <input
+              type="time"
               value={start}
               onChange={(e) => setStart(e.target.value)}
-              className="w-full mt-2 p-2 border rounded"
-              placeholder="HH:MM:SS"
+              className="w-full mt-2 p-2 border rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              placeholder="HH:MM"
             />
           </div>
 
           <div>
             <label className="text-sm text-gray-600">{_t('END_TIME')}</label>
             <input
+              type="time"
               value={end}
               onChange={(e) => setEnd(e.target.value)}
-              className="w-full mt-2 p-2 border rounded"
-              placeholder="HH:MM:SS"
+              className="w-full mt-2 p-2 border rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              placeholder="HH:MM"
             />
           </div>
 

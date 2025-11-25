@@ -17,9 +17,24 @@ export default function RequestDetailsSection({ requestData, downloadFile }) {
         return diffDays + 1;
     };
 
+    // Parse ISO 8601 duration format (PT2H30M) to hours and minutes
+    const parseDuration = (duration) => {
+        if (!duration) return { hours: 0, minutes: 0 };
+        const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+        if (!match) return { hours: 0, minutes: 0 };
+        const hours = parseInt(match[1] || 0);
+        const minutes = parseInt(match[2] || 0);
+        return { hours, minutes };
+    };
+
     const duration = calculateDuration(requestData.startDate, requestData.endDate);
     // Make request type detection case-insensitive 
     const requestType = (requestData.requestType || '').toLowerCase();
+
+    // Determine request type (case-insensitive, handle underscores)
+    const isVacation = requestType.includes('vacation') || requestType.includes('leave') || requestType.includes('إجازة');
+    const isAdvance = requestType.includes('advance') || requestType.includes('سلفة');
+    const isOvertime = requestType.includes('overtime') || requestType.includes('over_time') || requestType.includes('over time') || requestType.includes('إضافي');
 
     console.log('RequestDetailsSection Debug:', {
         fullRequestData: requestData,
@@ -27,13 +42,20 @@ export default function RequestDetailsSection({ requestData, downloadFile }) {
         requestTypeNormalized: requestType,
         advanceAmount: requestData.advanceAmount,
         amount: requestData.amount,
-        isAdvance: requestType.includes('advance')
+        overTimeAmount: requestData.overTimeAmount,
+        overTimeDuration: requestData.overTimeDuration,
+        isVacation: isVacation,
+        isAdvance: isAdvance,
+        isOvertime: isOvertime
     });
 
-    // Determine request type (case-insensitive)
-    const isVacation = requestType.includes('vacation') || requestType.includes('leave');
-    const isAdvance = requestType.includes('advance');
-    const isOvertime = requestType.includes('overtime') || requestType.includes('over time');
+    // Get translated request type label
+    const getRequestTypeLabel = () => {
+        if (isVacation) return _t('VACATION');
+        if (isAdvance) return _t('ADVANCE');
+        if (isOvertime) return _t('OVER_TIME');
+        return requestData.requestType; // fallback to original
+    };
 
     return (
         <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
@@ -45,7 +67,7 @@ export default function RequestDetailsSection({ requestData, downloadFile }) {
                     <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{_t('REQUEST_TYPE')}</label>
                     <div className="flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-green-600" />
-                        <span className="text-gray-900 font-medium capitalize">{requestData.requestType}</span>
+                        <span className="text-gray-900 font-medium">{getRequestTypeLabel()}</span>
                     </div>
                 </div>
 
@@ -120,39 +142,72 @@ export default function RequestDetailsSection({ requestData, downloadFile }) {
                             <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{_t('OVERTIME_DATE')}</label>
                             <div className="flex items-center gap-2">
                                 <Calendar className="w-5 h-5 text-green-600" />
-                                <span className="text-gray-900 font-medium">{requestData.date || requestData.overtimeDate || '-'}</span>
+                                <span className="text-gray-900 font-medium">{requestData.date || requestData.overtimeDate || requestData.requestDate || '-'}</span>
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{_t('OVERTIME_HOURS')}</label>
-                            <div className="flex items-center gap-2">
-                                <Clock className="w-5 h-5 text-green-600" />
-                                <span className="text-gray-900 font-bold text-2xl">
-                                    {requestData.hours || requestData.overtimeHours || '-'} {_t('HOURS')}
-                                </span>
-                            </div>
-                        </div>
+                        {/* Parse and display duration from overTimeDuration or use individual fields */}
+                        {(() => {
+                            const durationData = parseDuration(requestData.overTimeDuration);
+                            const hours = durationData.hours || requestData.hours || requestData.overtimeHours || 0;
+                            const minutes = durationData.minutes || requestData.overtimeMins || 0;
+                            const totalHours = hours + (minutes / 60);
+                            
+                            console.log('Overtime Duration Debug:', {
+                                overTimeDuration: requestData.overTimeDuration,
+                                parsedHours: durationData.hours,
+                                parsedMinutes: durationData.minutes,
+                                finalHours: hours,
+                                finalMinutes: minutes,
+                                totalHours: totalHours
+                            });
+                            
+                            return (
+                                <>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{_t('OVERTIME_HOURS')}</label>
+                                        <div className="flex items-center gap-2">
+                                            <Clock className="w-5 h-5 text-green-600" />
+                                            <span className="text-gray-900 font-bold text-2xl">
+                                                {totalHours > 0 ? totalHours.toFixed(2) : hours} {_t('HOURS')}
+                                            </span>
+                                        </div>
+                                    </div>
 
-                        {requestData.overtimeMins && (
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{_t('OVERTIME_MINS')}</label>
-                                <div className="flex items-center gap-2">
-                                    <Clock className="w-5 h-5 text-blue-600" />
-                                    <span className="text-gray-900 font-medium text-xl">{requestData.overtimeMins} {_t('MINUTES')}</span>
-                                </div>
-                            </div>
-                        )}
+                                    {minutes > 0 && (
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{_t('OVERTIME_MINS')}</label>
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="w-5 h-5 text-blue-600" />
+                                                <span className="text-gray-900 font-medium text-xl">{minutes} {_t('MINUTES')}</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            );
+                        })()}
 
-                        {requestData.overtimeAmount && (
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{_t('OVERTIME_AMOUNT')}</label>
-                                <div className="flex items-center gap-2">
-                                    <DollarSign className="w-5 h-5 text-green-600" />
-                                    <span className="text-gray-900 font-bold text-2xl">{requestData.overtimeAmount} {_t('CURRENCY')}</span>
+                        {/* Display overtime amount - check both overTimeAmount and overtimeAmount */}
+                        {(() => {
+                            const amount = requestData.overTimeAmount || requestData.overtimeAmount || 0;
+                            console.log('Overtime Amount Debug:', {
+                                overTimeAmount: requestData.overTimeAmount,
+                                overtimeAmount: requestData.overtimeAmount,
+                                finalAmount: amount
+                            });
+                            
+                            return amount > 0 ? (
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{_t('OVERTIME_AMOUNT')}</label>
+                                    <div className="flex items-center gap-2">
+                                        <DollarSign className="w-5 h-5 text-green-600" />
+                                        <span className="text-gray-900 font-bold text-2xl">
+                                            {amount.toFixed(2)} {_t('CURRENCY')}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            ) : null;
+                        })()}
                     </>
                 )}
 
