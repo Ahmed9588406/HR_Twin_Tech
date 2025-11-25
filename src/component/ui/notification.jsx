@@ -521,10 +521,13 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode, on
       
       <div
         ref={modalRef}
-        className="fixed w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-[90] overflow-hidden transition-shadow duration-200"
+        className="fixed w-full sm:w-96 max-w-full sm:max-w-96 bg-white rounded-none sm:rounded-2xl shadow-2xl border-0 sm:border border-gray-200 z-[90] overflow-hidden transition-shadow duration-200"
         style={{
-          left: `${position.x}px`,
-          top: `${position.y}px`,
+          left: window.innerWidth < 640 ? '0' : `${position.x}px`,
+          top: window.innerWidth < 640 ? '0' : `${position.y}px`,
+          right: window.innerWidth < 640 ? '0' : 'auto',
+          bottom: window.innerWidth < 640 ? '0' : 'auto',
+          height: window.innerWidth < 640 ? '100vh' : 'auto',
           cursor: isDragging ? 'grabbing' : 'default',
           animation: 'slideDown 0.2s ease-out'
         }}
@@ -589,7 +592,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode, on
         </div>
         
         {/* Notifications List */}
-        <div className="max-h-96 overflow-y-auto">
+        <div className="max-h-96 sm:max-h-96 overflow-y-auto" style={{ maxHeight: window.innerWidth < 640 ? 'calc(100vh - 200px)' : '24rem' }}>
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="w-8 h-8 border-4 border-green-200 border-t-green-600 rounded-full animate-spin"></div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell, LogOut } from 'lucide-react';
+import { Bell, LogOut } from 'lucide-react';
 import { t as _t, getLang as _getLang, subscribe as _subscribe, setLang as _setLang } from '../i18n/i18n';
 import { fetchEmployeeProfile } from './employee_role_api';
 import UserProfile from './userprofile';
@@ -38,6 +38,7 @@ export default function UserProfileView() {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showAdvanceModal, setShowAdvanceModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const notificationButtonRef = useRef(null);
 
   // Language subscription
@@ -108,7 +109,7 @@ export default function UserProfileView() {
       .catch((err) => console.error('Failed to receive foreground message:', err));
   }, []);
 
-  const handleBack = () => navigate('/user-dashboard');
+
   
   const handleAdvanceRequest = () => setShowAdvanceModal(true);
 
@@ -154,16 +155,7 @@ export default function UserProfileView() {
       {/* Header */}
       <div className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <button onClick={handleBack} className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-                <ArrowLeft className="w-5 h-5" />
-                <span className="font-medium">{_t('BACK')}</span>
-              </button>
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-500 bg-clip-text text-transparent">
-              {_t('MY_PROFILE')}
-            </h1>
+          <div className="flex items-center justify-end">
             <div className="flex items-center gap-3">
               <button
                 onClick={toggleLanguage}
@@ -179,6 +171,11 @@ export default function UserProfileView() {
                 aria-label={_t('NOTIFICATIONS')}
               >
                 <Bell className="w-6 h-6" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </button>
               <button
                 onClick={handleLogout}
@@ -247,6 +244,7 @@ export default function UserProfileView() {
         onClose={() => setShowNotificationModal(false)}
         buttonRef={notificationButtonRef}
         receiverCode={user.code}
+        onUnreadCountChange={setUnreadCount}
       />
     </div>
   );

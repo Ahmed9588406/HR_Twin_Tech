@@ -46,7 +46,9 @@ export default function EmployeeRewards({ empCode }) {
             <div className="flex items-center gap-3">
               <Award className="w-6 h-6 text-yellow-600" />
               <div>
-                <div className="font-medium text-slate-800">{reward.description || NA_VALUE}</div>
+                <div className="font-medium text-slate-800">
+                  {lang === 'ar' && reward.descriptionAr ? reward.descriptionAr : (reward.description || NA_VALUE)}
+                </div>
                 <div className="text-sm text-slate-600 flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
                   {reward.transactionDate ? new Date(reward.transactionDate).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', {

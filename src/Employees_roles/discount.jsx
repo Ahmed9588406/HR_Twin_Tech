@@ -110,7 +110,9 @@ export default function EmployeeDiscounts({ empCode }) {
             <div className="flex items-center gap-3">
               <Minus className="w-6 h-6 text-red-600" />
               <div>
-                <div className="font-medium text-slate-800">{discount.description || _t('NA_VALUE')}</div>
+                <div className="font-medium text-slate-800">
+                  {lang === 'ar' && discount.descriptionAr ? discount.descriptionAr : (discount.description || _t('NA_VALUE'))}
+                </div>
                 <div className="text-sm text-slate-600 flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
                   {discount.transactionDate ? formatDate(discount.transactionDate, lang) : _t('NA_VALUE')}
