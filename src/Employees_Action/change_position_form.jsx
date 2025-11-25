@@ -79,7 +79,6 @@ export default function ChangePositionForm({ selectedActions = [], onClose = () 
         const data = await fetchJobPositions();
         setPositions(data || []);
       } catch (err) {
-        console.error('Failed to load positions:', err);
         setError('Failed to load positions.');
       } finally {
         setLoadingPositions(false);
@@ -130,12 +129,9 @@ export default function ChangePositionForm({ selectedActions = [], onClose = () 
       }
 
       const result = await response.json();
-      console.log('Position change result:', result);
-
       alert(`Position changed for ${empCodes.length} employee(s).`);
       onSuccess();
     } catch (err) {
-      console.error('Position change failed:', err);
       setError(err.message || _t('FAILED_CHANGE_POSITION'));
     } finally {
       setSubmitting(false);

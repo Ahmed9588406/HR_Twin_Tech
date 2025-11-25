@@ -112,16 +112,13 @@ export default function UserProfile({
   const handleMarkAttendance = async () => {
     try {
       const location = await getCurrentLocation();
-      console.log('Employee current location:', location);
       // Mark attendance with location
       const result = await markAttendance(location.latitude, location.longitude);
-      console.log('Attendance marked successfully:', result);
       // Show success message instead of opening modal
       alert(copy.attendanceMarked);
       // Optionally reload to refresh attendance history
       window.location.reload();
     } catch (error) {
-      console.error('Failed to get location or mark attendance:', error.message);
       alert(`${copy.attendanceFail} ${error.message}`);
     }
   };
@@ -129,16 +126,13 @@ export default function UserProfile({
   const handleMarkLeave = async () => {
     try {
       const location = await getCurrentLocation();
-      console.log('Employee current location for leave:', location);
       // Mark leave with location
       const result = await markLeave(location.latitude, location.longitude);
-      console.log('Leave marked successfully:', result);
       // Show success message
       alert(copy.leaveMarked);
       // Optionally reload to refresh data
       window.location.reload();
     } catch (error) {
-      console.error('Failed to get location or mark leave:', error.message);
       alert(`${copy.leaveFail} ${error.message}`);
     }
   };
@@ -166,7 +160,7 @@ export default function UserProfile({
       window.location.reload(); // Or update photoSrc dynamically if the response includes new URL
     } catch (error) {
       // Log full server error for debugging
-      console.error('Upload failed (detailed):', error);
+      console.error('Upload photo error:', error);
 
       // Present a friendly localized message to the user and keep the server message in console
       const friendly = _t('FAILED_UPLOAD_PHOTO') || copy.attendanceFail || 'Failed to upload photo';
@@ -177,9 +171,6 @@ export default function UserProfile({
       setUploading(false);
     }
   };
-
-  console.log('UserProfile props:', { profileData, user, photoSrc });
-  console.log('UserProfile profileData (endpoint return):', profileData);
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-200" dir={dir} lang={lang}>

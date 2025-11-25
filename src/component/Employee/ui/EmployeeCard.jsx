@@ -126,8 +126,7 @@ export default function EmployeeCard({
         setEditEmployeeData(data); // Set the fetched data
         setIsEditModalOpen(true); // Open the modal
       } catch (error) {
-        console.error("Error fetching employee data:", error);
-      }
+        }
     }
   };
 
@@ -172,8 +171,7 @@ export default function EmployeeCard({
       const data = await fetchEmployeeById(emp.id);
       setDetailLocked(resolveLocked(data));
     } catch (err) {
-      console.error('detail fetch failed', err);
-    }
+      }
   };
   useEffect(() => { setDetailLocked(null); refreshDetail(); }, [emp.id]);
   const baseLocked = resolveLocked(emp);
@@ -334,8 +332,7 @@ export default function EmployeeCard({
           onClose={handleCloseModal} 
           onSuccess={() => {
             handleCloseModal();
-            console.log("Employee updated successfully!");
-          }}
+            }}
         />
       )}
     </>

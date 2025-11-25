@@ -35,7 +35,6 @@ export default function VacationRequestPage() {
         const normalizedStatus = (data.requestStatus || 'PENDING').toUpperCase();
         setStatus(normalizedStatus);
       } catch (err) {
-        console.error('Failed to fetch request data:', err);
         setError('Failed to load request data. Please try again.');
       } finally {
         setLoading(false);
@@ -53,7 +52,6 @@ export default function VacationRequestPage() {
       setStatus('APPROVING...');
       // Call approve API with the selected paid status
       const result = await approveVacationRequest(requestId, isPaid);
-      console.log('Approve result:', result);
       setStatus('APPROVED');
       // Refresh request data to reflect server state
       try {
@@ -62,10 +60,8 @@ export default function VacationRequestPage() {
         const normalizedStatus = (fresh.requestStatus || 'APPROVED').toUpperCase();
         setStatus(normalizedStatus);
       } catch (refreshErr) {
-        console.warn('Failed to refresh request after approve:', refreshErr);
-      }
+        }
     } catch (err) {
-      console.error('Approve failed:', err);
       alert(_t('FAILED_TO_APPROVE') + ': ' + (err.message || 'Please try again.'));
       setStatus(prevStatus || 'PENDING');
     } finally {
@@ -81,7 +77,6 @@ export default function VacationRequestPage() {
       setStatus('REJECTING...');
       // Call reject API
       const result = await rejectVacationRequest(requestId);
-      console.log('Reject result:', result);
       setStatus('REJECTED');
       // Refresh request data
       try {
@@ -90,10 +85,8 @@ export default function VacationRequestPage() {
         const normalizedStatus = (fresh.requestStatus || 'REJECTED').toUpperCase();
         setStatus(normalizedStatus);
       } catch (refreshErr) {
-        console.warn('Failed to refresh request after reject:', refreshErr);
-      }
+        }
     } catch (err) {
-      console.error('Reject failed:', err);
       alert(_t('FAILED_TO_REJECT') + ': ' + (err.message || 'Please try again.'));
       setStatus(prevStatus || 'PENDING');
     } finally {
@@ -144,7 +137,6 @@ export default function VacationRequestPage() {
       a.remove();
       window.URL.revokeObjectURL(downloadUrl);
     } catch (err) {
-      console.error('Error downloading file:', err);
       alert('Failed to download file. ' + (err.message || ''));
     }
   };

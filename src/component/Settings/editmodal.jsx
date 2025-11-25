@@ -25,7 +25,7 @@ export default function EditModal({ workplace, onClose }) {
   useEffect(() => {
     const fetchCurrentLocation = () => {
       if (!navigator.geolocation) {
-        console.warn(t('GEO_NOT_SUPPORTED'));
+        console.warn('Geolocation not supported');
         return;
       }
       navigator.geolocation.getCurrentPosition(
@@ -35,7 +35,7 @@ export default function EditModal({ workplace, onClose }) {
           setLongitude(longitude.toString());
         },
         (error) => {
-          console.warn(t('UNABLE_RETRIEVE_LOCATION') + ': ' + error.message);
+          console.warn('Unable to retrieve location: ' + error.message);
           // Fall back to workplace if available
           if (workplace) {
             setLatitude(workplace.lat ?? workplace.latitude ?? '');
@@ -108,13 +108,11 @@ export default function EditModal({ workplace, onClose }) {
     try {
       // Send only the fields being updated (updateBranch will merge with existing)
       const payload = { name, latitude: lat, longitude: lng };
-      console.log('Update payload:', payload);
       const updated = await updateBranch(workplace.id, payload);
-      console.log('Update response:', updated);
       // map response to local shape for parent
       onClose && onClose(updated);
     } catch (err) {
-      console.error(t('FAILED_UPDATE_BRANCH') + ':', err);
+      console.error('Failed to update branch:', err);
       alert(t('FAILED_UPDATE_BRANCH') + ': ' + (err.message || err));
     }
   };

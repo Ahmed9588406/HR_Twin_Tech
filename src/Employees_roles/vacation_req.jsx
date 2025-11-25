@@ -127,19 +127,12 @@ export default function VacationRequest({ employee = {}, onClose = () => {}, onS
         comment: comments
       };
 
-      console.log('Submitting vacation request with payload:', payload);
-      console.log('Employee code:', employee.code);
-      console.log('File:', file ? file.name : 'No file');
-
       // Call helper: will send multipart FormData
       const result = await postVacationRequest(employee.code, payload, file);
-      console.log('Vacation request result:', result);
-
       alert(copy.submitSuccess);
       resetForm();
       onSuccess();
     } catch (err) {
-      console.error('Leave request failed:', err);
       // Extract friendly message if possible
       let msg = copy.submitFailureFallback;
       try {

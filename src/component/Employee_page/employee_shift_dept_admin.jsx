@@ -72,8 +72,6 @@ const EmployeeShiftDept = ({ empCode }) => {
         }
 
         const url = `https://api.shl-hr.com/api/v1/dashboard/${empCode}/details`;
-        console.log('[DEBUG] Fetching shift/dept data from URL:', url);
-
         const response = await fetch(url, {
           method: 'GET',
           headers: {
@@ -83,8 +81,6 @@ const EmployeeShiftDept = ({ empCode }) => {
             Authorization: `Bearer ${token}`,
           },
         });
-
-        console.log('[DEBUG] Response status:', response.status);
 
         if (!response.ok) {
           let errorMessage = 'Failed to fetch shift/dept data';
@@ -98,8 +94,6 @@ const EmployeeShiftDept = ({ empCode }) => {
         }
 
         const result = await response.json();
-        console.log('[DEBUG] Shift/Dept data:', result);
-
         // Transform the API response to match the expected format
         const transformedData = {
           department: result.departmentName || 'N/A',
@@ -113,7 +107,6 @@ const EmployeeShiftDept = ({ empCode }) => {
 
         // Remove warnings state as we use noticeNumber directly
       } catch (err) {
-        console.error('[DEBUG] Error fetching shift/dept data:', err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -186,7 +179,6 @@ const EmployeeShiftDept = ({ empCode }) => {
       alert(copy.warningsUpdated);
       setShowEditModal(false);
     } catch (error) {
-      console.error('Error updating warnings:', error);
       alert(`${copy.updateError}${error && error.message ? ' - ' + error.message : ''}`);
     }
   };

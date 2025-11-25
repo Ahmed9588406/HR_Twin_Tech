@@ -35,8 +35,7 @@ export default function WorkPlace() {
             updateWorkplaces(data || []);
           }
         } catch (err) {
-          console.error('Failed to fetch branches:', err);
-        } finally {
+          } finally {
           if (mounted) setLoading(false);
         }
       }

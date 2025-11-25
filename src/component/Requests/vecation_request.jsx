@@ -17,7 +17,6 @@ export default function VacationRequestsTable() {
         const data = await fetchVacationRequests();
         setRequests(data || []);
       } catch (err) {
-        console.error('API fetch failed:', err);
         setError(_t('FAILED_LOAD_VACATION_REQUESTS'));
       } finally {
         setLoading(false);

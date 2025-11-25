@@ -61,7 +61,6 @@ export default function EmployeeSalary({ empCode }) {
         if (!mounted) return;
         setSalaryData(data);
       } catch (err) {
-        console.error('Failed to fetch salary data:', err);
         if (!mounted) return;
         setError('Unable to load salary details.');
       } finally {

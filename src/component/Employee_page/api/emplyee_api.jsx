@@ -38,7 +38,6 @@ export const fetchDepartments = async () => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching departments:', error);
     throw error;
   }
 };
@@ -58,7 +57,6 @@ export const fetchShifts = async () => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching shifts:', error);
     throw error;
   }
 };
@@ -93,10 +91,8 @@ export const createEmployee = async (employeeData) => {
     }
 
     // Log the FormData for debugging
-    console.log('FormData being sent to the server:');
     for (const [key, value] of formData.entries()) {
-      console.log(`${key}: ${value}`);
-    }
+      }
 
     const response = await fetch(`${BASE_URL}/employees`, {
       method: 'POST',
@@ -121,7 +117,6 @@ export const createEmployee = async (employeeData) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error creating employee:', error);
     throw error;
   }
 };
@@ -156,8 +151,6 @@ export const fetchEmployees = async (page = 0, size = 10) => {
     }
 
     const data = await response.json();
-    console.log('Employees API response:', data);
-    
     // Handle both array and paginated response formats
     if (Array.isArray(data)) {
       // Old format: direct array
@@ -198,7 +191,6 @@ export const fetchEmployees = async (page = 0, size = 10) => {
       };
     }
   } catch (error) {
-    console.error('Error fetching employees:', error);
     throw error;
   }
 };
@@ -250,10 +242,8 @@ export const updateEmployee = async (employeeData) => {
     }
 
     // Log the FormData for debugging
-    console.log('FormData being sent to the server for update:');
     for (const [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
-    }
+      }
 
     const response = await fetch(`${BASE_URL}/employees/${employeeData.id}`, {
       method: 'PUT',
@@ -283,7 +273,6 @@ export const updateEmployee = async (employeeData) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error updating employee:', error);
     throw error;
   }
 };
@@ -318,7 +307,6 @@ export const deleteEmployee = async (employeeId) => {
     // Assuming successful deletion returns no content or a success message
     return true;
   } catch (error) {
-    console.error('Error deleting employee:', error);
     throw error;
   }
 };
@@ -358,7 +346,6 @@ export const markAttendance = async (empCode, arrivalTime) => {
     const data = await response.json();
     return data; // Expected: true
   } catch (error) {
-    console.error('Error marking attendance:', error);
     throw error;
   }
 };
@@ -398,7 +385,6 @@ export const markLeave = async (empCode, leaveTime) => {
     const data = await response.json();
     return data; // Expected: true
   } catch (error) {
-    console.error('Error marking leave:', error);
     throw error;
   }
 };
@@ -434,7 +420,6 @@ export const fetchEmployeeProfile = async (empCode) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching employee profile:', error);
     throw error;
   }
 };
@@ -470,7 +455,6 @@ export const fetchEmployeeSalary = async (empCode) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching employee salary:', error);
     throw error;
   }
 };
@@ -506,7 +490,6 @@ export const fetchEmployeeAttendanceHistory = async (empCode, page = 0, size = 5
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching employee attendance history:', error);
     throw error;
   }
 };
@@ -541,7 +524,6 @@ export const lockEmployee = async (employeeId) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error locking/unlocking employee:', error);
     throw error;
   }
 };

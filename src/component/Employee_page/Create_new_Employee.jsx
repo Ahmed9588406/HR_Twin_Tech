@@ -53,17 +53,12 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
           fetchShifts()
         ]);
         
-        console.log('Departments:', departmentsData);
-        console.log('Positions:', positionsData);
-        console.log('Shifts:', shiftsData);
-        
         setDepartments(departmentsData || []);
         setAllPositions(positionsData || []);
         setShifts(shiftsData || []);
       } catch (err) {
         setError('Failed to load form data');
-        console.error(err);
-      } finally {
+        } finally {
         setLoading(false);
       }
     };
@@ -154,8 +149,6 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
       }
 
       // Log the formData for debugging
-      console.log('Submitting employee data:', formData);
-
       // Submit the form
       if (employeeData && employeeData.id) {
         // Update existing employee
@@ -171,7 +164,6 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
       if (onClose) onClose();
     } catch (err) {
       setError(err.message || 'Failed to save employee');
-      console.error('Error saving employee:', err);
       alert(`Error: ${err.message}`);
     } finally {
       setLoading(false);

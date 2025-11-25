@@ -121,7 +121,7 @@ export default function EditModalTransaction({ transaction, type = 'reward', onC
       const updatedTransaction = { ...transaction, amount: newAmount };
       onSuccess(updatedTransaction);
     } catch (err) {
-      console.error(`${_t('UPDATE_ERROR').replace('{{type}}', _t(type.toUpperCase()))}:`, err);
+      console.error(`Error updating ${type}:`, err);
       setError(err.message);
     } finally {
       setLoading(false);

@@ -108,7 +108,6 @@ export default function ActionDashboard() {
         }));
         setActions(mapped);
       } catch (err) {
-        console.error('Failed to load actions:', err);
         // Optionally set error state or show message
       } finally {
         setIsLoading(false);

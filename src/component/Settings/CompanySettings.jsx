@@ -93,7 +93,6 @@ export default function CompanySettings() {
           });
         }
       } catch (err) {
-        console.error('Failed to load company settings:', err);
         setError(copy.fail);
       } finally {
         if (mounted) setLoading(false);
@@ -146,7 +145,6 @@ export default function CompanySettings() {
       });
       alert(copy.success);
     } catch (err) {
-      console.error('Update failed:', err);
       setError(copy.fail + (err && err.message ? ' - ' + err.message : ''));
       alert(copy.fail);
     } finally {

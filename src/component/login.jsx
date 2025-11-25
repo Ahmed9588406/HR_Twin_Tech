@@ -29,17 +29,12 @@ function LoginPage() {
   useEffect(() => {
     const initializeFirebase = async () => {
       try {
-        console.log('[Login] 🚀 Starting Firebase initialization...');
-        
         // Register service worker first
         await registerServiceWorker();
-        console.log('[Login] ✅ Service worker registered');
-        
         // Test Firebase connection
         testFirebaseConnection();
-        console.log('[Login] ✅ Firebase connection tested');
       } catch (error) {
-        console.error('[Login] ❌ Firebase initialization error:', error);
+        console.error('Firebase initialization error:', error);
       }
     };
 
@@ -53,8 +48,6 @@ function LoginPage() {
 
     try {
       const data = await loginUser({ username, password });
-      console.log('[Login] ✅ Login response data:', data);
-      
       if (data && data.token) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('role', data.role ?? '');
@@ -62,16 +55,14 @@ function LoginPage() {
         localStorage.setItem('userData', JSON.stringify(data));
 
         // Request notification permission after successful login
-        console.log('[Login] 🔔 Requesting notification permission...');
-        
         // Wait a bit for storage to be ready
         await new Promise(resolve => setTimeout(resolve, 500));
         
         const token = await requestNotificationPermission();
         if (token) {
-          console.log('[Login] ✅ FCM Token obtained:', token);
+          console.log('FCM token received');
         } else {
-          console.warn('[Login] ⚠️ FCM Token not obtained (check console for details)');
+          console.warn('No FCM token received');
         }
 
         // Navigate based on role
@@ -84,7 +75,6 @@ function LoginPage() {
         setError(_t('LOGIN_TOKEN_MISSING'));
       }
     } catch (err) {
-      console.error('[Login] ❌ Login failed:', err);
       setError(err.message || _t('LOGIN_FAILED'));
     } finally {
       setLoading(false);

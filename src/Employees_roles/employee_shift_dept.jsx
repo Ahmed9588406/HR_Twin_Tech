@@ -45,8 +45,6 @@ const EmployeeShiftDept = () => {
         }
 
         const url = `https://api.shl-hr.com/api/v1/emp-dashboard/employee-shift-dept`;
-        console.log('[DEBUG] Fetching shift/dept data from URL:', url);
-
         const response = await fetch(url, {
           method: 'GET',
           headers: {
@@ -56,8 +54,6 @@ const EmployeeShiftDept = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-
-        console.log('[DEBUG] Response status:', response.status);
 
         if (!response.ok) {
           let errorMessage = 'Failed to fetch shift/dept data';
@@ -71,10 +67,8 @@ const EmployeeShiftDept = () => {
         }
 
         const result = await response.json();
-        console.log('[DEBUG] Shift/Dept data:', result);
         setData(result);
       } catch (err) {
-        console.error('[DEBUG] Error fetching shift/dept data:', err);
         setError(err.message);
       } finally {
         setLoading(false);

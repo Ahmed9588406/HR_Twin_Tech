@@ -14,20 +14,14 @@ const PublicRoute = ({ children }) => {
   const authenticated = isAuthenticated();
   const role = getUserRole();
 
-  console.log('[PublicRoute] Checking authentication...');
-  console.log('[PublicRoute] Authenticated:', authenticated);
-  console.log('[PublicRoute] Role:', role);
-
   if (authenticated) {
     // User is already authenticated, redirect to appropriate dashboard
     const isAdmin = role && role.toUpperCase() === 'ADMIN';
     const redirectPath = isAdmin ? '/dashboard' : '/user-dashboard';
     
-    console.log('[PublicRoute] ✅ User is authenticated - Redirecting to:', redirectPath);
     return <Navigate to={redirectPath} replace />;
   }
 
-  console.log('[PublicRoute] ❌ User not authenticated - Showing login page');
   return children;
 };
 

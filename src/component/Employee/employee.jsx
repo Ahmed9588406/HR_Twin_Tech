@@ -51,7 +51,6 @@ function Employee() {
 
   const handleEmployeeDeleted = () => {
     // Handle employee deletion logic here
-    console.log('Employee removed');
     // Optionally refresh the employee list
     window.location.reload();
   };

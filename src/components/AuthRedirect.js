@@ -16,21 +16,15 @@ const AuthRedirect = ({ children }) => {
 
   useEffect(() => {
     const checkAuthAndRedirect = () => {
-      console.log('[AuthRedirect] Checking authentication on app load...');
-      
       const authenticated = isAuthenticated();
       const currentPath = window.location.pathname;
       
-      console.log('[AuthRedirect] Authenticated:', authenticated);
-      console.log('[AuthRedirect] Current path:', currentPath);
-
       if (authenticated && currentPath === '/') {
         // User is authenticated and on login page, redirect to dashboard
         const role = getUserRole();
         const isAdmin = role && role.toUpperCase() === 'ADMIN';
         const redirectPath = isAdmin ? '/dashboard' : '/user-dashboard';
         
-        console.log('[AuthRedirect] ✅ Redirecting authenticated user to:', redirectPath);
         navigate(redirectPath, { replace: true });
       }
       

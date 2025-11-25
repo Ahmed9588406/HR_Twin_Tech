@@ -48,7 +48,6 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
         setMembers(memberList);
         setTeamData(rawTeam);
       } catch (error) {
-        console.error('Unexpected error loading data:', error);
         setEmployees([]);
         setMembers([]);
         setTeamData(null);
@@ -106,7 +105,6 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
           if (onMembersChange) onMembersChange();
         }
       } catch (error) {
-        console.error('Error adding member:', error);
         alert(_t('FAILED_ADD_MEMBER', { error: error.message }));
       } finally {
         setLoading(false);
@@ -131,7 +129,6 @@ export default function AddNewMembers({ team, onClose, onMembersChange }) {
         setTeamData(updatedTeam);
         if (onMembersChange) onMembersChange();
       } catch (error) {
-        console.error('Error removing member:', error);
         alert(_t('ERROR_REMOVING_MEMBER', { error: error.message }));
       }
     }

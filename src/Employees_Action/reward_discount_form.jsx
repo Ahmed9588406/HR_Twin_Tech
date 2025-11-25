@@ -174,11 +174,7 @@ export default function RewardDiscountForm({ selectedActions = [], onClose = () 
         payload.numberOfHours = selectedHours.reduce((a, b) => a + b, 0);
       }
 
-      console.log('Final payload before sending:', payload);
-
       const result = await postDiscountsRewards(payload);
-      console.log('Discounts/Rewards post result:', result);
-
       const detailMsg = amountType === 'AMOUNT' 
         ? `amount ${amount}`
         : amountType === 'NUMOFDAYS'
@@ -188,7 +184,6 @@ export default function RewardDiscountForm({ selectedActions = [], onClose = () 
       alert(`${actionType.charAt(0).toUpperCase() + actionType.slice(1)} of ${detailMsg} applied to ${selectedActions.length} employee(s).`);
       onSuccess();
     } catch (err) {
-      console.error('Discounts/Rewards failed:', err);
       setError(_t('FAILED_APPLY_REWARD_DISCOUNT'));
     } finally {
       setSubmitting(false);

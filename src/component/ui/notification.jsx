@@ -187,8 +187,7 @@ const playNotificationSound = () => {
       oscillator2.stop(audioContext.currentTime + 0.3);
     }, 150);
   } catch (error) {
-    console.error('Failed to play notification sound:', error);
-  }
+    }
 };
 
 // Main Notification Modal Component
@@ -225,17 +224,13 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode, on
   
   // Handle new notification callback
   const handleNewNotification = useCallback((notification) => {
-    console.log('🔔 NotificationModal received new notification:', notification);
-    
     setNotifications(prev => {
       // Check if notification already exists
       const exists = prev.some(n => n.id === notification.id);
       if (exists) {
-        console.log('⏭️ Notification already in list, skipping:', notification.id);
         return prev;
       }
       
-      console.log('✨ Adding new notification to list');
       return [notification, ...prev];
     });
     
@@ -260,8 +255,6 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode, on
   
   // Initialize WebSocket connection on mount
   useEffect(() => {
-    console.log('🚀 Component mounted, initializing WebSocket for empCode:', empCode);
-    
     const initializeConnection = async () => {
       try {
         setConnectionStatus('connecting');
@@ -271,20 +264,16 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode, on
         
         if (connected) {
           setConnectionStatus('connected');
-          console.log('✅ WebSocket connected successfully');
-        } else {
+          } else {
           setConnectionStatus('disconnected');
-          console.error('❌ WebSocket connection failed');
-        }
+          }
         
         // Load initial notifications
         setLoading(true);
         const data = await notificationAPI.fetchNotifications(empCode);
         setNotifications(data);
-        console.log('📥 Initial load:', data.length, 'notifications');
         setLoading(false);
       } catch (error) {
-        console.error('❌ Initialization failed:', error);
         setConnectionStatus('disconnected');
         setLoading(false);
         
@@ -296,7 +285,6 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode, on
     initializeConnection();
     
     return () => {
-      console.log('🔌 Component unmounting');
       if (subscriptionRef.current) {
         subscriptionRef.current();
         subscriptionRef.current = null;
@@ -307,16 +295,11 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode, on
   
   // Subscribe to real-time notifications
   useEffect(() => {
-    console.log('📡 Setting up notification subscription');
-    
     const unsubscribe = notificationAPI.subscribe(handleNewNotification);
     subscriptionRef.current = unsubscribe;
     
-    console.log('✅ Subscription active, waiting for notifications...');
-    
     return () => {
       if (subscriptionRef.current) {
-        console.log('🔌 Cleaning up subscription');
         subscriptionRef.current();
         subscriptionRef.current = null;
       }
@@ -336,12 +319,10 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode, on
   // Load notifications when modal opens
   useEffect(() => {
     if (isOpen) {
-      console.log('📂 Modal opened, refreshing notifications');
       const refreshNotifications = async () => {
         const data = await notificationAPI.fetchNotifications(empCode);
         setNotifications(data);
-        console.log('📥 Refreshed:', data.length, 'notifications');
-      };
+        };
       refreshNotifications();
       setPosition({ x: window.innerWidth - 420, y: 80 });
     }
@@ -413,9 +394,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode, on
       setConnectionStatus('connecting');
       await notificationAPI.forceReconnect();
       setConnectionStatus('connected');
-      console.log('✅ WebSocket reconnected');
-    } catch (error) {
-      console.error('❌ WebSocket reconnection failed:', error);
+      } catch (error) {
       setConnectionStatus('disconnected');
     }
   };
@@ -427,8 +406,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode, on
         prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
       );
     } catch (error) {
-      console.error('Failed to mark as read:', error);
-    }
+      }
   };
   
   const handleMarkAllAsRead = async () => {
@@ -436,8 +414,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode, on
       await notificationAPI.markAllAsRead(empCode);
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     } catch (error) {
-      console.error('Failed to mark all as read:', error);
-    }
+      }
   };
   
   const handleDelete = async (notificationId) => {
@@ -450,13 +427,11 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode, on
         return newSet;
       });
     } catch (error) {
-      console.error('Failed to delete notification:', error);
-    }
+      }
   };
   
   const handleNotificationClick = (notification) => {
     if (notification.actionUrl) {
-      console.log('Navigate to:', notification.actionUrl);
       // window.location.href = notification.actionUrl;
     }
   };
@@ -491,8 +466,7 @@ export const NotificationModal = ({ isOpen, onClose, buttonRef, receiverCode, on
       setNotifications(prev => prev.filter(n => !selectedNotifications.has(n.id)));
       setSelectedNotifications(new Set());
     } catch (error) {
-      console.error('Failed to delete selected notifications:', error);
-    }
+      }
   };
   
   const unreadCount = notifications.filter(n => !n.read).length;

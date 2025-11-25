@@ -39,7 +39,6 @@ const fetchAttendanceRecords = async (empCode, options = {}) => {
 
     return records;
   } catch (err) {
-    console.error('Error in fetchAttendanceRecords:', err);
     throw err;
   }
 };
@@ -172,7 +171,6 @@ export default function EmployeeAttendanceHistory({ empCode }) {
           totalElements: Array.isArray(data) ? data.length : 0
         });
       } catch (err) {
-        console.error('Failed to fetch attendance records:', err);
         if (!mounted) return;
         setError('Unable to load attendance history.');
         setHistoryData({

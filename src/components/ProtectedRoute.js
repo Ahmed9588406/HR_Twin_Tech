@@ -14,16 +14,10 @@ const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   const authenticated = !!token;
   
-  console.log('[ProtectedRoute] Checking authentication...');
-  console.log('[ProtectedRoute] Token exists:', authenticated);
-  console.log('[ProtectedRoute] Token value:', token);
-  
   if (!authenticated) {
-    console.log('[ProtectedRoute] ❌ Not authenticated - Redirecting to login');
     return <Navigate to="/" replace />;
   }
 
-  console.log('[ProtectedRoute] ✅ Authenticated - Rendering protected component');
   return children;
 };
 

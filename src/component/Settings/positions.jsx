@@ -55,7 +55,6 @@ export default function Positions() {
         setIsAdding(false);
         setNewPosition({ name: '', department: '' });
       } catch (error) {
-        console.error('Error saving new position:', error);
         alert(`Failed to add position: ${error.message}`);
       } finally {
         setPositionsLoading(false);
@@ -100,7 +99,6 @@ export default function Positions() {
       setIsModalOpen(false);
       setSelectedPosition(null);
     } catch (error) {
-      console.error('Error updating position:', error);
       alert(`Failed to update position: ${error.message}`);
     } finally {
       setPositionsLoading(false);
@@ -115,7 +113,6 @@ export default function Positions() {
         const fetchedPositions = await fetchPositions();
         setPositions(fetchedPositions);
       } catch (error) {
-        console.error('Error deleting position:', error);
         alert(`Failed to delete position: ${error.message}`);
       } finally {
         setPositionsLoading(false);

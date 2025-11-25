@@ -153,13 +153,10 @@ export default function AdvanceRequest({ employee = {}, onClose = () => {}, onSu
 
       // call helper
       const result = await postAdvanceRequest(payload);
-      console.log('Advance request result:', result);
-
       alert(copy.submitSuccess);
       reset();
       onSuccess();
     } catch (err) {
-      console.error('Advance request failed:', err);
       // show user-friendly message if available
       let msg = copy.submitFailureFallback;
       try {

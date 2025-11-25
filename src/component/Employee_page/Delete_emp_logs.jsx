@@ -143,8 +143,7 @@ const DeleteEmployeeModal = ({ isOpen, onClose }) => {
       const data = await response.json();
       setLogs(data);
     } catch (error) {
-      console.error('Error fetching logs:', error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

@@ -17,16 +17,12 @@ export const fetchDepartments = async () => {
       }
     });
 
-    console.log('Fetch departments response status:', response.status);
-
     if (!response.ok) {
       const text = await response.text();
       throw new Error(`Failed to fetch departments: ${response.status} - ${text}`);
     }
 
     const data = await response.json();
-    console.log('Fetched departments data:', data);
-
     // Normalize the response data
     return data.map((department) => ({
       id: department.id,
@@ -37,7 +33,6 @@ export const fetchDepartments = async () => {
       date: department.date
     }));
   } catch (error) {
-    console.error('Error fetching departments:', error);
     return [];
   }
 };
@@ -60,7 +55,7 @@ export const fetchDepartmentById = async (id) => {
       }
     });
 
-    console.log(`Fetch department by ID (${id}) response status:`, response.status);
+    console.log(`response status:`, response.status);
 
     if (!response.ok) {
       const text = await response.text();
@@ -70,8 +65,6 @@ export const fetchDepartmentById = async (id) => {
     }
 
     const data = await response.json();
-    console.log('Fetched department data:', data);
-
     // Normalize the response data
     return {
       id: data.id,
@@ -82,7 +75,7 @@ export const fetchDepartmentById = async (id) => {
       date: data.date
     };
   } catch (error) {
-    console.error(`Error fetching department by ID (${id}):`, error);
+    console.error(`Error fetching department:`, error);
 
     // Provide a more user-friendly error message
     if (error.message.includes('500')) {
@@ -112,8 +105,6 @@ export const deleteDepartment = async (id) => {
       }
     });
 
-    console.log(`Delete department response status:`, response.status);
-
     if (!response.ok) {
       const text = await response.text();
       throw new Error(`Failed to delete department with ID ${id}: ${response.status} - ${text}`);
@@ -122,7 +113,6 @@ export const deleteDepartment = async (id) => {
     // Assuming successful delete returns no content
     return true;
   } catch (error) {
-    console.error(`Error deleting department with ID ${id}:`, error);
     throw error;
   }
 };
@@ -145,19 +135,14 @@ export const createDepartment = async (departmentData) => {
       body: JSON.stringify(departmentData)
     });
 
-    console.log('Create department response status:', response.status);
-
     if (!response.ok) {
       const text = await response.text();
       throw new Error(`Failed to create department: ${response.status} - ${text}`);
     }
 
     const data = await response.json();
-    console.log('Created department data:', data);
-
     return data;
   } catch (error) {
-    console.error('Error creating department:', error);
     throw error;
   }
 };
@@ -180,19 +165,14 @@ export const updateDepartment = async (departmentData) => {
       body: JSON.stringify(departmentData)
     });
 
-    console.log('Update department response status:', response.status);
-
     if (!response.ok) {
       const text = await response.text();
       throw new Error(`Failed to update department: ${response.status} - ${text}`);
     }
 
     const data = await response.json();
-    console.log('Updated department data:', data);
-
     return data;
   } catch (error) {
-    console.error('Error updating department:', error);
     throw error;
   }
 };

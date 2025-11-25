@@ -81,7 +81,6 @@ export default function UserProfileView() {
           const profile = await fetchEmployeeProfile(code);
           setProfileData(profile);
         } catch (profileErr) {
-          console.error('Failed to load profile:', profileErr);
           setError(_t('PROFILE_LOAD_ERROR_FALLBACK'));
         }
       } finally {
@@ -96,7 +95,6 @@ export default function UserProfileView() {
     // Listen for foreground notifications
     onMessageListener()
       .then((payload) => {
-        console.log('Foreground notification received:', payload);
         showBrowserNotification(
           payload.notification?.title || _t('DEFAULT_NOTIFICATION_TITLE'),
           {
@@ -106,7 +104,7 @@ export default function UserProfileView() {
           }
         );
       })
-      .catch((err) => console.error('Failed to receive foreground message:', err));
+      .catch((err) => console.error('Notification listener error:', err));
   }, []);
 
 

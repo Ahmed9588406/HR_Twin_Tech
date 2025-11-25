@@ -16,7 +16,6 @@ export default function AdvanceRequestsTable() {
         const data = await fetchAdvanceRequests();
         setRequests(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error('Failed to load advance requests:', err);
         setError(_t('FAILED_LOAD_ADVANCE_REQUESTS'));
       } finally {
         setLoading(false);
