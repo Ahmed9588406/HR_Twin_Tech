@@ -139,7 +139,7 @@ export default function DiscountsDashboard({ selectedMonth }) {
           <table className="w-full">
             <thead>
               <tr className="bg-gradient-to-r from-red-50 to-orange-50 border-b border-red-100">
-                <th className="text-center py-4 px-6 text-sm font-semibold text-red-700">{_t('EMPLOYEE_NAME')}</th>
+                <th className="text-left py-4 px-6 text-sm font-semibold text-red-700">{_t('EMPLOYEE_NAME')}</th>
                 <th className="text-center py-4 px-4 text-sm font-semibold text-red-700">{_t('REASON_DISCOUNT')}</th>
                 <th className="text-center py-4 px-4 text-sm font-semibold text-red-700">{_t('AMOUNT')}</th>
                 <th className="text-center py-4 px-4 text-sm font-semibold text-red-700">{_t('DISCOUNT_DATE')}</th>
@@ -154,39 +154,51 @@ export default function DiscountsDashboard({ selectedMonth }) {
                     className="hover:bg-red-50/30 transition-colors cursor-pointer"
                     onClick={() => handleRowClick(discount)}
                   >
-                    <td className="py-4 px-6 text-center">
-                      <div className="flex items-center gap-3 justify-center">
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-3">
                         <img
                           src={discount.data ? `data:${discount.contentType};base64,${discount.data}` : 'https://i.pravatar.cc/150?img=12'}
                           alt={discount.name}
-                          className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100"
+                          className="w-10 h-10 rounded-full object-cover ring-2 ring-red-100 flex-shrink-0"
                         />
                         <span className="font-medium text-gray-900">{discount.name}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-gray-700 text-center">{discount.description}</td>
-                    <td className="py-4 px-4 text-red-600 font-semibold text-center">
-                      {discount.amount.toFixed(2)} {_t('CURRENCY')}
+                    <td className="py-4 px-4 text-center">
+                      <span className="text-gray-700 line-clamp-2">{discount.description}</span>
                     </td>
-                    <td className="py-4 px-4 text-gray-600 text-center">{new Date(discount.date).toLocaleDateString(_getLang() === 'ar' ? 'ar' : 'en-US')}</td>
-                    <td className="py-4 px-6 text-center">
-                      <div className="flex justify-center gap-3">
-                        <Edit3
-                          className="h-4 w-4 text-red-600 hover:text-red-800 cursor-pointer"
+                    <td className="py-4 px-4 text-center">
+                      <span className="text-red-600 font-semibold whitespace-nowrap">
+                        {discount.amount.toFixed(2)} {_t('CURRENCY')}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <span className="text-gray-600 whitespace-nowrap">
+                        {new Date(discount.date).toLocaleDateString(_getLang() === 'ar' ? 'ar' : 'en-US')}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex justify-center items-center gap-3">
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleEditClick(discount);
                           }}
+                          className="p-2 hover:bg-red-100 rounded-lg transition-colors"
                           title={_t('EDIT_AMOUNT')}
-                        />
-                        <Trash2
-                          className="h-4 w-4 text-red-600 hover:text-red-800 cursor-pointer"
+                        >
+                          <Edit3 className="h-4 w-4 text-red-600" />
+                        </button>
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeleteClick(discount);
                           }}
+                          className="p-2 hover:bg-red-100 rounded-lg transition-colors"
                           title={_t('DELETE_DISCOUNT')}
-                        />
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </button>
                       </div>
                     </td>
                   </tr>

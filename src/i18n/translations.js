@@ -515,6 +515,7 @@ const translations = {
 
     // Employee Actions - Change Position Form
     , CHANGE_POSITION: 'Change Position'
+    , CHANGE_JOB_POSITION_NAME: 'Change Job Position Name'
     , NEW_POSITION: 'New Position'
     , LOADING_POSITIONS: 'Loading positions...'
     , SELECT_POSITION: 'Select a position'
@@ -1100,6 +1101,7 @@ const translations = {
 
     // Employee Actions - Change Position Form
     , CHANGE_POSITION: 'تغيير المنصب'
+    , CHANGE_JOB_POSITION_NAME: 'تغيير اسم المنصب الوظيفي'
     , NEW_POSITION: 'المنصب الجديد'
     , LOADING_POSITIONS: 'جاري تحميل المناصب...'
     , SELECT_POSITION: 'اختر منصبًا'
