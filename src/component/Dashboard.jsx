@@ -10,6 +10,7 @@ import { fetchAttendanceStatistics, fetchDashboardData } from './api/dashboard_a
 import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../i18n/i18n'
 
 function Dashboard() {
+  // State management
   const [dashboardData, setDashboardData] = useState(null);
   const [attendanceData, setAttendanceData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,194 +22,173 @@ function Dashboard() {
     search: ''
   });
 
+  // Language subscription
   const [lang, setLang] = useState(_getLang());
-  const [, forceUpdate] = useState({});
-  
   useEffect(() => {
-    const unsub = _subscribe((newLang) => {
-      setLang(newLang);
-      forceUpdate({});
-    });
+    const unsub = _subscribe((newLang) => setLang(newLang));
     return unsub;
   }, []);
 
+  // Initial data load - dashboard data only
   useEffect(() => {
-    const loadData = async () => {
+    const loadDashboardData = async () => {
       try {
         setLoading(true);
-        const [dashboard, attendance] = await Promise.all([
-          fetchDashboardData(),
-          fetchAttendanceStatistics({ date: filters.date, department: filters.department })
-        ]);
+        const dashboard = await fetchDashboardData();
         setDashboardData(dashboard);
-        console.log('Fetched attendance data:', attendance);
-        console.log('First employee data:', attendance && attendance.length > 0 ? attendance[0] : 'No data');
-        setAttendanceData(attendance || []);
       } catch (err) {
+        console.error('Error loading dashboard data:', err);
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    loadData();
-  }, []); 
+    loadDashboardData();
+  }, []);
 
+  // Fetch attendance data when date or department filter changes
   useEffect(() => {
-    const refetchAttendance = async () => {
+    const loadAttendanceData = async () => {
       try {
         setLoading(true);
-        const attendance = await fetchAttendanceStatistics({ date: filters.date, department: filters.department });
-        console.log('Refetched attendance for date:', filters.date, 'department:', filters.department);
-        console.log('Attendance data received:', attendance);
-        setAttendanceData(attendance || []);
+        const params = {
+          date: filters.date
+        };
+        
+        // Only add department if it's not 'all'
+        if (filters.department !== 'all') {
+          params.department = filters.department;
+        }
+
+        const attendance = await fetchAttendanceStatistics(params);
+        setAttendanceData(Array.isArray(attendance) ? attendance : []);
       } catch (err) {
+        console.error('Error loading attendance data:', err);
         setError(err.message);
+        setAttendanceData([]);
       } finally {
         setLoading(false);
       }
     };
-    refetchAttendance();
+
+    loadAttendanceData();
   }, [filters.date, filters.department]);
 
+  // Handle filter changes from the filter component
   const handleFilterChange = (newFilters) => {
-    console.log('Filters changed:', newFilters);
     setFilters(newFilters);
   };
 
-  const normalizeDate = (value) => {
-    if (!value) return null;
-    const str = String(value).trim().split('T')[0]; // Remove time part if present
-    
-    // If already like 2025-11-02 or 2025/11/02
-    if (/^\d{4}[-\/]\d{2}[-\/]\d{2}$/.test(str)) {
-      const parts = str.includes('-') ? str.split('-') : str.split('/');
-      return `${parts[0]}-${parts[1]}-${parts[2]}`;
-    }
-    // If like 02/11/2025
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) {
-      const [dd, mm, yyyy] = str.split('/');
-      return `${yyyy}-${mm}-${dd}`;
-    }
-    try {
-      const d = new Date(str);
-      if (isNaN(d.getTime())) return null;
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${yyyy}-${mm}-${dd}`;
-    } catch {
-      return null;
-    }
-  };
-
-  const getEmpDepartment = (emp) => {
-    const dept = emp.department || emp.deptartment || emp.departmentName || emp.empDepartment || '';
-    return String(dept).trim();
-  };
-
+  // Helper functions to safely extract employee data
   const getEmpName = (emp) => {
-    return String(emp.name || emp.empName || emp.employeeName || '').trim();
+    return String(emp?.name || emp?.empName || emp?.employeeName || '').trim();
   };
 
   const getEmpCode = (emp) => {
-    return String(emp.empCode || emp.code || emp.employeeCode || '').trim();
+    return String(emp?.empCode || emp?.code || emp?.employeeCode || '').trim();
   };
 
-  const getEmpStatusNorm = (emp) => {
-    const raw = String(emp.status || emp.empStatus || '').toUpperCase().trim();
-    const hasLeave = !!(emp.leaveTime && emp.leaveTime !== 'N/A' && emp.leaveTime !== '');
-    const hasArrival = !!(emp.arrivalTime && emp.arrivalTime !== 'N/A' && emp.arrivalTime !== '');
-    
-    // Check for leave first
-    if (hasLeave || /ON[_ ]?LEAVE|LEFT|LEAVE/.test(raw)) return 'on-leave';
-    
-    // Check for absent (including typos like APSENT)
-    if (/ABSENT|APSENT|APESENT|ABSENTED|MISSING/.test(raw)) return 'absent';
-    
-    // Check for present
-    if (/PRESENT|HERE|ON_TIME|CHECKED[_ ]?IN/.test(raw) || hasArrival) return 'present';
-    
-    // If they have arrival time but no explicit status, they're present
-    if (hasArrival) return 'present';
-    
-    // Default to present if they're in the attendance data
-    return 'present';
+  const getEmpDepartment = (emp) => {
+    return String(emp?.department || emp?.deptartment || emp?.departmentName || emp?.empDepartment || '').trim();
   };
 
-  const filteredEmployees = useMemo(() => {
-    console.log('=== FILTERING DEBUG ===');
-    console.log('Total attendance data:', attendanceData.length);
-    console.log('Current filters:', filters);
+  const getEmpStatus = (emp) => {
+    const rawStatus = String(emp?.status || emp?.empStatus || '').toUpperCase().trim();
+    const hasArrival = emp?.arrivalTime && emp.arrivalTime !== 'N/A' && emp.arrivalTime !== '';
+    const hasLeave = emp?.leaveTime && emp.leaveTime !== 'N/A' && emp.leaveTime !== '';
     
-    // If no attendance data, return empty array
-    if (!attendanceData || attendanceData.length === 0) {
-      console.log('No attendance data available');
-      return [];
+    // Determine status based on various indicators
+    if (/ON[_ -]?LEAVE|LEFT|LEAVE/.test(rawStatus) || (hasLeave && !hasArrival)) {
+      return 'on-leave';
     }
     
-    return attendanceData.filter((emp, index) => {
-      // Debug first few employees
-      if (index < 3) {
-        console.log(`Employee ${index}:`, {
-          name: getEmpName(emp),
-          code: getEmpCode(emp),
-          rawDate: emp.date || emp.attendanceDate,
-          department: getEmpDepartment(emp),
-          status: emp.status,
-          normalizedStatus: getEmpStatusNorm(emp),
-          arrivalTime: emp.arrivalTime,
-          leaveTime: emp.leaveTime
-        });
-      }
+    if (/ABSENT|APSENT|MISSING/.test(rawStatus) || (!hasArrival && !hasLeave)) {
+      return 'absent';
+    }
+    
+    if (/PRESENT|HERE|ON[_ ]?TIME|CHECKED/.test(rawStatus) || hasArrival) {
+      return 'present';
+    }
+    
+    return 'present'; // Default
+  };
 
-      // Department filter
-      if (filters.department !== 'all') {
-        const empDept = getEmpDepartment(emp).toLowerCase();
-        const selDept = String(filters.department).toLowerCase();
-        if (empDept !== selDept) {
-          if (index < 3) console.log(`  ❌ Department mismatch: ${empDept} !== ${selDept}`);
-          return false;
-        }
-      }
+  // Filter employees based on all filter criteria
+  const filteredEmployees = useMemo(() => {
+    if (!Array.isArray(attendanceData) || attendanceData.length === 0) {
+      return [];
+    }
 
-      // Status filter
+    return attendanceData.filter((emp) => {
+      // Status filter (client-side)
       if (filters.status !== 'all') {
-        const empStatus = getEmpStatusNorm(emp);
-        const filterStatus = String(filters.status).toLowerCase();
-        if (empStatus !== filterStatus) {
-          if (index < 3) console.log(`  ❌ Status mismatch: ${empStatus} !== ${filterStatus}`);
+        const empStatus = getEmpStatus(emp);
+        if (empStatus !== filters.status) {
           return false;
         }
       }
 
-      // Search filter
-      if (filters.search) {
+      // Search filter (client-side)
+      if (filters.search && filters.search.trim() !== '') {
+        const searchTerm = filters.search.toLowerCase().trim();
         const empName = getEmpName(emp).toLowerCase();
         const empCode = getEmpCode(emp).toLowerCase();
-        const term = String(filters.search).toLowerCase();
-        if (!empName.includes(term) && !empCode.includes(term)) {
-          if (index < 3) console.log(`  ❌ Search mismatch: ${term} not in ${empName} or ${empCode}`);
+        
+        if (!empName.includes(searchTerm) && !empCode.includes(searchTerm)) {
           return false;
         }
       }
 
-      if (index < 3) console.log(`  ✅ Employee passed all filters`);
       return true;
     });
-  }, [attendanceData, filters]);
+  }, [attendanceData, filters.status, filters.search]);
 
-  console.log('Filtered employees count:', filteredEmployees.length);
-
+  // Extract unique departments from dashboard and attendance data
   const departments = useMemo(() => {
-    const fromDashboard = dashboardData?.deptNumOfEmp?.map(dept => String(dept.name).trim()) || [];
-    const fromAttendance = Array.from(new Set((attendanceData || []).map(e => getEmpDepartment(e)).filter(Boolean)));
-    const set = new Set([...(fromDashboard || []), ...(fromAttendance || [])]);
-    return Array.from(set);
+    const deptSet = new Set();
+    
+    // From dashboard data
+    if (dashboardData?.deptNumOfEmp) {
+      dashboardData.deptNumOfEmp.forEach(dept => {
+        const name = String(dept?.name || '').trim();
+        if (name) deptSet.add(name);
+      });
+    }
+    
+    // From attendance data
+    if (Array.isArray(attendanceData)) {
+      attendanceData.forEach(emp => {
+        const dept = getEmpDepartment(emp);
+        if (dept) deptSet.add(dept);
+      });
+    }
+    
+    return Array.from(deptSet).sort();
   }, [dashboardData, attendanceData]);
 
-  if (loading) return <div className="flex items-center justify-center h-screen">{_t('LOADING')}</div>;
-  if (error) return <div className="flex items-center justify-center h-screen text-red-600">{error}</div>;
+  // Loading and error states
+  if (loading && !dashboardData) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">{_t('LOADING')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !dashboardData) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-2">{_t('ERROR')}</h2>
+          <p className="text-gray-600">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -242,37 +222,36 @@ function Dashboard() {
                   <div>
                     <h2 className="text-xl font-bold text-gray-900">{_t('EMPLOYEE_ATTENDANCE')}</h2>
                     <p className="text-sm text-gray-500 mt-1">
-                      {_t('SHOWING_EMPLOYEES', { 
-                        current: filteredEmployees.length, 
-                        total: attendanceData.length, 
-                        date: new Date(filters.date).toLocaleDateString(
-                          _getLang() === 'ar' ? 'ar' : 'en-US', 
-                          { month: 'long', day: 'numeric', year: 'numeric' }
-                        ) 
-                      })}
+                      {_t('SHOWING_EMPLOYEES').replace('{{current}}', filteredEmployees.length).replace('{{total}}', attendanceData.length).replace('{{date}}', new Date(filters.date).toLocaleDateString(
+                        lang === 'ar' ? 'ar' : 'en-US', 
+                        { month: 'long', day: 'numeric', year: 'numeric' }
+                      ))}
                     </p>
                   </div>
                 </div>
                 
-                {filteredEmployees.length > 0 ? (
+                {loading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+                  </div>
+                ) : filteredEmployees.length > 0 ? (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {filteredEmployees.map((employee, index) => {
-                      const empStatus = getEmpStatusNorm(employee);
+                      const empStatus = getEmpStatus(employee);
                       const displayStatus = empStatus === 'on-leave' ? _t('LEFT') :
                                           empStatus === 'absent' ? _t('ABSENT') :
-                                          empStatus === 'present' ? _t('STAY_HERE') :
                                           _t('STAY_HERE');
                       
                       return (
                         <EmployeeCard 
-                          key={employee.empCode || index}
+                          key={getEmpCode(employee) || index}
                           employee={{
-                            code: employee.empCode,
+                            code: getEmpCode(employee),
                             name: getEmpName(employee),
-                            role: employee.jobPosition,
+                            role: employee.jobPosition || employee.position || '',
                             department: getEmpDepartment(employee),
                             contentType: employee.contentType,
-                            image: employee.empPhoto,
+                            image: employee.empPhoto || employee.photo,
                             checkInTime: employee.arrivalTime,
                             leaveTime: employee.leaveTime,
                             status: displayStatus
