@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Palmtree, X } from 'lucide-react';
 import { postVacations } from './emp_actions_api';
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../i18n/i18n';
 
 export default function SendVacationForm({ selectedActions = [], onClose = () => {}, onSuccess = () => {} }) {
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => _subscribe(setLang), []);
+
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [comment, setComment] = useState('');
@@ -73,15 +77,15 @@ export default function SendVacationForm({ selectedActions = [], onClose = () =>
 
   const validate = () => {
     if (!startDate) {
-      setError('Please select start date.');
+      setError(_t('SELECT_START_DATE'));
       return false;
     }
     if (!endDate) {
-      setError('Please select end date.');
+      setError(_t('SELECT_END_DATE'));
       return false;
     }
     if (new Date(startDate) > new Date(endDate)) {
-      setError('End date must be after start date.');
+      setError(_t('END_DATE_AFTER_START'));
       return false;
     }
     return true;
@@ -104,11 +108,11 @@ export default function SendVacationForm({ selectedActions = [], onClose = () =>
       const result = await postVacations(payload);
       console.log('Vacation post result:', result);
 
-      alert(`Vacation sent to ${selectedActions.length} employee(s).`);
+      alert(_t('AFFECTED_EMPLOYEES_VACATION', { count: selectedActions.length }));
       onSuccess();
     } catch (err) {
       console.error('Vacation send failed:', err);
-      setError('Failed to send vacation. Please try again.');
+      setError(_t('FAILED_SEND_VACATION'));
     } finally {
       setSubmitting(false);
     }
@@ -137,7 +141,7 @@ export default function SendVacationForm({ selectedActions = [], onClose = () =>
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
                 <Palmtree className="w-5 h-5 text-white" />
               </div>
-              Send Vacation
+              {_t('SEND_VACATION')}
             </h2>
             <button
               onClick={onClose}
@@ -152,7 +156,7 @@ export default function SendVacationForm({ selectedActions = [], onClose = () =>
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Start Date</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">{_t('START_DATE')}</label>
               <input
                 type="date"
                 value={startDate}
@@ -163,7 +167,7 @@ export default function SendVacationForm({ selectedActions = [], onClose = () =>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">End Date</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">{_t('END_DATE')}</label>
               <input
                 type="date"
                 value={endDate}
@@ -175,11 +179,11 @@ export default function SendVacationForm({ selectedActions = [], onClose = () =>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Comment (Optional)</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">{_t('REASON_OPTIONAL')}</label>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Provide reason for vacation..."
+              placeholder={_t('REASON_OPTIONAL')}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
               rows={3}
             />
@@ -188,7 +192,7 @@ export default function SendVacationForm({ selectedActions = [], onClose = () =>
           {/* Affected Employees */}
           <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
             <p className="text-sm text-emerald-700">
-              <strong>{selectedActions.length}</strong> employee(s) will be affected by this vacation.
+              {_t('AFFECTED_EMPLOYEES_VACATION', { count: selectedActions.length })}
             </p>
           </div>
 
@@ -206,14 +210,14 @@ export default function SendVacationForm({ selectedActions = [], onClose = () =>
               onClick={onClose}
               className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
             >
-              Cancel
+              {_t('CANCEL')}
             </button>
             <button
               type="submit"
               disabled={submitting}
               className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-500 text-white rounded-lg hover:from-emerald-700 hover:to-green-600 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {submitting ? 'Sending...' : `Send Vacation (${selectedActions.length})`}
+              {submitting ? _t('SENDING') : `${_t('SEND_VACATION')} (${selectedActions.length})`}
             </button>
           </div>
         </form>

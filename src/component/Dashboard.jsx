@@ -99,7 +99,12 @@ function Dashboard() {
     const hasLeave = emp?.leaveTime && emp.leaveTime !== 'N/A' && emp.leaveTime !== '';
     
     // Determine status based on various indicators
-    if (/ON[_ -]?LEAVE|LEFT|LEAVE/.test(rawStatus) || (hasLeave && !hasArrival)) {
+    // If employee has leave time, they have left
+    if (hasLeave) {
+      return 'on-leave';
+    }
+    
+    if (/ON[_ -]?LEAVE|LEFT|LEAVE/.test(rawStatus)) {
       return 'on-leave';
     }
     

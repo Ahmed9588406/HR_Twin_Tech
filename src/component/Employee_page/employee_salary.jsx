@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { DollarSign, Calendar, Clock, TrendingUp } from 'lucide-react';
-import { getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 const TEXT = {
   en: {
@@ -73,7 +73,7 @@ export default function EmployeeSalaryCard({ salaryData }) {
             <TrendingUp className="w-5 h-5 text-green-600" />
             <span className="text-sm font-medium text-green-800">{copy.basicSalary}</span>
           </div>
-          <div className="text-2xl font-bold text-green-900">${Math.floor(salaryData.basicSalary)}</div>
+          <div className="text-2xl font-bold text-green-900">{Math.floor(salaryData.basicSalary)} {_t('CURRENCY')}</div>
         </div>
 
         <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 rounded-xl">
@@ -81,7 +81,7 @@ export default function EmployeeSalaryCard({ salaryData }) {
             <DollarSign className="w-5 h-5 text-emerald-600" />
             <span className="text-sm font-medium text-emerald-800">{copy.currentSalary}</span>
           </div>
-          <div className="text-2xl font-bold text-emerald-900">${salaryData.currentSalary.toFixed(2)}</div>
+          <div className="text-2xl font-bold text-emerald-900">{salaryData.currentSalary.toFixed(2)} {_t('CURRENCY')}</div>
         </div>
       </div>
     </div>

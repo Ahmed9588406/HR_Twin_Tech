@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Building2, X } from 'lucide-react';
 import { fetchDepartmentsSimple, changeEmployeeDepartments } from './emp_actions_api';
+import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../i18n/i18n';
 
 export default function ChangeDepartmentForm({ selectedActions = [], onClose = () => {}, onSuccess = () => {} }) {
+  const [lang, setLang] = useState(_getLang());
+  useEffect(() => _subscribe(setLang), []);
+
   const [departments, setDepartments] = useState([]);
   const [newDepartmentId, setNewDepartmentId] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -89,7 +93,7 @@ export default function ChangeDepartmentForm({ selectedActions = [], onClose = (
 
   const validate = () => {
     if (!newDepartmentId) {
-      setError('Please select a new department.');
+      setError(_t('SELECT_NEW_POSITION'));
       return false;
     }
     return true;
@@ -105,11 +109,11 @@ export default function ChangeDepartmentForm({ selectedActions = [], onClose = (
       const result = await changeEmployeeDepartments(selectedActions, parseInt(newDepartmentId));
       console.log('Department change result:', result);
 
-      alert(`Department changed for ${selectedActions.length} employee(s).`);
+      alert(_t('AFFECTED_EMPLOYEES_POSITION', { count: selectedActions.length }));
       onSuccess();
     } catch (err) {
       console.error('Department change failed:', err);
-      setError('Failed to change department. Please try again.');
+      setError(_t('FAILED_CHANGE_POSITION'));
     } finally {
       setSubmitting(false);
     }
@@ -138,7 +142,7 @@ export default function ChangeDepartmentForm({ selectedActions = [], onClose = (
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
                 <Building2 className="w-5 h-5 text-white" />
               </div>
-              Change Department
+              {_t('BULK_CHANGE_DEPARTMENT')}
             </h2>
             <button
               onClick={onClose}
@@ -152,9 +156,9 @@ export default function ChangeDepartmentForm({ selectedActions = [], onClose = (
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">New Department</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">{_t('DEPARTMENT')}</label>
             {loadingDepartments ? (
-              <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500">Loading departments...</div>
+              <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500">{_t('LOADING')}...</div>
             ) : (
               <select
                 value={newDepartmentId}
@@ -162,7 +166,7 @@ export default function ChangeDepartmentForm({ selectedActions = [], onClose = (
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 required
               >
-                <option value="">Select a department</option>
+                <option value="">{_t('SELECT_DEPT')}</option>
                 {departments.map((dept) => (
                   <option key={dept.id} value={dept.id}>{dept.departmentName}</option>
                 ))}
@@ -173,7 +177,7 @@ export default function ChangeDepartmentForm({ selectedActions = [], onClose = (
           {/* Affected Employees */}
           <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
             <p className="text-sm text-emerald-700">
-              <strong>{selectedActions.length}</strong> employee(s) will be affected by this change.
+              {_t('AFFECTED_EMPLOYEES', { count: selectedActions.length })}
             </p>
           </div>
 
@@ -191,14 +195,14 @@ export default function ChangeDepartmentForm({ selectedActions = [], onClose = (
               onClick={onClose}
               className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
             >
-              Cancel
+              {_t('CANCEL')}
             </button>
             <button
               type="submit"
               disabled={submitting || loadingDepartments}
               className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-500 text-white rounded-lg hover:from-emerald-700 hover:to-green-600 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {submitting ? 'Applying...' : `Change Department (${selectedActions.length})`}
+              {submitting ? _t('APPLYING') : `${_t('BULK_CHANGE_DEPARTMENT')} (${selectedActions.length})`}
             </button>
           </div>
         </form>

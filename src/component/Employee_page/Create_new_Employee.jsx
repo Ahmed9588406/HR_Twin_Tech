@@ -431,7 +431,7 @@ export default function ProgressTabsForm({ employeeData, onSuccess, onClose }) {
                   <div className="border border-gray-200 rounded-3xl p-8">
                     <div className="grid md:grid-cols-2 gap-8">
                       <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">{_t('SALARY')} *</label>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">{_t('SALARY')} ({_t('CURRENCY')}) *</label>
                         <input
                           type="number"
                           name="salary"

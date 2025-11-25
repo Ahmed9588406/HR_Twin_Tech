@@ -236,7 +236,7 @@ export default function PayrollDashboard({ selectedMonth }) {
                     </div>
                   </td>
                   <td className="py-4 px-4 text-gray-600 text-center">{employee.totalDays}</td>
-                  <td className="py-4 px-4 text-gray-600 text-center">{employee.totalHours}h</td>
+                  <td className="py-4 px-4 text-gray-600 text-center">{employee.totalHours}</td>
                   <td className="py-4 px-4 text-center">
                     <span className="font-medium text-gray-900">{employee.salary.toFixed(2)}</span>
                     <span className="text-gray-500 text-sm ml-1">{_t('CURRENCY')}</span>
