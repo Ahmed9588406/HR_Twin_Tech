@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Edit2, X, Check, Plus } from 'lucide-react';
 import DepEditModal from './Dep_editmodal';
-import { fetchDepartments, deleteDepartment, createDepartment, updateDepartment as updateDepartmentApi } from './api/department_api';
-import { fetchDashboardData } from '../api/dashboard_api'; // Import the dashboard API
+import { fetchDepartments, deleteDepartment, createDepartment } from './api/department_api';
+import { fetchDepartments as fetchDepartmentsFromSettings, fetchBranches } from './api/settings_api';
+import { fetchEmployees } from './api/employees_api'; // Add this import
 import { t as _t, getLang as _getLang } from '../../i18n/i18n';
 
 // Helper function to format dates
@@ -18,27 +19,52 @@ const formatDate = (dateString) => {
 export default function Departments() {
   const [departments, setDepartments] = useState([]);
   const [departmentsLoading, setDepartmentsLoading] = useState(true);
+  const [branches, setBranches] = useState([]);
+  const [managers, setManagers] = useState([]);
   const isRtl = _getLang() === 'ar';
   const [isAdding, setIsAdding] = useState(false);
   const [newDepartment, setNewDepartment] = useState({
     name: '',
-    manager: '',
+    branchId: '',
+    branchName: '',
     date: '',
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
 
+  // Fetch branches and managers on component mount
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        const [branchesData, managersData] = await Promise.all([
+          fetchBranches(),
+          fetchEmployees()
+        ]);
+        setBranches(Array.isArray(branchesData) ? branchesData : []);
+        setManagers(Array.isArray(managersData) ? managersData : []);
+      } catch (error) {
+        console.error('Failed to load branches or managers:', error);
+        setBranches([]);
+        setManagers([]);
+      }
+    };
+
+    loadInitialData();
+  }, []);
+
   useEffect(() => {
     const loadDepartments = async () => {
       setDepartmentsLoading(true);
-      const fetchedData = await fetchDashboardData();
-      // Map deptNumOfEmp to departments format, assuming name is sufficient; add defaults for missing fields
-      const mappedDepartments = fetchedData.deptNumOfEmp.map((dept, index) => ({
-        id: index + 1, // Temporary ID since not provided
+      const fetchedData = await fetchDepartmentsFromSettings();
+      const mappedDepartments = (fetchedData || []).map((dept) => ({
+        id: dept.id,
         name: dept.name,
-        manager: 'N/A', // Default since not in API
-        date: new Date().toISOString().split('T')[0], // Default date
-        numberOfEmp: dept.numberOfEmp
+        branchId: dept.branchId ?? null,
+        branchName: dept.branchName || 'N/A',
+        managerId: dept.managerId ?? null,
+        manager: dept.manager || 'N/A',
+        date: dept.date || new Date().toISOString().split('T')[0],
+        numberOfEmp: dept.numberOfEmp || 0
       }));
       setDepartments(mappedDepartments);
       setDepartmentsLoading(false);
@@ -49,27 +75,39 @@ export default function Departments() {
 
   const handleAdd = () => {
     setIsAdding(true);
-    setNewDepartment({ name: '', manager: '', date: '' });
+    setNewDepartment({ name: '', branchId: '', branchName: '', date: '' });
   };
 
   const handleSaveNew = async () => {
-    if (newDepartment.name && newDepartment.date) {
+    if (newDepartment.name && newDepartment.date && newDepartment.branchId) {
       try {
         setDepartmentsLoading(true);
         await createDepartment({
-          branchId: 1, // Assuming default branchId, adjust as needed
+          branchId: newDepartment.branchId,
           name: newDepartment.name,
-          date: newDepartment.date
+          date: newDepartment.date,
+          managerId: null
         });
 
         // Reload departments after creation
-        const fetchedDepartments = await fetchDepartments();
-        setDepartments(fetchedDepartments);
+        const fetchedDepartments = await fetchDepartmentsFromSettings();
+        const mappedDepartments = fetchedDepartments.map((dept) => ({
+          id: dept.id,
+          name: dept.name,
+          branchId: dept.branchId ?? null,
+          branchName: dept.branchName || 'N/A',
+          managerId: dept.managerId ?? null,
+          manager: dept.manager || 'N/A',
+          date: dept.date || new Date().toISOString().split('T')[0],
+          numberOfEmp: dept.numberOfEmp || 0
+        }));
+        setDepartments(mappedDepartments);
 
         setIsAdding(false);
-        setNewDepartment({ name: '', manager: '', date: '' });
+        setNewDepartment({ name: '', branchId: '', branchName: '', date: '' });
       } catch (error) {
-        } finally {
+        console.error('Failed to create department:', error);
+      } finally {
         setDepartmentsLoading(false);
       }
     }
@@ -77,7 +115,7 @@ export default function Departments() {
 
   const handleCancelAdd = () => {
     setIsAdding(false);
-    setNewDepartment({ name: '', manager: '', date: '' });
+    setNewDepartment({ name: '', branchId: '', branchName: '', date: '' });
   };
 
   const handleEdit = (department) => {
@@ -91,29 +129,32 @@ export default function Departments() {
   };
 
   const updateDepartment = async (updatedDepartment) => {
-    const current = departments.find(d => d.id === updatedDepartment.id);
-    if (!current) {
-      // alert('Department not found.');
-      return;
-    }
+    // The modal already made the PUT request and returned the applied object
+    // We just need to update local state with it
+    if (!updatedDepartment || !updatedDepartment.id) return;
 
     try {
-      await updateDepartmentApi({
-        id: updatedDepartment.id,
-        branchId: current.branchId,
-        name: updatedDepartment.name,
-        date: updatedDepartment.date,
-        managerId: updatedDepartment.managerId || null
-      });
-
-      // Reload departments after update
-      const fetchedDepartments = await fetchDepartments();
-      setDepartments(fetchedDepartments);
+      // Update local state immediately with the object from modal
+      const updatedDepartments = departments.map(d =>
+        d.id === updatedDepartment.id ? {
+          id: updatedDepartment.id,
+          name: updatedDepartment.name,
+          branchId: updatedDepartment.branchId,
+          branchName: updatedDepartment.branchName,
+          managerId: updatedDepartment.managerId,
+          manager: updatedDepartment.manager,
+          date: updatedDepartment.date,
+          numberOfEmp: d.numberOfEmp // preserve existing numberOfEmp
+        } : d
+      );
+      setDepartments(updatedDepartments);
+      console.log('Department updated in table:', updatedDepartment);
 
       setIsModalOpen(false);
       setSelectedDepartment(null);
     } catch (error) {
-      // alert(`Failed to update department: ${error.message}`);
+      console.error('Failed to update department', error);
+      alert('Failed to update department');
     }
   };
 
@@ -122,10 +163,21 @@ export default function Departments() {
       try {
         setDepartmentsLoading(true);
         await deleteDepartment(id);
-        const fetchedDepartments = await fetchDepartments();
-        setDepartments(fetchedDepartments);
+        const fetchedDepartments = await fetchDepartmentsFromSettings();
+        const mappedDepartments = fetchedDepartments.map((dept) => ({
+          id: dept.id,
+          name: dept.name,
+          branchId: dept.branchId ?? null,
+          branchName: dept.branchName || 'N/A',
+          managerId: dept.managerId ?? null,
+          manager: dept.manager || 'N/A',
+          date: dept.date || new Date().toISOString().split('T')[0],
+          numberOfEmp: dept.numberOfEmp || 0
+        }));
+        setDepartments(mappedDepartments);
       } catch (error) {
-        } finally {
+        console.error('Failed to delete department', error);
+      } finally {
         setDepartmentsLoading(false);
       }
     }
@@ -138,6 +190,7 @@ export default function Departments() {
           <thead>
             <tr className="bg-green-50">
               <th className="px-6 py-4 text-green-600 font-semibold">{_t('NAME')}</th>
+              <th className="px-6 py-4 text-green-600 font-semibold">{_t('BRANCH')}</th>
               <th className="px-6 py-4 text-green-600 font-semibold">{_t('MANAGER')}</th>
               <th className="px-6 py-4 text-green-600 font-semibold">{_t('DATE')}</th>
               <th className="px-6 py-4 text-green-600 font-semibold text-center">{_t('ACTIONS')}</th>
@@ -146,7 +199,7 @@ export default function Departments() {
           <tbody>
             {departmentsLoading ? (
               <tr>
-                <td colSpan={4} className="px-6 py-8 text-center">
+                <td colSpan={5} className="px-6 py-8 text-center">
                   <div className="flex flex-col items-center justify-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mb-3" />
                     <div className="text-gray-600">{_t('LOADING')}</div>
@@ -162,6 +215,7 @@ export default function Departments() {
                 <td className="px-6 py-4 font-medium text-green-600">
                   {dept.name}
                 </td>
+                <td className="px-6 py-4 text-gray-500">{dept.branchName}</td> {/* Add Branch cell */}
                 <td className="px-6 py-4 text-gray-500">{dept.manager}</td>
                 <td className="px-6 py-4 text-gray-500">
                   {formatDate(dept.date)}
@@ -203,15 +257,28 @@ export default function Departments() {
                   />
                 </td>
                 <td className="px-6 py-4">
-                  <input
-                    type="text"
-                    value={newDepartment.manager}
-                    onChange={(e) =>
-                      setNewDepartment({ ...newDepartment, manager: e.target.value })
-                    }
+                  <select
+                    value={newDepartment.branchId}
+                    onChange={(e) => {
+                      const selectedBranch = branches.find(b => b.id === parseInt(e.target.value));
+                      setNewDepartment({
+                        ...newDepartment,
+                        branchId: parseInt(e.target.value),
+                        branchName: selectedBranch?.name || ''
+                      });
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder={_t('MANAGER')}
-                  />
+                  >
+                    <option value="">{_t('SELECT_A_BRANCH')}</option>
+                    {branches.map((branch) => (
+                      <option key={branch.id} value={branch.id}>
+                        {branch.name}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td className="px-6 py-4">
+                  {/* Manager field removed */}
                 </td>
                 <td className="px-6 py-4">
                   <input
@@ -246,7 +313,7 @@ export default function Departments() {
             {/* Empty row for floating button */}
             {!isAdding && (
               <tr>
-                <td colSpan={4} className="relative py-6">
+                <td colSpan={5} className="relative py-6">
                   <div className="flex justify-center">
                     <button
                       onClick={handleAdd}

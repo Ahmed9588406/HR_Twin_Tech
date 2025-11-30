@@ -564,12 +564,29 @@ export const fetchDepartments = async () => {
       return [];
     }
 
-    // Ensure array form and map to {id, name}
+    // Ensure array form and map to include all fields
     const arr = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
-    return arr.map(d => ({
-      id: d.id ?? d.departmentId ?? null,
-      name: d.name ?? d.department_name ?? d.title ?? 'Unknown'
-    }));
+    return arr.map(d => {
+      // try multiple shapes for branchId / branchName
+      const branchId = d.branchId ?? d.branch_id ?? (d.branch && (d.branch.id ?? null)) ?? null;
+      const branchName =
+        d.branchName ??
+        d.branch_name ??
+        (d.branch && (d.branch.name || d.branch.branchName || d.branch.branch_name)) ??
+        d.branch ??
+        'Unknown';
+
+      return {
+        id: d.id ?? d.departmentId ?? null,
+        name: d.name ?? d.department_name ?? d.title ?? 'Unknown',
+        branchId,
+        branchName,
+        // Include date and manager from API response
+        date: d.date ?? null,
+        manager: d.managerName ?? d.manager ?? d.manager_name ?? null,
+        managerId: d.managerId ?? d.manager_id ?? null
+      };
+    });
   } catch (error) {
     return [];
   }

@@ -221,6 +221,7 @@ const translations = {
     WELCOME_SUB: 'To Keep Connected With Us Please Login With Your Personal Info',
     LOGIN_TOKEN_MISSING: 'Login succeeded but token missing in response',
     LOGIN_FAILED: 'Login failed. Please try again.',
+    INVALID_CREDENTIALS: 'Invalid username or password. Please try again.',
 
     // Notifications
     NOTIFICATIONS: 'Notifications',
@@ -820,6 +821,7 @@ const translations = {
     WELCOME_SUB: 'للبقاء على اتصال معنا، يرجى تسجيل الدخول بمعلوماتك الشخصية',
     LOGIN_TOKEN_MISSING: 'تم تسجيل الدخول لكن المعرّف مفقود في الاستجابة',
     LOGIN_FAILED: 'فشل تسجيل الدخول. حاول مرة أخرى.',
+    INVALID_CREDENTIALS: 'اسم المستخدم أو كلمة المرور غير صحيحة. يرجى المحاولة مرة أخرى.',
 
     // Notifications
     NOTIFICATIONS: 'الإشعارات',

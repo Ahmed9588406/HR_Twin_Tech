@@ -75,7 +75,8 @@ function LoginPage() {
         setError(_t('LOGIN_TOKEN_MISSING'));
       }
     } catch (err) {
-      setError(err.message || _t('LOGIN_FAILED'));
+      // Always show friendly invalid credentials message for login errors
+      setError(_t('INVALID_CREDENTIALS'));
     } finally {
       setLoading(false);
     }

@@ -40,6 +40,30 @@ const RewardsLoadingSkeleton = () => (
   </div>
 );
 
+// Helper function for formatting dates (matching attendance history format)
+const formatDate = (dateStr, lang) => {
+  const d = new Date(dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00`);
+  
+  if (lang === 'ar') {
+    const arabicDays = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const arabicMonths = ['يناير', 'فبراير', 'مارس', 'إبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+    
+    const dayName = arabicDays[d.getDay()];
+    const monthName = arabicMonths[d.getMonth()];
+    const day = d.getDate();
+    const year = d.getFullYear();
+    
+    return `${dayName}، ${day} ${monthName} ${year}`;
+  } else {
+    return d.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  }
+};
+
 export default function EmployeeRewards({ empCode }) {
   const [lang, setLang] = useState(_getLang());
   const [rewardsData, setRewardsData] = useState([]);
@@ -125,10 +149,7 @@ export default function EmployeeRewards({ empCode }) {
                   <div className="text-sm text-slate-600 flex items-center gap-1 mt-1">
                     <Calendar className="w-4 h-4 flex-shrink-0" />
                     {reward.transactionDate 
-                      ? new Date(reward.transactionDate).toLocaleDateString(
-                          lang === 'ar' ? 'ar-SA' : 'en-US', 
-                          { year: 'numeric', month: 'short', day: 'numeric' }
-                        )
+                      ? formatDate(reward.transactionDate, lang)
                       : NA_VALUE
                     }
                   </div>
@@ -136,7 +157,7 @@ export default function EmployeeRewards({ empCode }) {
               </div>
               <div className="text-right flex-shrink-0">
                 <div className="text-lg font-bold text-yellow-600">
-                  +{typeof reward.amount === 'number' ? reward.amount.toFixed(2) : NA_VALUE}
+                  +{typeof reward.amount === 'number' ? reward.amount.toFixed(2) : NA_VALUE} {_t('CURRENCY')}
                 </div>
               </div>
             </div>

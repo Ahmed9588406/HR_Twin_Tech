@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Building2, X, ChevronDown } from 'lucide-react';
 import { fetchEmployees } from './api/employees_api';
+import { fetchBranches } from './api/settings_api'; // <-- add import
 import { t as _t, getLang as _getLang, subscribe as _subscribe } from '../../i18n/i18n';
 
 export default function DepEditModal({ department, onClose, onSave }) {
@@ -11,6 +12,17 @@ export default function DepEditModal({ department, onClose, onSave }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const [lang, setLang] = useState(_getLang());
+  const [branchId, setBranchId] = useState('');
+  const [branches, setBranches] = useState([]);
+  const [date, setDate] = useState(''); // <-- new
+
+  // saving state & error for PUT request
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+
+  // store raw server response text for debugging / user visibility
+  const [serverResponseText, setServerResponseText] = useState('');
+
   useEffect(() => _subscribe(setLang), []);
 
   useEffect(() => {
@@ -19,16 +31,30 @@ export default function DepEditModal({ department, onClose, onSave }) {
       setEmployees(fetchedEmployees);
     };
 
+    const loadBranches = async () => {
+      const fetched = await fetchBranches();
+      setBranches(fetched || []);
+    };
+
     loadEmployees();
-  }, []); // Fetch employees only once on mount
+    loadBranches();
+  }, []); // Fetch employees and branches only once on mount
 
   useEffect(() => {
     if (department) {
       setName(department.name);
+      setBranchId(department.branchId ?? '');
+      // set date input value (normalize to yyyy-mm-dd if possible)
+      const rawDate = department.date || department.dateString || '';
+      try {
+        setDate(rawDate ? (new Date(rawDate).toISOString().split('T')[0]) : '');
+      } catch {
+        setDate(rawDate);
+      }
       // Find manager ID from the manager name if it exists
-      const managerEmployee = employees.find(emp => emp.name === department.manager);
-      setManagerId(managerEmployee?.id || '');
-      setSelectedEmployee(managerEmployee || null);
+      const managerEmployee = employees.find(emp => emp.id === department.managerId) || employees.find(emp => emp.name === department.manager);
+      setManagerId(managerEmployee?.id || (department.managerId ?? ''));
+      setSelectedEmployee(managerEmployee || (department.manager ? { name: department.manager, id: department.managerId } : null));
     }
   }, [department, employees]); // Set form values when department or employees change
 
@@ -38,14 +64,82 @@ export default function DepEditModal({ department, onClose, onSave }) {
     setIsDropdownOpen(false);
   };
 
-  const handleSave = () => {
-    const updatedDepartment = { 
-      ...department, 
-      name, 
-      managerId: managerId ? Number(managerId) : null 
+  const handleSave = async () => {
+    setSaveError(null);
+    setSaving(true);
+    setServerResponseText(''); // clear previous
+
+    // Build payload exactly as backend expects
+    const payload = {
+      id: Number(department?.id ?? 0),
+      branchId: branchId ? Number(branchId) : null,
+      name: name || '',
+      date: date || department?.date || (new Date().toISOString().split('T')[0]),
+      managerId: managerId ? Number(managerId) : null
     };
-    onSave(updatedDepartment);
-    onClose();
+
+    // Log the request payload being sent
+    console.log('PUT /setting/departments request payload:', JSON.stringify(payload, null, 2));
+
+    try {
+      const token = localStorage.getItem('token') || '';
+      const res = await fetch('https://api.shl-hr.com/api/v1/setting/departments', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token ? `Bearer ${token}` : '',
+          'ngrok-skip-browser-warning': 'true',
+          'X-Time-Zone': 'Africa/Cairo',
+          'Accept-Language': _getLang() || 'en'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const text = await res.text().catch(() => '');
+      // always store raw response text for debugging / UI
+      setServerResponseText(text || `${res.status} ${res.statusText}`);
+      console.log('PUT /setting/departments response text:', text);
+
+      if (!res.ok) {
+        let errMsg = text || `${res.status} ${res.statusText}`;
+        try { const j = text ? JSON.parse(text) : null; if (j) errMsg = j.message || j.error || JSON.stringify(j); } catch {}
+        throw new Error(errMsg);
+      }
+
+      // prefer server-returned department if provided
+      let serverData = null;
+      try { serverData = text ? JSON.parse(text) : null; } catch { serverData = null; }
+
+      // Map server response to the shape expected by departments.jsx table
+      const applied = serverData && serverData.id ? {
+         id: serverData.id,
+         name: serverData.name ?? payload.name,
+         branchId: serverData.branchId ?? payload.branchId,
+         branchName: serverData.branchName ?? (branches.find(b => Number(b.id) === Number(payload.branchId))?.name ?? ''),
+         managerId: payload.managerId, // server doesn't return managerId, keep what we sent
+         manager: serverData.managerName ?? selectedEmployee?.name ?? '', // server returns managerName
+         date: serverData.date ?? payload.date
+       } : {
+         id: payload.id,
+         name: payload.name,
+         branchId: payload.branchId,
+         branchName: branches.find(b => Number(b.id) === Number(payload.branchId))?.name ?? '',
+         managerId: payload.managerId,
+         manager: selectedEmployee?.name ?? department?.manager ?? '',
+         date: payload.date
+       };
+
+      console.log('Applied department object to send to parent:', applied);
+      if (typeof onSave === 'function') onSave(applied);
+      onClose();
+    } catch (err) {
+      console.error('Save department error', err);
+      // if we don't already have server text, put the error message there
+      if (!serverResponseText) setServerResponseText(err.message || String(err));
+      setSaveError(err.message || 'Failed to save department');
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Close dropdown when clicking outside
@@ -89,6 +183,36 @@ export default function DepEditModal({ department, onClose, onSave }) {
             onChange={(e) => setName(e.target.value)}
             className="w-full px-4 py-3 border-b-2 border-gray-200 focus:border-green-400 focus:outline-none text-lg transition-colors"
             placeholder={_t('ENTER_DEPARTMENT_NAME')}
+          />
+        </div>
+
+        {/* Branch Name / Branch Selector */}
+        <div className="mb-6">
+          <label className="block text-gray-500 text-sm font-medium mb-3 tracking-wide">
+            {_t('BRANCH')}
+          </label>
+          <select
+            value={branchId ?? ''}
+            onChange={(e) => setBranchId(e.target.value)}
+            className="w-full px-4 py-3 border-b-2 border-gray-200 focus:border-green-400 focus:outline-none text-lg transition-colors bg-white"
+          >
+            <option value="">{_t('SELECT_A_BRANCH')}</option>
+            {branches.map(b => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Date Input */}
+        <div className="mb-6">
+          <label className="block text-gray-500 text-sm font-medium mb-3 tracking-wide">
+            {_t('DATE')}
+          </label>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full px-4 py-3 border-b-2 border-gray-200 focus:border-green-400 focus:outline-none text-lg transition-colors"
           />
         </div>
 
@@ -149,19 +273,49 @@ export default function DepEditModal({ department, onClose, onSave }) {
           </div>
         </div>
 
+        {/* Save Error */}
+        {saveError && (
+          <div className="mb-4 text-sm text-red-600">{saveError}</div>
+        )}
+
+        {/* Server response (raw) - useful to debug what backend returned */}
+        {serverResponseText && (
+          <div className="mb-4">
+            <label className="block text-xs text-gray-500 mb-2">Server response (raw)</label>
+            <pre className="max-h-48 overflow-auto text-xs bg-gray-50 p-3 rounded border border-gray-200">
+              {(() => {
+                try {
+                  // pretty-print JSON if possible
+                  const obj = JSON.parse(serverResponseText);
+                  return JSON.stringify(obj, null, 2);
+                } catch {
+                  return serverResponseText;
+                }
+              })()}
+            </pre>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="flex justify-end gap-4">
           <button
             onClick={onClose}
             className="px-6 py-3 bg-gray-200 text-gray-700 rounded-2xl font-semibold hover:bg-gray-300 transition-all"
+            disabled={saving}
           >
             {_t('CANCEL')}
           </button>
           <button
             onClick={handleSave}
-            className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+            disabled={saving}
+            className={`px-6 py-3 text-white rounded-2xl font-semibold shadow-lg transition-all ${saving ? 'bg-green-300 cursor-wait' : 'bg-gradient-to-r from-green-500 to-green-600 hover:shadow-xl hover:scale-105'}`}
           >
-            {_t('SAVE')}
+            {saving ? (
+              <span className="inline-flex items-center gap-2">
+                <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white inline-block" />
+                {_t('SAVING') || 'Saving...'}
+              </span>
+            ) : _t('SAVE')}
           </button>
         </div>
       </div>
