@@ -1,57 +1,48 @@
-import translations from './translations.js';
+import translations from './translations';
 
-let currentLang = localStorage.getItem('i18nLang') || 'ar';
-const subscribers = [];
+let currentLang = localStorage.getItem('i18nLang') || 'en';
+const subscribers = new Set();
 
-// apply initial document direction
-if (typeof document !== 'undefined') {
-  document.documentElement.lang = currentLang;
-  document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
-}
-
-export function getLang() {
-  return currentLang;
-}
-
-export function setLang(lang) {
-  if (translations[lang]) {
-    currentLang = lang;
-    try { localStorage.setItem('i18nLang', lang); } catch (e) {}
-    if (typeof document !== 'undefined') {
-      document.documentElement.lang = lang;
-      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+const notifySubscribers = () => {
+  subscribers.forEach(callback => {
+    try {
+      callback(currentLang);
+    } catch (error) {
+      console.error('Error notifying i18n subscriber:', error);
     }
-    subscribers.forEach(cb => cb(lang));
-
-    // Dispatch a global event for any code listening on window (backwards compatibility)
-    if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') {
-      try {
-        window.dispatchEvent(new CustomEvent('languageChange', { detail: { lang } }));
-      } catch (e) {
-        // ignore event dispatch errors
-      }
-    }
-  }
-}
-
-export function subscribe(callback) {
-  subscribers.push(callback);
-  return () => {
-    const i = subscribers.indexOf(callback);
-    if (i > -1) subscribers.splice(i, 1);
-  };
-}
-
-export function t(key, params = {}) {
-  const langData = translations[currentLang] || translations.en;
-  let text = langData[key] || key;
-  Object.keys(params).forEach(param => {
-    text = text.replace(new RegExp(`{{${param}}}`, 'g'), params[param]);
   });
-  return text;
-}
+};
 
-export function getMonths() {
-  const langData = translations[currentLang] || translations.en;
-  return langData.MONTHS || ['january','february','march','april','may','june','july','august','september','october','november','december'];
-}
+export const getLang = () => currentLang;
+
+export const setLang = (lang) => {
+  if (lang !== currentLang && (lang === 'en' || lang === 'ar')) {
+    currentLang = lang;
+    localStorage.setItem('i18nLang', lang);
+    notifySubscribers();
+    window.dispatchEvent(new CustomEvent('languageChange', { detail: { lang } }));
+  }
+};
+
+export const subscribe = (callback) => {
+  if (typeof callback === 'function') {
+    subscribers.add(callback);
+    return () => subscribers.delete(callback);
+  }
+  return () => {};
+};
+
+export const t = (key, params = {}) => {
+  const langData = translations[currentLang] || translations.en || {};
+  let text = langData[key] || key; // Fallback to key if not found
+
+  // Replace placeholders like {{n}} or {{count}}
+  if (params && typeof params === 'object') {
+    Object.keys(params).forEach(paramKey => {
+      const placeholder = `{{${paramKey}}}`;
+      text = text.replace(new RegExp(placeholder, 'g'), params[paramKey]);
+    });
+  }
+
+  return text;
+};
