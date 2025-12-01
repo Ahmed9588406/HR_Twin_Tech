@@ -10,16 +10,23 @@ const AttendanceCard = ({ count, label, color }) => (
   </div>
 );
 
-export default function AttendanceCards({ data }) {
+function AttendanceCards({ data }) {
   const [dashboardData, setDashboardData] = useState(data || null);
   const [loading, setLoading] = useState(!data);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (data) {
+      setDashboardData(data);
+      setLoading(false);
+    }
+  }, [data]);
+
+  useEffect(() => {
     if (!data) {
       fetchDashboardData();
     }
-  }, [data]);
+  }, []);
 
   const fetchDashboardData = async () => {
     try {
@@ -35,7 +42,7 @@ export default function AttendanceCards({ data }) {
       setError(null);
     } catch (err) {
       setError(err.message);
-      } finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -68,3 +75,5 @@ export default function AttendanceCards({ data }) {
     </div>
   );
 }
+
+export default AttendanceCards;
